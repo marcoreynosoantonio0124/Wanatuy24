@@ -1,0 +1,301 @@
+// DueMate domain model — see spec §3. Names are canonical; keep them.
+// Store UTC in DB; per-agreement IANA timezone drives all "due at 09:00" logic.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum AssetType {
+  HOUSE
+  UNIT
+  CAR
+  EQUIPMENT
+  OTHER
+  PERSONAL
+}
+
+enum AgreementStatus {
+  DRAFT
+  ACTIVE
+  ENDED
+  TERMINATED
+}
+
+enum MemberRole {
+  LESSOR
+  RENTER
+  COMANAGER
+}
+
+enum ObligationKind {
+  PAYMENT
+  TASK
+  DOCUMENT
+}
+
+enum ResponsibleRole {
+  RENTER
+  LESSOR
+}
+
+enum OccurrenceStatus {
+  UPCOMING
+  DUE
+  SUBMITTED
+  CONFIRMED
+  REJECTED
+  OVERDUE
+  OVERDUE_ESCALATED
+  WAIVED
+}
+
+enum ProofType {
+  RECEIPT
+  REFERENCE
+  ACKNOWLEDGEMENT
+  // v2 hook (spec A3/§9): GATEWAY
+}
+
+enum ProofReviewStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+enum NotificationChannel {
+  EMAIL
+  SMS
+  IN_APP
+}
+
+enum NotificationStatus {
+  SCHEDULED
+  SENT
+  FAILED
+  CANCELLED
+}
+
+// ─── Models ──────────────────────────────────────────────────────────────────
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  phone     String?
+  timezone  String   @default("Asia/Dubai")
+  createdAt DateTime @default(now())
+
+  // Soft-delete / anonymise support (spec §8).
+  deletedAt DateTime?
+
+  assetsOwned      Asset[]                @relation("AssetOwner")
+  agreementsLessor Agreement[]            @relation("AgreementLessor")
+  memberships      AgreementMember[]
+  proofsSubmitted  Proof[]                @relation("ProofSubmitter")
+  proofsReviewed   Proof[]                @relation("ProofReviewer")
+  notifications    Notification[]
+  reminderPolicies ReminderPolicy[]
+  notificationPref UserNotificationPrefs?
+  auditLogs        AuditLog[]
+
+  @@index([email])
+}
+
+model Asset {
+  id          String    @id @default(cuid())
+  ownerId     String
+  owner       User      @relation("AssetOwner", fields: [ownerId], references: [id])
+  type        AssetType
+  label       String
+  description String?
+  addressLine String?
+  city        String?
+  region      String?
+  country     String?
+  postalCode  String?
+  lat         Float?
+  lng         Float?
+  metadata    Json      @default("{}") // plate no., unit no., locationProviderRef hook (§9)
+  archivedAt  DateTime?
+  createdAt   DateTime  @default(now())
+
+  agreements Agreement[]
+
+  @@index([ownerId])
+}
+
+model Agreement {
+  id              String          @id @default(cuid())
+  assetId         String
+  asset           Asset           @relation(fields: [assetId], references: [id])
+  lessorId        String
+  lessor          User            @relation("AgreementLessor", fields: [lessorId], references: [id])
+  timezone        String // IANA, drives all due-time math (spec A8)
+  title           String
+  startDate       DateTime
+  endDate         DateTime?
+  status          AgreementStatus @default(DRAFT)
+  autoConfirmProof Boolean        @default(false)
+  currency        String          @default("AED")
+  notes           String?
+  contractFileUrl String?
+  createdAt       DateTime        @default(now())
+
+  members     AgreementMember[]
+  obligations Obligation[]
+
+  @@index([assetId])
+  @@index([lessorId])
+}
+
+model AgreementMember {
+  id           String     @id @default(cuid())
+  agreementId  String
+  agreement    Agreement  @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  userId       String?
+  user         User?      @relation(fields: [userId], references: [id])
+  invitedEmail String
+  role         MemberRole
+  acceptedAt   DateTime?
+  createdAt    DateTime   @default(now())
+
+  @@unique([agreementId, invitedEmail])
+  @@index([userId])
+}
+
+model Obligation {
+  id               String          @id @default(cuid())
+  agreementId      String
+  agreement        Agreement       @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  kind             ObligationKind
+  title            String
+  amount           Decimal?        @db.Decimal(14, 2)
+  recurrence       String // RRULE string, RFC 5545. Empty = one-off on startDate.
+  dueTimeLocal     String          @default("09:00") // "HH:mm" in agreement TZ
+  graceDays        Int             @default(0)
+  reminderPolicyId String
+  reminderPolicy   ReminderPolicy  @relation(fields: [reminderPolicyId], references: [id])
+  responsibleRole  ResponsibleRole @default(RENTER)
+  active           Boolean         @default(true)
+  createdAt        DateTime        @default(now())
+
+  occurrences Occurrence[]
+
+  @@index([agreementId])
+}
+
+model Occurrence {
+  id            String           @id @default(cuid())
+  obligationId  String
+  obligation    Obligation       @relation(fields: [obligationId], references: [id], onDelete: Cascade)
+  dueAt         DateTime // UTC
+  periodStart   DateTime
+  periodEnd     DateTime
+  status        OccurrenceStatus @default(UPCOMING)
+  confirmedAt   DateTime?
+  confirmedById String?
+  waivedReason  String?
+  version       Int              @default(0) // optimistic lock (spec §8)
+  createdAt     DateTime         @default(now())
+
+  proofs        Proof[]
+  notifications Notification[]
+
+  @@unique([obligationId, dueAt])
+  @@index([status])
+  @@index([dueAt])
+}
+
+model Proof {
+  id            String            @id @default(cuid())
+  occurrenceId  String
+  occurrence    Occurrence        @relation(fields: [occurrenceId], references: [id], onDelete: Cascade)
+  submittedById String
+  submittedBy   User              @relation("ProofSubmitter", fields: [submittedById], references: [id])
+  type          ProofType
+  fileUrl       String?
+  referenceNo   String?
+  amount        Decimal?          @db.Decimal(14, 2)
+  paidAt        DateTime?
+  note          String?
+  gatewayRef    String? // v2 hook (spec A3/A12/§9): payment gateway reference
+  createdAt     DateTime          @default(now())
+
+  reviewStatus  ProofReviewStatus @default(PENDING)
+  reviewNote    String?
+  reviewedById  String?
+  reviewedBy    User?             @relation("ProofReviewer", fields: [reviewedById], references: [id])
+  reviewedAt    DateTime?
+
+  @@index([occurrenceId])
+}
+
+model ReminderPolicy {
+  id      String  @id @default(cuid())
+  ownerId String?
+  owner   User?   @relation(fields: [ownerId], references: [id])
+  name    String
+  steps   Json // ordered array of ReminderStep — see spec §5.3 and lib/domain/reminders.ts
+  isDefault Boolean @default(false)
+  createdAt DateTime @default(now())
+
+  obligations Obligation[]
+
+  @@index([ownerId])
+}
+
+model Notification {
+  id           String              @id @default(cuid())
+  userId       String?
+  user         User?               @relation(fields: [userId], references: [id])
+  // When the recipient hasn't registered yet, we still remind invitedEmail (spec 4.2).
+  toEmail      String?
+  occurrenceId String?
+  occurrence   Occurrence?         @relation(fields: [occurrenceId], references: [id], onDelete: Cascade)
+  channel      NotificationChannel
+  templateKey  String
+  scheduledFor DateTime
+  sentAt       DateTime?
+  status       NotificationStatus  @default(SCHEDULED)
+  providerId   String?
+  attempts     Int                 @default(0)
+  error        String?
+  createdAt    DateTime            @default(now())
+
+  @@index([status, scheduledFor])
+  @@index([occurrenceId])
+  @@index([userId])
+}
+
+model UserNotificationPrefs {
+  id             String  @id @default(cuid())
+  userId         String  @unique
+  user           User    @relation(fields: [userId], references: [id])
+  emailEnabled   Boolean @default(true)
+  smsEnabled     Boolean @default(false)
+  inAppEnabled   Boolean @default(true)
+  // Quiet hours in the user's timezone, "HH:mm". Null = no quiet hours.
+  quietHoursStart String?
+  quietHoursEnd   String?
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  entityType String
+  entityId   String
+  action     String
+  diff       Json     @default("{}")
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([createdAt])
+}
