@@ -33,11 +33,6 @@ export default async function LandingPage() {
           </span>
           Wanatuy24
         </span>
-        <nav className="hidden items-center gap-7 text-sm text-white/80 md:flex">
-          <a href="#landlords" className="hover:text-white">Landlords</a>
-          <a href="#renters" className="hover:text-white">Renters</a>
-          <a href="#how" className="hover:text-white">How it works</a>
-        </nav>
         <Link
           href={user ? "/dashboard" : "/login"}
           className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
@@ -58,10 +53,18 @@ export default async function LandingPage() {
           <span className="text-emerald-400">the follow-up.</span>
         </h1>
 
-        <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/85">
-          Set the rent once and Wanatuy24 tracks every due date, reminds your
-          renters, and keeps proof of every payment — GCash, Maya, bank, or cash.
-          Renters pay from a simple link. No account needed.
+        {/* Taglish punchline */}
+        <p className="mt-5 text-2xl font-bold text-emerald-300 drop-shadow sm:text-3xl">
+          Wala nang habulan sa upa. 🇵🇭
+        </p>
+        <p className="mt-2 text-lg font-medium text-white/85">
+          Hindi mo na kailangan mag-remind — para bawas stress.
+        </p>
+
+        <p className="mt-5 max-w-xl leading-relaxed text-white/75">
+          Set the rent once — we track every due date, remind your renters, and
+          keep proof of every payment (GCash, Maya, bank, or cash). Renters pay
+          from a simple link. No account needed.
         </p>
 
         <div className="mt-9 flex flex-wrap gap-3">
@@ -69,14 +72,8 @@ export default async function LandingPage() {
             href={user ? "/dashboard" : "/login"}
             className="rounded-xl bg-emerald-500 px-6 py-3.5 font-semibold text-slate-950 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400"
           >
-            {user ? "Go to dashboard" : "Get started free"} →
+            {user ? "Go to dashboard" : "Get started — libre"} →
           </Link>
-          <a
-            href="#how"
-            className="rounded-xl border border-white/25 bg-white/5 px-6 py-3.5 font-semibold text-white backdrop-blur transition hover:bg-white/10"
-          >
-            See how it works
-          </a>
         </div>
 
         <dl className="mt-14 grid max-w-2xl grid-cols-2 gap-x-10 gap-y-7 sm:grid-cols-4">
@@ -89,74 +86,16 @@ export default async function LandingPage() {
         </dl>
       </section>
 
-      {/* ---------- How it works (glass, over the wallpaper) ---------- */}
-      <section id="how" className="mx-auto w-full max-w-6xl px-5 py-20">
-        <h2 className="text-center text-3xl font-bold tracking-tight text-white drop-shadow">
-          How Wanatuy24 works
-        </h2>
-        <p className="mx-auto mt-3 max-w-2xl text-center text-white/70">
-          One place for landlords to manage rentals, and a dead-simple way for
-          renters to pay and prove it.
-        </p>
-        <div className="mt-12 grid gap-6 md:grid-cols-3">
-          {FEATURES.map((f) => (
-            <div
-              key={f.title}
-              id={f.anchor}
-              className="scroll-mt-24 rounded-2xl border border-white/10 bg-white/5 p-7 backdrop-blur-md"
-            >
-              <div className="grid h-11 w-11 place-items-center rounded-xl bg-emerald-500/20 text-xl">
-                {f.icon}
-              </div>
-              <h3 className="mt-4 font-semibold text-white">{f.title}</h3>
-              <p className="mt-1.5 text-sm leading-relaxed text-white/70">
-                {f.body}
-              </p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-14 flex justify-center">
-          <Link
-            href={user ? "/dashboard" : "/login"}
-            className="rounded-xl bg-emerald-500 px-6 py-3.5 font-semibold text-slate-950 hover:bg-emerald-400"
-          >
-            {user ? "Go to dashboard" : "Get started free"} →
-          </Link>
-        </div>
-      </section>
-
       <footer className="mx-auto w-full max-w-6xl px-5 py-8 text-center text-sm text-white/50">
-        Wanatuy24 · Install it from your browser to use it like an app.
+        I-install mo sa browser mo para parang app. 📲
       </footer>
     </main>
   );
 }
 
 const STATS = [
-  { value: "₱0", label: "to start — free" },
-  { value: "5 min", label: "to set up a unit" },
-  { value: "Auto", label: "due-date reminders" },
-  { value: "24/7", label: "renter self-service" },
-];
-
-const FEATURES = [
-  {
-    anchor: "landlords",
-    icon: "🏠",
-    title: "For landlords: every unit in one place",
-    body: "Houses, rooms, apartments, vehicles, and commercial spaces — set the terms once and the due dates generate themselves.",
-  },
-  {
-    anchor: "reminders",
-    icon: "🔔",
-    title: "Reminders that do the nagging",
-    body: "Due-date reminders go out automatically by email or push, before and after the deadline — so you don't have to chase.",
-  },
-  {
-    anchor: "renters",
-    icon: "🧾",
-    title: "For renters: pay and prove it",
-    body: "Open a simple link — no account needed — to see what's due and send a receipt. The landlord confirms in a tap.",
-  },
+  { value: "₱0", label: "para magsimula — libre" },
+  { value: "5 min", label: "para mag-set up ng unit" },
+  { value: "Auto", label: "paalala sa due date" },
+  { value: "24/7", label: "self-service para sa renter" },
 ];
