@@ -10,6 +10,7 @@ import {
 } from "@/lib/format";
 import { PeriodStatusBadge } from "@/components/period-status-badge";
 import { CopyButton } from "@/components/copy-button";
+import { SendReminderButton } from "@/components/send-reminder-button";
 import type {
   AgreementRow,
   AssetRow,
@@ -86,6 +87,15 @@ export default async function AgreementDetailPage({
 
   const origin = (await headers()).get("origin") ?? "";
   const renterLink = `${origin}/r/${agreement.renter_access_token}`;
+
+  // Ready-made Taglish reminder for the phone share sheet (Viber/Messenger/SMS).
+  const firstName = agreement.renter_name.split(" ")[0] || "there";
+  const reminderFor = (dueDate: string, amount: number) => {
+    const pay = agreement.payment_instructions
+      ? ` Bayad via ${agreement.payment_instructions}.`
+      : "";
+    return `Hi ${firstName}! Reminder po 😊 — ${formatPeso(amount)} na upa, due ${formatDate(dueDate)}.${pay} I-send mo na lang ang resibo dito: ${renterLink}. Salamat! 🙏`;
+  };
 
   const collected = periods
     .filter((p) => p.status === "paid")
@@ -229,7 +239,12 @@ export default async function AgreementDetailPage({
                 {["upcoming", "due", "overdue", "proof_submitted"].includes(
                   p.status,
                 ) && (
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    {["upcoming", "due", "overdue"].includes(p.status) && (
+                      <SendReminderButton
+                        message={reminderFor(p.due_date, p.amount_php)}
+                      />
+                    )}
                     <form action={markPeriodPaid}>
                       <input type="hidden" name="period_id" value={p.id} />
                       <input type="hidden" name="agreement_id" value={id} />
