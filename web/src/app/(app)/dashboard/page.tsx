@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { formatPeso, formatDate } from "@/lib/format";
 import { PeriodStatusBadge } from "@/components/period-status-badge";
 import { PushToggle } from "@/components/push-toggle";
-import { HouseScene } from "@/components/house-scene";
+import { NeighborhoodScene } from "@/components/neighborhood-scene";
 import type { PeriodStatus } from "@/lib/database.types";
 
 export const dynamic = "force-dynamic";
@@ -47,24 +47,26 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <section className="overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-white">
-        <div className="flex items-center justify-between gap-4 p-6">
-          <div>
-            <p className="text-sm font-medium text-emerald-700">Welcome back 👋</p>
-            <h1 className="mt-1 text-2xl font-semibold text-slate-900">
-              Your rentals at a glance
-            </h1>
-            <p className="mt-1 max-w-sm text-sm text-slate-500">
-              Track due dates, reminders, and payment proofs — all in one place.
-            </p>
-            <Link
-              href="/agreements/new"
-              className="mt-4 inline-block rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
-            >
-              + New agreement
-            </Link>
-          </div>
-          <HouseScene className="hidden w-52 shrink-0 md:block lg:w-64" />
+      <section className="relative min-h-[220px] overflow-hidden rounded-2xl">
+        <NeighborhoodScene
+          preserveAspectRatio="xMidYMid slice"
+          className="absolute inset-0 h-full w-full"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-900/45 to-transparent" />
+        <div className="relative p-6 sm:p-8">
+          <p className="text-sm font-medium text-emerald-100">Welcome back 👋</p>
+          <h1 className="mt-1 text-2xl font-semibold text-white drop-shadow sm:text-3xl">
+            Your rentals at a glance
+          </h1>
+          <p className="mt-1 max-w-sm text-sm text-emerald-50/90">
+            Track due dates, reminders, and payment proofs — all in one place.
+          </p>
+          <Link
+            href="/agreements/new"
+            className="mt-4 inline-block rounded-lg bg-white px-4 py-2 text-sm font-semibold text-emerald-700 shadow hover:bg-emerald-50"
+          >
+            + New agreement
+          </Link>
         </div>
       </section>
 

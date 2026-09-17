@@ -5,7 +5,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   const { user } = await requireUser();
 
   return (
-    <div className="flex min-h-full flex-1 flex-col">
+    <div className="flex min-h-full flex-1 flex-col bg-gradient-to-b from-emerald-50/70 via-slate-50 to-slate-50">
       <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
           <nav className="flex items-center gap-1 sm:gap-4">

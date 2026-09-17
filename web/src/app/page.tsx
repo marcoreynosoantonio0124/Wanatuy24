@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { HouseScene } from "@/components/house-scene";
+import { NeighborhoodScene } from "@/components/neighborhood-scene";
 
 export default async function LandingPage() {
   let user = null;
@@ -31,15 +31,16 @@ export default async function LandingPage() {
         <div className="grid items-center gap-10 lg:grid-cols-2">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-emerald-600">
-              For Filipino lessors
+              For Filipino landlords &amp; renters
             </p>
             <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
               Rent collection without the follow-up stress.
             </h1>
             <p className="mt-4 max-w-xl text-lg text-slate-600">
-              Track every unit, set the rent once, and let Wanatuy24 count the
-              due dates, remind your renters, and keep proof of every payment —
-              GCash, Maya, bank, or cash.
+              Landlords set the rent once and let Wanatuy24 count the due dates,
+              send reminders, and keep proof of every payment. Renters get a
+              simple link to see what&apos;s due and send proof — GCash, Maya,
+              bank, or cash. No account needed.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link
@@ -56,7 +57,10 @@ export default async function LandingPage() {
               </a>
             </div>
           </div>
-          <HouseScene className="w-full max-w-md justify-self-center" />
+          <NeighborhoodScene
+            preserveAspectRatio="xMidYMid slice"
+            className="aspect-[16/10] w-full overflow-hidden rounded-2xl border border-emerald-100 shadow-sm"
+          />
         </div>
 
         <div id="how" className="mt-20 grid gap-6 sm:grid-cols-3">
@@ -83,17 +87,17 @@ export default async function LandingPage() {
 const FEATURES = [
   {
     icon: "🏠",
-    title: "Every unit in one place",
-    body: "Houses, rooms, apartments, vehicles, and commercial spaces — with the terms for each.",
+    title: "For landlords: every unit in one place",
+    body: "Houses, rooms, apartments, vehicles, and commercial spaces — set the terms once and the due dates generate themselves.",
   },
   {
     icon: "🔔",
-    title: "Automatic reminders",
-    body: "Due-date reminders go out on your schedule, by email or push, before and after the deadline.",
+    title: "Reminders that do the nagging",
+    body: "Due-date reminders go out automatically by email or push, before and after the deadline — so you don't have to chase.",
   },
   {
     icon: "🧾",
-    title: "Proof of payment",
-    body: "Renters upload a screenshot or receipt; you accept or reject. Nothing gets lost in chat.",
+    title: "For renters: pay and prove it",
+    body: "Open a simple link — no account needed — to see what's due and send a receipt. The landlord confirms in a tap.",
   },
 ];
