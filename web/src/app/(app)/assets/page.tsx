@@ -57,15 +57,42 @@ export default async function AssetsPage() {
                       {a.label}
                     </p>
                     {a.address_text && (
-                      <p className="truncate text-sm text-slate-500">
-                        {a.address_text}
-                      </p>
+                      <p className="text-sm text-slate-500">{a.address_text}</p>
                     )}
                     <p className="mt-1 text-xs uppercase tracking-wide text-slate-400">
                       {a.type}
                     </p>
                   </div>
                 </div>
+
+                {a.address_text && (
+                  <details className="mt-3">
+                    <summary className="cursor-pointer text-sm font-medium text-emerald-700">
+                      📍 See on map
+                    </summary>
+                    <div className="mt-2 overflow-hidden rounded-lg border border-slate-200">
+                      <iframe
+                        title={`Map of ${a.label}`}
+                        loading="lazy"
+                        className="h-48 w-full border-0"
+                        referrerPolicy="no-referrer-when-downgrade"
+                        src={`https://www.google.com/maps?q=${encodeURIComponent(
+                          a.address_text,
+                        )}&output=embed`}
+                      />
+                    </div>
+                    <a
+                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                        a.address_text,
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-2 inline-block text-xs font-medium text-emerald-700 underline"
+                    >
+                      Open in Google Maps ↗
+                    </a>
+                  </details>
+                )}
               </li>
             ))}
           </ul>
