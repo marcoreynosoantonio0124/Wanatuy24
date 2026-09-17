@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { sendPush } from "@/lib/webpush";
 import { sendEmail, reminderEmailHtml } from "@/lib/email";
+import { sendSms, reminderSms } from "@/lib/sms";
 import { formatPeso, formatDate } from "@/lib/format";
 import type { AgreementRow, PeriodRow } from "@/lib/database.types";
 
@@ -49,15 +50,17 @@ async function run(request: NextRequest) {
   // 2) Materialize reminder notifications for periods in a ±window.
   const created = await materializeNotifications(admin);
 
-  // 3) Deliver due push + email notifications.
+  // 3) Deliver due push + email + SMS notifications.
   const push = await deliverDuePush(admin);
   const email = await deliverDueEmail(admin);
+  const sms = await deliverDueSms(admin);
 
   return NextResponse.json({
     ok: true,
     notificationsCreated: created,
     ...push,
     ...email,
+    ...sms,
   });
 }
 
@@ -65,6 +68,10 @@ type Admin = ReturnType<typeof createAdminClient>;
 
 const WINDOW_BACK_DAYS = 7;
 const WINDOW_FWD_DAYS = 40;
+// SMS costs money per text, so only send it on a few key touchpoints
+// (3 days before, on the due date, 3 days after) even if the agreement's
+// reminder_schedule has more offsets. Push/email use the full schedule.
+const SMS_OFFSETS = [-3, 0, 3];
 
 async function materializeNotifications(admin: Admin): Promise<number> {
   const today = new Date();
@@ -76,7 +83,7 @@ async function materializeNotifications(admin: Admin): Promise<number> {
   const { data } = await admin
     .from("periods")
     .select(
-      "id, due_date, agreement_id, status, agreement:agreements(reminder_schedule, reminder_time_local, status, renter_email)",
+      "id, due_date, agreement_id, status, agreement:agreements(reminder_schedule, reminder_time_local, status, renter_email, renter_phone)",
     )
     .in("status", ["upcoming", "due", "overdue"])
     .gte("due_date", from.toISOString().slice(0, 10))
@@ -85,7 +92,11 @@ async function materializeNotifications(admin: Admin): Promise<number> {
   type Row = Pick<PeriodRow, "id" | "due_date" | "agreement_id"> & {
     agreement: Pick<
       AgreementRow,
-      "reminder_schedule" | "reminder_time_local" | "status" | "renter_email"
+      | "reminder_schedule"
+      | "reminder_time_local"
+      | "status"
+      | "renter_email"
+      | "renter_phone"
     > | null;
   };
   const rows = (data ?? []) as unknown as Row[];
@@ -96,12 +107,12 @@ async function materializeNotifications(admin: Admin): Promise<number> {
     if (!a || a.status !== "active") continue;
     const offsets = Array.isArray(a.reminder_schedule) ? a.reminder_schedule : [];
     const time = (a.reminder_time_local ?? "09:00:00").slice(0, 8).padEnd(8, ":00");
-    // Push always; email only when we have a renter address.
-    const channels: ("push" | "email")[] = a.renter_email
-      ? ["push", "email"]
-      : ["push"];
     for (const offset of offsets) {
       const when = manilaInstant(p.due_date, offset, time);
+      // Push always; email when we have an address; SMS only on key offsets.
+      const channels: string[] = ["push"];
+      if (a.renter_email) channels.push("email");
+      if (a.renter_phone && SMS_OFFSETS.includes(offset)) channels.push("sms");
       for (const channel of channels) {
         toInsert.push({
           agreement_id: p.agreement_id,
@@ -259,6 +270,62 @@ function subjectFor(key: string): string {
     default:
       return "Rent reminder";
   }
+}
+
+async function deliverDueSms(admin: Admin) {
+  const nowIso = new Date().toISOString();
+  const { data } = await admin
+    .from("notifications")
+    .select(
+      "id, period:periods(due_date, amount_php), agreement:agreements(renter_name, renter_phone, renter_access_token)",
+    )
+    .eq("status", "scheduled")
+    .eq("channel", "sms")
+    .lte("scheduled_for", nowIso)
+    .limit(200);
+
+  type Row = {
+    id: string;
+    period: { due_date: string; amount_php: number } | null;
+    agreement: {
+      renter_name: string;
+      renter_phone: string | null;
+      renter_access_token: string;
+    } | null;
+  };
+  const rows = (data ?? []) as unknown as Row[];
+  const base = process.env.APP_BASE_URL;
+
+  let sent = 0;
+  let skipped = 0;
+  for (const n of rows) {
+    const to = n.agreement?.renter_phone;
+    if (!to) {
+      await admin.from("notifications").update({ status: "skipped" }).eq("id", n.id);
+      skipped++;
+      continue;
+    }
+    const message = reminderSms({
+      firstName: n.agreement?.renter_name?.split(" ")[0] ?? "there",
+      amount: n.period ? formatPeso(n.period.amount_php) : "",
+      dueText: n.period ? `due ${formatDate(n.period.due_date)}` : "due soon",
+      link: base ? `${base}/r/${n.agreement?.renter_access_token}` : "",
+    });
+    const result = await sendSms(to, message);
+    if (result === "sent") {
+      await admin
+        .from("notifications")
+        .update({ status: "sent", sent_at: new Date().toISOString() })
+        .eq("id", n.id);
+      sent++;
+    } else if (result === "skipped") {
+      // No provider configured — leave scheduled to send once SMS is wired.
+      skipped++;
+    } else {
+      await admin.from("notifications").update({ status: "failed" }).eq("id", n.id);
+    }
+  }
+  return { smsSent: sent, smsSkipped: skipped };
 }
 
 async function subscriptionsFor(
