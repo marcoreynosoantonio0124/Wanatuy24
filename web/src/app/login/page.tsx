@@ -69,7 +69,8 @@ function LoginForm() {
       )}
 
       <p className="mt-8 text-center text-xs text-slate-400">
-        Renters: use the link your lessor shared with you.
+        Renters: sign in with the same email your landlord used, para makita ang
+        payment records mo. 🇵🇭
       </p>
     </main>
   );
