@@ -94,8 +94,14 @@ stored in the private `payment-proofs` Supabase Storage bucket (migration
 `0005`), and the lessor sees a short-lived signed "View receipt" link on the
 agreement page.
 
+## App icons
+
+`public/` ships `icon-192.png`, `icon-512.png`, a full-bleed
+`icon-maskable-512.png`, and a 180px `apple-touch-icon.png`, all wired into the
+manifest and `<head>`. They're generated from a font-independent vector (the
+"W" is drawn as strokes) — regenerate with `node scripts/gen-icons.cjs` after
+installing `sharp` if you change the mark.
+
 ## What's stubbed for later
 
-- **PNG app icons** — a single SVG icon is used; add 192/512 PNGs for the
-  broadest install support.
 - **Native app** — wrap with Expo/Capacitor reusing this Supabase backend.

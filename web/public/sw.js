@@ -16,8 +16,8 @@ self.addEventListener("push", (event) => {
   const title = payload.title || "Wanatuy24";
   const options = {
     body: payload.body || "",
-    icon: "/icon.svg",
-    badge: "/icon.svg",
+    icon: "/icon-192.png",
+    badge: "/icon-192.png",
     data: { url: payload.url || "/dashboard" },
     tag: payload.tag,
   };
