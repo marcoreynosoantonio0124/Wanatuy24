@@ -294,7 +294,6 @@ async function deliverDueSms(admin: Admin) {
     } | null;
   };
   const rows = (data ?? []) as unknown as Row[];
-  const base = process.env.APP_BASE_URL;
 
   let sent = 0;
   let skipped = 0;
@@ -307,9 +306,8 @@ async function deliverDueSms(admin: Admin) {
     }
     const message = reminderSms({
       firstName: n.agreement?.renter_name?.split(" ")[0] ?? "there",
-      amount: n.period ? formatPeso(n.period.amount_php) : "",
+      amountPhp: n.period?.amount_php ?? 0,
       dueText: n.period ? `due ${formatDate(n.period.due_date)}` : "due soon",
-      link: base ? `${base}/r/${n.agreement?.renter_access_token}` : "",
     });
     const result = await sendSms(to, message);
     if (result === "sent") {
