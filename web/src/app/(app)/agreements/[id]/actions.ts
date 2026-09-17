@@ -71,7 +71,7 @@ export async function sendReminderNow(
   if (agreement.renter_phone) {
     const r = await sendSms(
       agreement.renter_phone,
-      reminderSms({ firstName, amount, dueText, link }),
+      reminderSms({ firstName, amountPhp: period.amount_php, dueText }),
     );
     if (r === "sent") channels.push("SMS");
   }

@@ -37,12 +37,18 @@ export async function sendSms(
   }
 }
 
-/** Short Taglish reminder text kept SMS-friendly. */
+/**
+ * Short Taglish reminder kept to a single SMS segment (≤160 chars) and to the
+ * GSM-7 charset — no peso sign, emoji, or link, which would force costly
+ * multi-part / Unicode messages. (The full link still rides push/email.)
+ */
 export function reminderSms(opts: {
   firstName: string;
-  amount: string;
+  amountPhp: number;
   dueText: string;
-  link: string;
 }): string {
-  return `DueMeet: Hi ${opts.firstName}! ${opts.amount} na upa ${opts.dueText}. Details/resibo: ${opts.link}`;
+  const pesos = (opts.amountPhp / 100).toLocaleString("en-US", {
+    maximumFractionDigits: 2,
+  });
+  return `DueMeet: Hi ${opts.firstName}, PHP ${pesos} na upa, ${opts.dueText}. Pakibayad po. Salamat!`;
 }
