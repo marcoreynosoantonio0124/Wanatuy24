@@ -3,12 +3,12 @@ import "./globals.css";
 import { ServiceWorker } from "@/components/service-worker";
 
 export const metadata: Metadata = {
-  title: "Wanatuy24 — rent & lease tracking",
+  title: "DueMeet — rent & lease tracking",
   description:
     "Track rent, due dates, and payment proofs for your rentals. Automatic reminders over email and push.",
-  applicationName: "Wanatuy24",
+  applicationName: "DueMeet",
   manifest: "/manifest.webmanifest",
-  appleWebApp: { capable: true, statusBarStyle: "default", title: "Wanatuy24" },
+  appleWebApp: { capable: true, statusBarStyle: "default", title: "DueMeet" },
   icons: {
     icon: [
       { url: "/icon.svg", type: "image/svg+xml" },

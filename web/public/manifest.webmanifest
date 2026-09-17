@@ -1,6 +1,6 @@
 {
-  "name": "Wanatuy24 — rent & lease tracking",
-  "short_name": "Wanatuy24",
+  "name": "DueMeet — rent & lease tracking",
+  "short_name": "DueMeet",
   "description": "Track rent, due dates, and payment proofs for your rentals.",
   "start_url": "/dashboard",
   "scope": "/",

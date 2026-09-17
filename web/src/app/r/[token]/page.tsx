@@ -47,7 +47,7 @@ export default async function RenterPortalPage({
 
   return (
     <main className="mx-auto w-full max-w-lg flex-1 px-4 py-8">
-      <p className="text-sm font-semibold text-emerald-700">Wanatuy24</p>
+      <p className="text-sm font-semibold text-emerald-700">DueMeet</p>
       <h1 className="mt-1 text-2xl font-semibold text-slate-900">
         Hi {agreement.renter_name.split(" ")[0]} 👋
       </h1>

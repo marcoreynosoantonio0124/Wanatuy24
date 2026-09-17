@@ -46,7 +46,7 @@ export function reminderEmailHtml(opts: {
     ? `<p style="margin:20px 0"><a href="${opts.link}" style="background:#059669;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none">View & pay</a></p>`
     : "";
   return `<div style="font-family:ui-sans-serif,system-ui,Arial,sans-serif;max-width:480px;margin:0 auto;color:#0f172a">
-    <p style="color:#059669;font-weight:700;margin:0 0 8px">Wanatuy24</p>
+    <p style="color:#059669;font-weight:700;margin:0 0 8px">DueMeet</p>
     <h1 style="font-size:20px;margin:0 0 4px">${escapeHtml(opts.heading)}</h1>
     <p style="color:#475569;margin:0">${escapeHtml(opts.unit)} — ${escapeHtml(
       opts.dueText,
@@ -55,7 +55,7 @@ export function reminderEmailHtml(opts: {
       opts.amount,
     )}</p>
     ${instr}${cta}
-    <p style="color:#94a3b8;font-size:12px;margin-top:24px">You're receiving this because your rental is tracked on Wanatuy24.</p>
+    <p style="color:#94a3b8;font-size:12px;margin-top:24px">You're receiving this because your rental is tracked on DueMeet.</p>
   </div>`;
 }
 

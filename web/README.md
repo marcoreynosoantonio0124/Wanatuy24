@@ -1,4 +1,4 @@
-# Wanatuy24 — web app (PWA)
+# DueMeet — web app (PWA)
 
 Next.js (App Router) + Supabase + Tailwind, shipped as an installable PWA — so
 it's both the **website** and the **app**. A native iOS/Android wrapper (Expo)
