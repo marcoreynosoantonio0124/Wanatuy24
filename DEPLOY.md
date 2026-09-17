@@ -13,6 +13,8 @@ and **Vercel** (hosting). ~15 minutes.
    - `supabase/migrations/0002_period_generation.sql`
    - `supabase/migrations/0003_row_level_security.sql`
    - `supabase/migrations/0004_scheduling.sql`
+   - `supabase/migrations/0005_storage.sql` (creates the private
+     `payment-proofs` bucket for uploaded receipts)
 
    > CLI alternative: `supabase link --project-ref <ref> && supabase db push`
 
@@ -38,6 +40,9 @@ and **Vercel** (hosting). ~15 minutes.
    | `VAPID_PRIVATE_KEY` | VAPID private key (below) |
    | `VAPID_SUBJECT` | `mailto:you@example.com` |
    | `CRON_SECRET` | any long random string |
+   | `APP_BASE_URL` | your Vercel URL (used in reminder email links) |
+   | `RESEND_API_KEY` | *(optional)* Resend key to send email reminders |
+   | `EMAIL_FROM` | *(optional)* e.g. `Wanatuy24 <reminders@yourdomain>` |
 
    Generate the VAPID pair locally:
 

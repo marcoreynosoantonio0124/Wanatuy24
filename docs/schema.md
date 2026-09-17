@@ -54,6 +54,7 @@ that CHECK constraints can't express).
 | `0002_period_generation.sql` | `rental_first_due_date`, `rental_next_due_date`, and idempotent `generate_periods(agreement_id, until_date)`. |
 | `0003_row_level_security.sql` | RLS enable + owner/party policies. Assumes `users.id = auth.uid()`; trusted server code uses the service role (which bypasses RLS) for account-less renters, period/notification generation, and audit writes. |
 | `0004_scheduling.sql` | `refresh_period_statuses()` (advance `upcoming→due→overdue`) and `generate_all_periods(until)` — called by the app's `/api/cron` route or `pg_cron`. |
+| `0005_storage.sql` | Private `payment-proofs` Storage bucket (Supabase only) for uploaded receipts. |
 
 ## Applying
 

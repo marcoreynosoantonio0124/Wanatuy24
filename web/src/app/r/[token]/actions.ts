@@ -17,6 +17,10 @@ const schema = z.object({
 
 export type ProofState = { error?: string; ok?: boolean };
 
+const PROOF_BUCKET = "payment-proofs";
+const MAX_FILE_BYTES = 10 * 1024 * 1024;
+const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp", "application/pdf"];
+
 export async function submitProof(
   _prev: ProofState,
   formData: FormData,
@@ -52,6 +56,26 @@ export async function submitProof(
     .single();
   if (!period) return { error: "That due date wasn't found." };
 
+  // Optional receipt upload to private Storage.
+  let filePath: string | null = null;
+  const file = formData.get("file");
+  if (file instanceof File && file.size > 0) {
+    if (file.size > MAX_FILE_BYTES) {
+      return { error: "That file is larger than 10 MB." };
+    }
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return { error: "Upload a PNG, JPG, WebP, or PDF." };
+    }
+    const ext = file.name.includes(".") ? file.name.split(".").pop() : "bin";
+    const path = `${agreement.id}/${v.period_id}/${Date.now()}.${ext}`;
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const { error: uploadError } = await admin.storage
+      .from(PROOF_BUCKET)
+      .upload(path, bytes, { contentType: file.type, upsert: false });
+    if (uploadError) return { error: `Upload failed: ${uploadError.message}` };
+    filePath = path;
+  }
+
   const { error } = await admin.from("payment_proofs").insert({
     period_id: v.period_id,
     submitted_by: "renter",
@@ -59,6 +83,7 @@ export async function submitProof(
     reference_no: v.reference_no || null,
     amount_php: pesosToCentavos(v.amount),
     paid_on: v.paid_on,
+    file_path: filePath,
     note: v.note || null,
     status: "pending",
   });

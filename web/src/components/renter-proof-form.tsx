@@ -84,6 +84,17 @@ export function RenterProofForm({
       </div>
       <label className="block text-sm">
         <span className="mb-1 block font-medium text-slate-700">
+          Receipt / screenshot <span className="text-slate-400">(optional)</span>
+        </span>
+        <input
+          name="file"
+          type="file"
+          accept="image/png,image/jpeg,image/webp,application/pdf"
+          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-50 file:px-3 file:py-1.5 file:text-emerald-700"
+        />
+      </label>
+      <label className="block text-sm">
+        <span className="mb-1 block font-medium text-slate-700">
           Note <span className="text-slate-400">(optional)</span>
         </span>
         <input name="note" placeholder="Sent via GCash" className={input} />

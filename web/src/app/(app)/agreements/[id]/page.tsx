@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
 import { requireUser } from "@/lib/auth";
+import { createAdminClient } from "@/lib/supabase/server";
 import {
   formatPeso,
   formatDate,
@@ -60,6 +61,21 @@ export default async function AgreementDetailPage({
     : { data: [] };
   const pendingProofs = (proofsData ?? []) as PaymentProofRow[];
   const periodById = new Map(periods.map((p) => [p.id, p]));
+
+  // Signed URLs for any uploaded receipts (private bucket, server-side only).
+  const receiptUrls = new Map<string, string>();
+  const withFiles = pendingProofs.filter((p) => p.file_path);
+  if (withFiles.length) {
+    const admin = createAdminClient();
+    await Promise.all(
+      withFiles.map(async (p) => {
+        const { data } = await admin.storage
+          .from("payment-proofs")
+          .createSignedUrl(p.file_path as string, 60 * 10);
+        if (data?.signedUrl) receiptUrls.set(p.id, data.signedUrl);
+      }),
+    );
+  }
 
   const { data: chargesData } = await supabase
     .from("charges")
@@ -151,6 +167,16 @@ export default async function AgreementDetailPage({
                         <p className="mt-1 text-sm text-slate-600">
                           “{proof.note}”
                         </p>
+                      )}
+                      {receiptUrls.has(proof.id) && (
+                        <a
+                          href={receiptUrls.get(proof.id)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="mt-1 inline-block text-sm font-medium text-blue-700 underline"
+                        >
+                          View receipt ↗
+                        </a>
                       )}
                     </div>
                     <div className="flex gap-2">

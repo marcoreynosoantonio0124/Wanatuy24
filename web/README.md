@@ -32,6 +32,8 @@ can be added later against the same Supabase backend.
    | `SUPABASE_SERVICE_ROLE_KEY` | same page (server-only, bypasses RLS) |
    | `NEXT_PUBLIC_VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` | `web-push generate-vapid-keys` |
    | `CRON_SECRET` | any random string; sent as `x-cron-secret` to `/api/cron` |
+   | `APP_BASE_URL` | deployed URL, used in reminder email links |
+   | `RESEND_API_KEY`, `EMAIL_FROM` | optional — enables email reminders |
 
 3. **Run:**
 
@@ -78,12 +80,22 @@ Example Vercel `vercel.json`:
 cron header instead, or trigger `/api/cron` from a GitHub Action that sends
 `x-cron-secret`.)
 
+## Email reminders
+
+The cron materializes both `push` and `email` reminder rows (email only when the
+agreement has a renter email). Email delivery uses **Resend** — set
+`RESEND_API_KEY` and `EMAIL_FROM` and it starts sending; leave them unset and
+email is skipped while push keeps working.
+
+## Proof uploads
+
+The renter portal accepts an optional receipt (PNG/JPG/WebP/PDF, ≤10 MB). It's
+stored in the private `payment-proofs` Supabase Storage bucket (migration
+`0005`), and the lessor sees a short-lived signed "View receipt" link on the
+agreement page.
+
 ## What's stubbed for later
 
-- **Email reminders** — the job materializes push reminders; wire an email
-  provider (Resend/Postmark) to also send the `email` channel.
-- **Proof file uploads** — the renter portal submits reference + amount; add a
-  Supabase Storage upload for the screenshot/receipt (`payment_proofs.file_path`).
 - **PNG app icons** — a single SVG icon is used; add 192/512 PNGs for the
   broadest install support.
 - **Native app** — wrap with Expo/Capacitor reusing this Supabase backend.
