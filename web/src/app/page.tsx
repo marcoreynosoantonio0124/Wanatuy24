@@ -58,13 +58,13 @@ export default async function LandingPage() {
           Wala nang habulan sa upa. 🇵🇭
         </p>
         <p className="mt-2 text-lg font-medium text-white/85">
-          Bayad on time, zero follow-up — automated na ang paalala at resibo.
+          Hindi mo na kailangan mag-remind — para bawas stress.
         </p>
 
         <p className="mt-5 max-w-xl leading-relaxed text-white/75">
-          Set the rent once and Wanatuy24 tracks every due date, reminds your
-          renters, and keeps proof of every payment — GCash, Maya, bank, or cash.
-          Renters pay from a simple link. No account needed.
+          Set the rent once — we track every due date, remind your renters, and
+          keep proof of every payment (GCash, Maya, bank, or cash). Renters pay
+          from a simple link. No account needed.
         </p>
 
         <div className="mt-9 flex flex-wrap gap-3">
@@ -87,7 +87,7 @@ export default async function LandingPage() {
       </section>
 
       <footer className="mx-auto w-full max-w-6xl px-5 py-8 text-center text-sm text-white/50">
-        Wanatuy24 · I-install mo sa browser mo para parang app. 📲
+        I-install mo sa browser mo para parang app. 📲
       </footer>
     </main>
   );
