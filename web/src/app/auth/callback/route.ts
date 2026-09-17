@@ -1,9 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 
 /**
  * Handles the magic-link redirect: exchanges the PKCE code for a session,
- * ensures a public.users row exists, then forwards to the app.
+ * ensures a public.users row exists, links the user to any rentals addressed
+ * to their email, then forwards to the app.
  */
 export async function GET(request: NextRequest) {
   const { searchParams, origin: reqOrigin } = new URL(request.url);
@@ -23,15 +24,28 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // Mirror the auth user into public.users (id == auth.uid()).
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
   if (user) {
-    await supabase.from("users").upsert(
-      { id: user.id, email: user.email ?? "" },
-      { onConflict: "id", ignoreDuplicates: true },
-    );
+    // Service role bypasses RLS for profile creation + renter linking.
+    const admin = createAdminClient();
+    // Ensure a public.users row (also created by the signup trigger).
+    await admin
+      .from("users")
+      .upsert(
+        { id: user.id, email: user.email ?? "" },
+        { onConflict: "id", ignoreDuplicates: true },
+      );
+    // Link this account to any agreement addressed to their email.
+    if (user.email) {
+      await admin
+        .from("agreements")
+        .update({ renter_user_id: user.id })
+        .eq("renter_email", user.email)
+        .is("renter_user_id", null);
+    }
   }
 
   return NextResponse.redirect(`${origin}${next}`);
