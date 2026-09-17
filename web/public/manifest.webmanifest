@@ -1,0 +1,19 @@
+{
+  "name": "Wanatuy24 — rent & lease tracking",
+  "short_name": "Wanatuy24",
+  "description": "Track rent, due dates, and payment proofs for your rentals.",
+  "start_url": "/dashboard",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#059669",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
