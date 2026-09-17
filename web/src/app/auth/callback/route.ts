@@ -6,7 +6,8 @@ import { createClient } from "@/lib/supabase/server";
  * ensures a public.users row exists, then forwards to the app.
  */
 export async function GET(request: NextRequest) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams, origin: reqOrigin } = new URL(request.url);
+  const origin = process.env.APP_BASE_URL || reqOrigin;
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/dashboard";
 

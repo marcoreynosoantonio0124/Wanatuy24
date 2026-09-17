@@ -25,7 +25,9 @@ export async function sendMagicLink(
 
   const { email, next } = parsed.data;
   const supabase = await createClient();
-  const origin = (await headers()).get("origin") ?? "";
+  // Prefer the configured public URL (correct behind proxies like Replit),
+  // fall back to the request origin.
+  const origin = process.env.APP_BASE_URL || (await headers()).get("origin") || "";
   const callback = new URL("/auth/callback", origin);
   if (next) callback.searchParams.set("next", next);
 

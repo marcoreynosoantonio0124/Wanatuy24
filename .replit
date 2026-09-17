@@ -1,0 +1,12 @@
+# Replit config. The app lives in web/, so install + run happen there.
+# On first run this installs dependencies (takes a minute), then starts Next.
+run = "cd web && npm install && npm run dev -- -H 0.0.0.0 -p 3000"
+modules = ["nodejs-20"]
+
+[env]
+NEXT_TELEMETRY_DISABLED = "1"
+
+# Map the Next dev port to the public web preview.
+[[ports]]
+localPort = 3000
+externalPort = 80
