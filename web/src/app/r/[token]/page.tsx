@@ -8,6 +8,7 @@ import {
 } from "@/lib/format";
 import { PeriodStatusBadge } from "@/components/period-status-badge";
 import { RenterProofForm } from "@/components/renter-proof-form";
+import { RenterPushToggle } from "@/components/renter-push-toggle";
 import type {
   AgreementRow,
   AssetRow,
@@ -82,6 +83,10 @@ export default async function RenterPortalPage({
           </p>
         </div>
       )}
+
+      <div className="mt-4">
+        <RenterPushToggle token={token} />
+      </div>
 
       <section className="mt-6">
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
