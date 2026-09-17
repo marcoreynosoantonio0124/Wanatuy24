@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { NeighborhoodScene } from "@/components/neighborhood-scene";
+import { DuskScene } from "@/components/dusk-scene";
 
 export default async function LandingPage() {
   let user = null;
@@ -15,87 +15,150 @@ export default async function LandingPage() {
 
   return (
     <main className="flex flex-1 flex-col">
-      <header className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-5">
-        <span className="text-lg font-bold text-emerald-700">
-          Wanatuy<span className="text-slate-400">24</span>
-        </span>
-        <Link
-          href={user ? "/dashboard" : "/login"}
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
-        >
-          {user ? "Open dashboard" : "Sign in"}
-        </Link>
-      </header>
+      {/* ---------- Hero ---------- */}
+      <section className="relative isolate flex min-h-[92vh] flex-col overflow-hidden">
+        <DuskScene
+          preserveAspectRatio="xMidYMid slice"
+          className="absolute inset-0 -z-20 h-full w-full"
+        />
+        {/* legibility overlays */}
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-slate-950/90 via-slate-950/55 to-slate-950/20" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-slate-950/85 via-transparent to-slate-950/40" />
 
-      <section className="mx-auto w-full max-w-5xl px-4 py-16">
-        <div className="grid items-center gap-10 lg:grid-cols-2">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-emerald-600">
-              For Filipino landlords &amp; renters
-            </p>
-            <h1 className="mt-3 text-4xl font-bold tracking-tight text-slate-900 sm:text-5xl">
-              Rent collection without the follow-up stress.
-            </h1>
-            <p className="mt-4 max-w-xl text-lg text-slate-600">
-              Landlords set the rent once and let Wanatuy24 count the due dates,
-              send reminders, and keep proof of every payment. Renters get a
-              simple link to see what&apos;s due and send proof — GCash, Maya,
-              bank, or cash. No account needed.
-            </p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link
-                href={user ? "/dashboard" : "/login"}
-                className="rounded-lg bg-emerald-600 px-5 py-3 font-medium text-white hover:bg-emerald-700"
-              >
-                {user ? "Go to dashboard" : "Get started free"}
-              </Link>
-              <a
-                href="#how"
-                className="rounded-lg border border-slate-300 px-5 py-3 font-medium text-slate-700 hover:bg-white"
-              >
-                How it works
-              </a>
-            </div>
-          </div>
-          <NeighborhoodScene
-            preserveAspectRatio="xMidYMid slice"
-            className="aspect-[16/10] w-full overflow-hidden rounded-2xl border border-emerald-100 shadow-sm"
-          />
-        </div>
+        {/* nav */}
+        <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5">
+          <span className="flex items-center gap-2 text-lg font-bold text-white">
+            <span className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-500 text-slate-950">
+              W
+            </span>
+            Wanatuy24
+          </span>
+          <nav className="hidden items-center gap-7 text-sm text-white/80 md:flex">
+            <a href="#landlords" className="hover:text-white">Landlords</a>
+            <a href="#renters" className="hover:text-white">Renters</a>
+            <a href="#how" className="hover:text-white">How it works</a>
+          </nav>
+          <Link
+            href={user ? "/dashboard" : "/login"}
+            className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
+          >
+            {user ? "Dashboard" : "Sign in"}
+          </Link>
+        </header>
 
-        <div id="how" className="mt-20 grid gap-6 sm:grid-cols-3">
-          {FEATURES.map((f) => (
-            <div
-              key={f.title}
-              className="rounded-2xl border border-slate-200 bg-white p-6"
+        {/* hero content */}
+        <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col justify-center px-5 py-16">
+          <span className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-sm font-medium text-emerald-200 backdrop-blur">
+            🛡️ Built for Filipino landlords &amp; renters
+          </span>
+
+          <h1 className="mt-6 max-w-3xl text-5xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-6xl">
+            Collect rent without
+            <br />
+            <span className="text-emerald-400">the follow-up.</span>
+          </h1>
+
+          <p className="mt-6 max-w-xl text-lg leading-relaxed text-white/85">
+            Set the rent once and Wanatuy24 tracks every due date, reminds your
+            renters, and keeps proof of every payment — GCash, Maya, bank, or
+            cash. Renters pay from a simple link. No account needed.
+          </p>
+
+          <div className="mt-9 flex flex-wrap gap-3">
+            <Link
+              href={user ? "/dashboard" : "/login"}
+              className="rounded-xl bg-emerald-500 px-6 py-3.5 font-semibold text-slate-950 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400"
             >
-              <div className="text-2xl">{f.icon}</div>
-              <h3 className="mt-3 font-semibold text-slate-900">{f.title}</h3>
-              <p className="mt-1 text-sm text-slate-600">{f.body}</p>
-            </div>
-          ))}
+              {user ? "Go to dashboard" : "Get started free"} →
+            </Link>
+            <a
+              href="#how"
+              className="rounded-xl border border-white/25 bg-white/5 px-6 py-3.5 font-semibold text-white backdrop-blur transition hover:bg-white/10"
+            >
+              See how it works
+            </a>
+          </div>
+
+          {/* stat tiles */}
+          <dl className="mt-14 grid max-w-2xl grid-cols-2 gap-x-10 gap-y-7 sm:grid-cols-4">
+            {STATS.map((s) => (
+              <div key={s.label}>
+                <dt className="text-3xl font-bold text-emerald-400">{s.value}</dt>
+                <dd className="mt-1 text-sm text-white/70">{s.label}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
       </section>
 
-      <footer className="mt-auto border-t border-slate-200 py-8 text-center text-sm text-slate-400">
+      {/* ---------- How it works ---------- */}
+      <section id="how" className="bg-white">
+        <div className="mx-auto w-full max-w-6xl px-5 py-20">
+          <h2 className="text-center text-3xl font-bold tracking-tight text-slate-900">
+            How Wanatuy24 works
+          </h2>
+          <p className="mx-auto mt-3 max-w-2xl text-center text-slate-500">
+            One place for landlords to manage rentals, and a dead-simple way for
+            renters to pay and prove it.
+          </p>
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {FEATURES.map((f) => (
+              <div
+                key={f.title}
+                id={f.anchor}
+                className="scroll-mt-24 rounded-2xl border border-slate-200 bg-slate-50 p-7"
+              >
+                <div className="grid h-11 w-11 place-items-center rounded-xl bg-emerald-100 text-xl">
+                  {f.icon}
+                </div>
+                <h3 className="mt-4 font-semibold text-slate-900">{f.title}</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-slate-600">
+                  {f.body}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          <div className="mt-14 flex justify-center">
+            <Link
+              href={user ? "/dashboard" : "/login"}
+              className="rounded-xl bg-emerald-600 px-6 py-3.5 font-semibold text-white hover:bg-emerald-700"
+            >
+              {user ? "Go to dashboard" : "Get started free"} →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      <footer className="border-t border-slate-200 bg-white py-8 text-center text-sm text-slate-400">
         Wanatuy24 · Install it from your browser to use it like an app.
       </footer>
     </main>
   );
 }
 
+const STATS = [
+  { value: "₱0", label: "to start — free" },
+  { value: "5 min", label: "to set up a unit" },
+  { value: "Auto", label: "due-date reminders" },
+  { value: "24/7", label: "renter self-service" },
+];
+
 const FEATURES = [
   {
+    anchor: "landlords",
     icon: "🏠",
     title: "For landlords: every unit in one place",
     body: "Houses, rooms, apartments, vehicles, and commercial spaces — set the terms once and the due dates generate themselves.",
   },
   {
+    anchor: "reminders",
     icon: "🔔",
     title: "Reminders that do the nagging",
     body: "Due-date reminders go out automatically by email or push, before and after the deadline — so you don't have to chase.",
   },
   {
+    anchor: "renters",
     icon: "🧾",
     title: "For renters: pay and prove it",
     body: "Open a simple link — no account needed — to see what's due and send a receipt. The landlord confirms in a tap.",
