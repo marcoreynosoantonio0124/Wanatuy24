@@ -11,6 +11,9 @@ for setup and routes. Core flows: lessor sign-in, units, agreements (with
 automatic due-date generation), payment-proof review, an account-less renter
 portal, and Web Push reminders driven by a scheduled job.
 
+**Going live:** follow [`DEPLOY.md`](DEPLOY.md) — Supabase + Vercel, ~15 minutes,
+no server to manage.
+
 ## Database schema
 
 The Postgres / Supabase schema is implemented as versioned migrations in

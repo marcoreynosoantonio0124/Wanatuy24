@@ -2,10 +2,15 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function LandingPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const supabase = await createClient();
+    ({
+      data: { user },
+    } = await supabase.auth.getUser());
+  } catch {
+    // Backend not reachable yet — show the signed-out marketing page.
+  }
 
   return (
     <main className="flex flex-1 flex-col">

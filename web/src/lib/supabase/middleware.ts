@@ -29,9 +29,16 @@ export async function updateSession(request: NextRequest) {
   });
 
   // IMPORTANT: do not run code between createServerClient and getUser().
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // If the backend is unreachable (outage, or before Supabase is configured),
+  // degrade gracefully instead of 500-ing the whole site.
+  let user = null;
+  try {
+    ({
+      data: { user },
+    } = await supabase.auth.getUser());
+  } catch {
+    user = null;
+  }
 
   const path = request.nextUrl.pathname;
   const isProtected = PROTECTED_PREFIXES.some(

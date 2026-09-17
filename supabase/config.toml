@@ -1,0 +1,3 @@
+# Minimal Supabase CLI config. `supabase link --project-ref <ref>` then
+# `supabase db push` applies the migrations in supabase/migrations.
+project_id = "wanatuy24"

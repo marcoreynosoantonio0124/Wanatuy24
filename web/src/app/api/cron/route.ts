@@ -8,15 +8,30 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 /**
- * Scheduled job. Point a scheduler at POST /api/cron with header
- * `x-cron-secret: $CRON_SECRET` (Vercel Cron, GitHub Actions, or pg_cron+pg_net).
- * It: extends the period horizon, advances statuses, materializes reminder
- * rows from each agreement's reminder_schedule, and delivers any that are due
- * over Web Push.
+ * Scheduled job. Trigger it with either:
+ *   - Vercel Cron (GET; sends `Authorization: Bearer $CRON_SECRET` automatically), or
+ *   - any scheduler (GitHub Actions, pg_cron+pg_net) sending `x-cron-secret`.
+ * It extends the period horizon, advances statuses, materializes reminder rows
+ * from each agreement's reminder_schedule, and delivers due ones over Web Push.
  */
-export async function POST(request: NextRequest) {
+function authorized(request: NextRequest): boolean {
   const secret = process.env.CRON_SECRET;
-  if (secret && request.headers.get("x-cron-secret") !== secret) {
+  if (!secret) return true; // unset (e.g. local) — allow
+  if (request.headers.get("x-cron-secret") === secret) return true;
+  if (request.headers.get("authorization") === `Bearer ${secret}`) return true;
+  return false;
+}
+
+export async function GET(request: NextRequest) {
+  return run(request);
+}
+
+export async function POST(request: NextRequest) {
+  return run(request);
+}
+
+async function run(request: NextRequest) {
+  if (!authorized(request)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
