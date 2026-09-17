@@ -1,4 +1,4 @@
--- Wanatuy24 — full database setup (all migrations concatenated).
+-- DueMeet — full database setup (all migrations concatenated).
 -- Convenience for the Supabase SQL editor: paste this whole file and Run once.
 -- (For the Supabase CLI, use `supabase db push` against supabase/migrations instead.)
 
@@ -617,4 +617,14 @@ values (
   array['image/png', 'image/jpeg', 'image/webp', 'application/pdf']
 )
 on conflict (id) do nothing;
+
+-- =====================================================================
+-- 0006_sms_channel.sql
+-- =====================================================================
+-- 0006_sms_channel.sql
+-- Add an 'sms' value to notification_channel so the reminder engine can send
+-- automated text messages (e.g. via a Philippine SMS provider like Semaphore).
+-- ADD VALUE runs outside a transaction and is idempotent.
+
+alter type notification_channel add value if not exists 'sms';
 

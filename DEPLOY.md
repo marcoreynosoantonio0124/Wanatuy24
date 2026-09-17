@@ -39,7 +39,15 @@ and **Vercel** (hosting). ~15 minutes.
    | `CRON_SECRET` | any long random string |
    | `APP_BASE_URL` | your Vercel URL (used in reminder email links) |
    | `RESEND_API_KEY` | *(optional)* Resend key to send email reminders |
-   | `EMAIL_FROM` | *(optional)* e.g. `Wanatuy24 <reminders@yourdomain>` |
+   | `EMAIL_FROM` | *(optional)* e.g. `DueMeet <reminders@yourdomain>` |
+   | `SEMAPHORE_API_KEY` | *(optional)* [Semaphore](https://semaphore.co) key for automated SMS |
+   | `SEMAPHORE_SENDER_NAME` | *(optional)* a Semaphore-registered sender name |
+
+> **Automated SMS (optional):** create a [Semaphore](https://semaphore.co)
+> account, load credits, put your API key in `SEMAPHORE_API_KEY`, and run
+> migration `0006_sms_channel.sql` on your database. Renters with a phone number
+> then get a text 3 days before, on, and 3 days after each due date (limited to
+> those dates since each SMS costs a small amount).
 
    Generate the VAPID pair locally:
 
