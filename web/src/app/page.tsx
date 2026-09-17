@@ -29,9 +29,9 @@ export default async function LandingPage() {
       <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5">
         <span className="flex items-center gap-2 text-lg font-bold text-white">
           <span className="grid h-8 w-8 place-items-center rounded-lg bg-emerald-500 text-slate-950">
-            W
+            D
           </span>
-          Wanatuy24
+          DueMeet
         </span>
         <Link
           href={user ? "/dashboard" : "/login"}

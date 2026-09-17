@@ -24,7 +24,7 @@ function LoginForm() {
   return (
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-16">
       <Link href="/" className="mb-8 text-lg font-bold text-emerald-700">
-        Wanatuy<span className="text-slate-400">24</span>
+        Due<span className="text-slate-400">Meet</span>
       </Link>
       <h1 className="text-2xl font-semibold text-slate-900">Sign in</h1>
       <p className="mt-1 text-sm text-slate-500">

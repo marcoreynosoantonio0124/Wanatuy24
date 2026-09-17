@@ -1,4 +1,4 @@
-/* Wanatuy24 service worker — Web Push + notification handling.
+/* DueMeet service worker — Web Push + notification handling.
    Kept intentionally minimal (no offline caching yet). */
 
 self.addEventListener("install", () => self.skipWaiting());
@@ -11,9 +11,9 @@ self.addEventListener("push", (event) => {
   try {
     payload = event.data ? event.data.json() : {};
   } catch {
-    payload = { title: "Wanatuy24", body: event.data ? event.data.text() : "" };
+    payload = { title: "DueMeet", body: event.data ? event.data.text() : "" };
   }
-  const title = payload.title || "Wanatuy24";
+  const title = payload.title || "DueMeet";
   const options = {
     body: payload.body || "",
     icon: "/icon-192.png",

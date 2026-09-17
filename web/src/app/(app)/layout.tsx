@@ -10,7 +10,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
           <nav className="flex items-center gap-1 sm:gap-4">
             <Link href="/dashboard" className="mr-2 font-bold text-emerald-700">
-              Wanatuy<span className="text-slate-400">24</span>
+              Due<span className="text-slate-400">Meet</span>
             </Link>
             <NavLink href="/dashboard">Dashboard</NavLink>
             <NavLink href="/assets">Units</NavLink>
