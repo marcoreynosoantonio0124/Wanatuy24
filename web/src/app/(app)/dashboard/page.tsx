@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { formatPeso, formatDate } from "@/lib/format";
 import { PeriodStatusBadge } from "@/components/period-status-badge";
 import { PushToggle } from "@/components/push-toggle";
+import { HouseScene } from "@/components/house-scene";
 import type { PeriodStatus } from "@/lib/database.types";
 
 export const dynamic = "force-dynamic";
@@ -46,15 +47,26 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold">Dashboard</h1>
-        <Link
-          href="/agreements/new"
-          className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
-        >
-          + New agreement
-        </Link>
-      </div>
+      <section className="overflow-hidden rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50 via-white to-white">
+        <div className="flex items-center justify-between gap-4 p-6">
+          <div>
+            <p className="text-sm font-medium text-emerald-700">Welcome back 👋</p>
+            <h1 className="mt-1 text-2xl font-semibold text-slate-900">
+              Your rentals at a glance
+            </h1>
+            <p className="mt-1 max-w-sm text-sm text-slate-500">
+              Track due dates, reminders, and payment proofs — all in one place.
+            </p>
+            <Link
+              href="/agreements/new"
+              className="mt-4 inline-block rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700"
+            >
+              + New agreement
+            </Link>
+          </div>
+          <HouseScene className="hidden w-52 shrink-0 md:block lg:w-64" />
+        </div>
+      </section>
 
       <div className="grid gap-4 sm:grid-cols-3">
         <StatCard label="Active agreements" value={String(agreementCount ?? 0)} />
