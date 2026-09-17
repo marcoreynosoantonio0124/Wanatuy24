@@ -7,16 +7,13 @@ and **Vercel** (hosting). ~15 minutes.
 
 1. Go to <https://supabase.com> → **New project**. Pick a region close to the
    Philippines (e.g. Singapore). Save the database password.
-2. When it's ready, open **SQL Editor** and run each migration in order,
-   pasting the file contents and clicking **Run**:
-   - `supabase/migrations/0001_rental_agreement_schema.sql`
-   - `supabase/migrations/0002_period_generation.sql`
-   - `supabase/migrations/0003_row_level_security.sql`
-   - `supabase/migrations/0004_scheduling.sql`
-   - `supabase/migrations/0005_storage.sql` (creates the private
-     `payment-proofs` bucket for uploaded receipts)
+2. When it's ready, open **SQL Editor** → **New query**, paste the entire
+   contents of **[`supabase/setup.sql`](supabase/setup.sql)** (all migrations
+   concatenated), and click **Run**. That creates every table, function, RLS
+   policy, and the private `payment-proofs` storage bucket in one shot.
 
-   > CLI alternative: `supabase link --project-ref <ref> && supabase db push`
+   > Prefer the CLI? `supabase link --project-ref <ref> && supabase db push`
+   > applies the individual files in `supabase/migrations/` instead.
 
 3. **Auth** → **Providers** → make sure **Email** is enabled (magic links are on
    by default). No SMTP setup is needed to start — Supabase sends the emails.
