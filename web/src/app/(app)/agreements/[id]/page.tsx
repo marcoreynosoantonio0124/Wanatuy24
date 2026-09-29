@@ -11,6 +11,7 @@ import {
 import { PeriodStatusBadge } from "@/components/period-status-badge";
 import { CopyButton } from "@/components/copy-button";
 import { SendReminderNowButton } from "@/components/send-reminder-now";
+import { SubmitButton } from "@/components/submit-button";
 import type {
   AgreementRow,
   AssetRow,
@@ -186,18 +187,24 @@ export default async function AgreementDetailPage({
                         <input type="hidden" name="period_id" value={proof.period_id} />
                         <input type="hidden" name="agreement_id" value={id} />
                         <input type="hidden" name="decision" value="accepted" />
-                        <button className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700">
+                        <SubmitButton
+                          pendingText="Accepting…"
+                          className="rounded-md bg-emerald-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-emerald-700 active:scale-95"
+                        >
                           Accept
-                        </button>
+                        </SubmitButton>
                       </form>
                       <form action={reviewProof}>
                         <input type="hidden" name="proof_id" value={proof.id} />
                         <input type="hidden" name="period_id" value={proof.period_id} />
                         <input type="hidden" name="agreement_id" value={id} />
                         <input type="hidden" name="decision" value="rejected" />
-                        <button className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-white">
+                        <SubmitButton
+                          pendingText="Rejecting…"
+                          className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-white active:scale-95"
+                        >
                           Reject
-                        </button>
+                        </SubmitButton>
                       </form>
                     </div>
                   </div>
@@ -240,16 +247,22 @@ export default async function AgreementDetailPage({
                     <form action={markPeriodPaid}>
                       <input type="hidden" name="period_id" value={p.id} />
                       <input type="hidden" name="agreement_id" value={id} />
-                      <button className="rounded-md border border-emerald-300 px-2.5 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50">
+                      <SubmitButton
+                        pendingText="Saving…"
+                        className="rounded-md border border-emerald-300 px-2.5 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50 active:scale-95"
+                      >
                         Mark paid
-                      </button>
+                      </SubmitButton>
                     </form>
                     <form action={waivePeriod}>
                       <input type="hidden" name="period_id" value={p.id} />
                       <input type="hidden" name="agreement_id" value={id} />
-                      <button className="rounded-md border border-slate-300 px-2.5 py-1 text-xs text-slate-500 hover:bg-slate-50">
+                      <SubmitButton
+                        pendingText="Waiving…"
+                        className="rounded-md border border-slate-300 px-2.5 py-1 text-xs text-slate-500 hover:bg-slate-50 active:scale-95"
+                      >
                         Waive
-                      </button>
+                      </SubmitButton>
                     </form>
                   </div>
                 )}
@@ -282,9 +295,12 @@ export default async function AgreementDetailPage({
             placeholder="₱ amount"
             className="w-32 rounded-lg border border-slate-300 px-3 py-2 text-sm"
           />
-          <button className="rounded-lg bg-slate-800 px-3 py-2 text-sm font-medium text-white hover:bg-slate-900">
+          <SubmitButton
+            pendingText="Adding…"
+            className="rounded-lg bg-slate-800 px-3 py-2 text-sm font-medium text-white hover:bg-slate-900 active:scale-95"
+          >
             Add
-          </button>
+          </SubmitButton>
         </form>
         {charges.length > 0 && (
           <ul className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 bg-white">
