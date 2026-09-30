@@ -7,10 +7,10 @@ import { LessorScene, TenantScene } from "./role-illustrations";
 /** The two big role boxes shown on the welcome screen. */
 export function RoleChooser({ fontClass = "" }: { fontClass?: string }) {
   return (
-    <div className="grid w-full gap-5 sm:grid-cols-2">
+    <div className="grid w-full grid-cols-2 gap-3 sm:gap-5">
       <RoleCard
         role="lessor"
-        scene={<LessorScene className="h-32 w-full" />}
+        scene={<LessorScene className="h-20 w-full sm:h-28" />}
         tagalog="NAGPAPAUPA"
         title="I'm a Lessor"
         subtitle="I own units and collect rent."
@@ -26,7 +26,7 @@ export function RoleChooser({ fontClass = "" }: { fontClass?: string }) {
       />
       <RoleCard
         role="tenant"
-        scene={<TenantScene className="h-32 w-full" />}
+        scene={<TenantScene className="h-20 w-full sm:h-28" />}
         tagalog="UMUUPA"
         title="I'm a Tenant"
         subtitle="I rent a place and pay rent."
@@ -117,27 +117,32 @@ function CardButton({
     <button
       type="submit"
       disabled={pending}
-      className={`flex h-full w-full flex-col rounded-3xl border border-white/15 bg-white/10 p-6 text-left backdrop-blur-md transition hover:-translate-y-1 hover:bg-white/15 hover:shadow-2xl active:translate-y-0 active:scale-[0.98] disabled:opacity-70 ${ring}`}
+      className={`flex h-full w-full flex-col rounded-2xl border border-white/15 bg-white/10 p-4 text-left backdrop-blur-md transition hover:-translate-y-1 hover:bg-white/15 hover:shadow-2xl active:translate-y-0 active:scale-[0.98] disabled:opacity-70 sm:rounded-3xl sm:p-6 ${ring}`}
     >
       {/* illustration + Tagalog speech bubble */}
-      <div className="relative mx-auto mb-2 w-full max-w-[220px]">
+      <div className="relative mx-auto mb-2 w-full max-w-[200px]">
         <div className="pointer-events-none absolute -top-1 right-0 z-10">
           <span
-            className={`block rounded-full bg-white px-3 py-1 text-xs font-bold uppercase tracking-wide shadow-lg ${bubbleText} ${fontClass}`}
+            className={`block rounded-full bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide shadow-lg sm:px-3 sm:py-1 sm:text-xs ${bubbleText} ${fontClass}`}
           >
             {tagalog}
           </span>
-          <span className="absolute -bottom-1 left-5 h-3 w-3 rotate-45 rounded-[2px] bg-white shadow-lg" />
+          <span className="absolute -bottom-1 left-4 h-2.5 w-2.5 rotate-45 rounded-[2px] bg-white shadow-lg sm:left-5 sm:h-3 sm:w-3" />
         </div>
         {scene}
       </div>
 
-      <h3 className={`text-2xl font-bold text-white ${fontClass}`}>{title}</h3>
-      <p className="mt-0.5 text-sm text-white/70">{subtitle}</p>
+      <h3 className={`text-lg font-bold text-white sm:text-2xl ${fontClass}`}>
+        {title}
+      </h3>
+      <p className="mt-0.5 text-xs text-white/70 sm:text-sm">{subtitle}</p>
 
-      <ul className="mt-4 space-y-2">
+      <ul className="mt-3 space-y-1.5 sm:mt-4 sm:space-y-2">
         {points.map((p) => (
-          <li key={p} className="flex items-start gap-2 text-sm text-white/85">
+          <li
+            key={p}
+            className="flex items-start gap-1.5 text-[11px] leading-snug text-white/85 sm:gap-2 sm:text-sm"
+          >
             <span className={`mt-0.5 shrink-0 ${dot}`}>✓</span>
             <span>{p}</span>
           </li>
@@ -145,7 +150,7 @@ function CardButton({
       </ul>
 
       <span
-        className={`mt-6 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold shadow-lg ${ctaBg} ${fontClass}`}
+        className={`mt-4 inline-flex items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold shadow-lg sm:mt-6 sm:px-4 sm:py-2.5 sm:text-sm ${ctaBg} ${fontClass}`}
       >
         {pending && (
           <span

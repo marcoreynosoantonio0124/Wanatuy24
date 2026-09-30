@@ -43,25 +43,25 @@ export default async function WelcomePage() {
         </span>
       </header>
 
-      <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center px-5 pb-16">
-        <div className="mb-7 text-center">
-          <p className="text-sm font-medium text-emerald-300">
+      <section className="mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center px-4 pb-8">
+        <div className="mb-4 text-center sm:mb-6">
+          <p className="text-xs font-medium text-emerald-300 sm:text-sm">
             Maligayang pagdating, {firstName}! 🌇
           </p>
-          <h1 className={`mt-2 text-3xl font-bold sm:text-4xl ${display.className}`}>
+          <h1
+            className={`mt-1 text-2xl font-bold sm:mt-2 sm:text-4xl ${display.className}`}
+          >
             How will you use DueMeet?
           </h1>
-          <p className="mt-2 text-white/70">
-            Pick the one that fits you. Ito ang magiging gabay mo — you can always
-            do both later.
+          <p className="mt-1.5 text-sm text-white/70 sm:mt-2">
+            Pick the one that fits you — ito ang gabay mo.
           </p>
         </div>
 
         <RoleChooser fontClass={display.className} />
 
-        <p className="mt-6 text-center text-xs text-white/50">
-          Not sure? Most people start as a <strong>Lessor</strong> if they own a
-          place to rent out, or a <strong>Tenant</strong> if they’re renting one.
+        <p className="mt-4 text-center text-[11px] text-white/50 sm:text-xs">
+          You can always switch or do both later.
         </p>
       </section>
     </main>
