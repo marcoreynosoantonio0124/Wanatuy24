@@ -1,20 +1,32 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { NavLink } from "@/components/nav-link";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const { user, supabase } = await requireUser();
 
-  // Decide which navigation to show based on the user's roles.
-  const [{ count: assetCount }, { count: rentalCount }] = await Promise.all([
-    supabase.from("assets").select("id", { count: "exact", head: true }),
-    supabase
-      .from("agreements")
-      .select("id", { count: "exact", head: true })
-      .eq("renter_user_id", user.id),
-  ]);
-  const isRenter = (rentalCount ?? 0) > 0;
-  const isLessor = (assetCount ?? 0) > 0 || !isRenter; // default to lessor view
+  // Decide which navigation to show based on the user's role + data.
+  const [{ count: assetCount }, { count: rentalCount }, profileRes] =
+    await Promise.all([
+      supabase.from("assets").select("id", { count: "exact", head: true }),
+      supabase
+        .from("agreements")
+        .select("id", { count: "exact", head: true })
+        .eq("renter_user_id", user.id),
+      supabase.from("users").select("role").eq("id", user.id).single(),
+    ]);
+
+  // First-time users (role not yet chosen) go to the welcome screen. We only
+  // gate when the column is actually readable, so the app still works if the
+  // migration hasn't been run yet (profileRes.error covers that case).
+  const role = (profileRes.data as { role?: string | null } | null)?.role ?? null;
+  if (!profileRes.error && !role) {
+    redirect("/welcome");
+  }
+
+  const isRenter = role === "tenant" || (rentalCount ?? 0) > 0;
+  const isLessor = role === "lessor" || (assetCount ?? 0) > 0 || !isRenter;
 
   return (
     <div className="flex min-h-full flex-1 flex-col bg-gradient-to-b from-emerald-50/70 via-slate-50 to-slate-50">

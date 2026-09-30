@@ -10,6 +10,7 @@ export type PeriodStatus =
 export type PaymentMethod = "gcash" | "maya" | "bank_transfer" | "cash" | "other";
 export type ProofSubmitter = "renter" | "lessor";
 export type ProofStatus = "pending" | "accepted" | "rejected";
+export type UserRole = "lessor" | "tenant";
 
 export interface UserRow {
   id: string;
@@ -17,6 +18,7 @@ export interface UserRow {
   full_name: string | null;
   phone: string | null;
   avatar_url: string | null;
+  role: UserRole | null;
   created_at: string;
 }
 
