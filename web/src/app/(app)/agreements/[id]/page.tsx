@@ -175,7 +175,7 @@ export default async function AgreementDetailPage({
                           href={receiptUrls.get(proof.id)}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="mt-1 inline-block text-sm font-medium text-blue-700 underline"
+                          className="mt-1 inline-block text-sm font-medium text-blue-700 underline transition hover:text-blue-900 active:scale-95"
                         >
                           View receipt ↗
                         </a>

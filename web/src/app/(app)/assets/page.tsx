@@ -46,7 +46,7 @@ export default async function AssetsPage() {
             {assets.map((a) => (
               <li
                 key={a.id}
-                className="rounded-xl border border-slate-200 bg-white p-4"
+                className="rounded-xl border border-slate-200 bg-white p-4 transition hover:border-emerald-200 hover:shadow-md"
               >
                 <div className="flex items-start gap-3">
                   <span className="text-2xl">
@@ -67,7 +67,7 @@ export default async function AssetsPage() {
 
                 {a.address_text && (
                   <details className="mt-3">
-                    <summary className="cursor-pointer text-sm font-medium text-emerald-700">
+                    <summary className="inline-block cursor-pointer rounded-md px-1 py-0.5 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50 hover:text-emerald-800 active:scale-95">
                       📍 See on map
                     </summary>
                     <div className="mt-2 overflow-hidden rounded-lg border border-slate-200">
@@ -87,7 +87,7 @@ export default async function AssetsPage() {
                       )}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="mt-2 inline-block text-xs font-medium text-emerald-700 underline"
+                      className="mt-2 inline-block text-xs font-medium text-emerald-700 underline transition hover:text-emerald-900 active:scale-95"
                     >
                       Open in Google Maps ↗
                     </a>

@@ -68,8 +68,14 @@ export function AssetForm() {
       <button
         type="submit"
         disabled={pending}
-        className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white hover:bg-emerald-700 disabled:opacity-60"
+        className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 active:scale-95 disabled:opacity-60"
       >
+        {pending && (
+          <span
+            aria-hidden
+            className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+          />
+        )}
         {pending ? "Adding…" : "Add unit"}
       </button>
     </form>

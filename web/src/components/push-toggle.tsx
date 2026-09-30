@@ -74,8 +74,14 @@ export function PushToggle() {
       type="button"
       onClick={enable}
       disabled={state === "working"}
-      className="rounded-lg border border-emerald-300 px-3 py-1.5 text-sm font-medium text-emerald-700 hover:bg-emerald-50 disabled:opacity-60"
+      className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 px-3 py-1.5 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50 active:scale-95 disabled:opacity-60"
     >
+      {state === "working" && (
+        <span
+          aria-hidden
+          className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-current border-t-transparent"
+        />
+      )}
       {state === "working" ? "Enabling…" : "🔔 Turn on push reminders"}
     </button>
   );

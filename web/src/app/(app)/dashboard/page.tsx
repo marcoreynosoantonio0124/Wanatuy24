@@ -67,7 +67,7 @@ export default async function DashboardPage() {
           <div>
             <Link
               href="/agreements/new"
-              className="inline-block rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/20 hover:bg-emerald-400"
+              className="inline-block rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400 hover:shadow-emerald-500/40 active:scale-95"
             >
               + New agreement
             </Link>
@@ -116,7 +116,7 @@ export default async function DashboardPage() {
               <li key={p.id}>
                 <Link
                   href={`/agreements/${p.agreement?.id}`}
-                  className="flex items-center justify-between gap-4 px-5 py-4 transition hover:bg-slate-50"
+                  className="flex items-center justify-between gap-4 px-5 py-4 transition hover:bg-emerald-50/60 active:bg-emerald-100/70"
                 >
                   <div className="min-w-0">
                     <p className="truncate font-medium text-slate-900">
