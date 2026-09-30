@@ -1,7 +1,11 @@
 import { redirect } from "next/navigation";
+import { Fredoka } from "next/font/google";
 import { requireUser } from "@/lib/auth";
 import { DuskScene } from "@/components/dusk-scene";
 import { RoleChooser } from "@/components/role-chooser";
+
+// Fun, rounded, easy-to-read display font for the welcome screen.
+const display = Fredoka({ subsets: ["latin"], weight: ["500", "600", "700"] });
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +48,7 @@ export default async function WelcomePage() {
           <p className="text-sm font-medium text-emerald-300">
             Maligayang pagdating, {firstName}! 🌇
           </p>
-          <h1 className="mt-2 text-3xl font-bold sm:text-4xl">
+          <h1 className={`mt-2 text-3xl font-bold sm:text-4xl ${display.className}`}>
             How will you use DueMeet?
           </h1>
           <p className="mt-2 text-white/70">
@@ -53,7 +57,7 @@ export default async function WelcomePage() {
           </p>
         </div>
 
-        <RoleChooser />
+        <RoleChooser fontClass={display.className} />
 
         <p className="mt-6 text-center text-xs text-white/50">
           Not sure? Most people start as a <strong>Lessor</strong> if they own a
