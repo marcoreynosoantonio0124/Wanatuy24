@@ -35,7 +35,7 @@ export default async function LandingPage() {
         </span>
         <Link
           href={user ? "/dashboard" : "/login"}
-          className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-emerald-400"
+          className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 active:scale-95"
         >
           {user ? "Dashboard" : "Sign in"}
         </Link>
@@ -70,7 +70,7 @@ export default async function LandingPage() {
         <div className="mt-9 flex flex-wrap gap-3">
           <Link
             href={user ? "/dashboard" : "/login"}
-            className="rounded-xl bg-emerald-500 px-6 py-3.5 font-semibold text-slate-950 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400"
+            className="rounded-xl bg-emerald-500 px-6 py-3.5 font-semibold text-slate-950 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400 hover:shadow-emerald-500/40 active:scale-95"
           >
             {user ? "Go to dashboard" : "Get started — libre"} →
           </Link>

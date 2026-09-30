@@ -16,7 +16,11 @@ export function CopyButton({ value, label = "Copy link" }: { value: string; labe
           /* clipboard blocked; user can select manually */
         }
       }}
-      className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-100"
+      className={`rounded-md border px-3 py-1.5 text-sm transition active:scale-95 ${
+        copied
+          ? "border-emerald-300 bg-emerald-50 text-emerald-700"
+          : "border-slate-300 text-slate-700 hover:bg-slate-100 active:bg-slate-200"
+      }`}
     >
       {copied ? "Copied ✓" : label}
     </button>
