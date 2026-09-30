@@ -104,13 +104,15 @@ export function AgreementForm({ assets }: { assets: AssetOption[] }) {
           ✨ Auto-fill from contract (optional)
         </legend>
         <p className="text-xs text-emerald-900/70">
-          Upload the signed contract (PDF or photo) and AI will read it and fill
-          the details below. Always review before saving.
+          Upload the signed contract (PDF or photo). Tap ✨ Auto-fill to have AI
+          read it and fill the details below (always review), and it&apos;s saved
+          to your vault when you make the agreement.
         </p>
         <div className="flex flex-wrap items-center gap-2">
           <input
             ref={fileRef}
             type="file"
+            name="contract"
             accept="application/pdf,image/png,image/jpeg,image/webp"
             className="text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-600 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-emerald-700"
           />
@@ -351,7 +353,7 @@ export function AgreementForm({ assets }: { assets: AssetOption[] }) {
             className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
           />
         )}
-        {pending ? "Creating…" : "Create agreement"}
+        {pending ? "Saving…" : "Make an agreement"}
       </button>
     </form>
   );

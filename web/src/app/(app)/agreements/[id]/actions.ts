@@ -245,10 +245,11 @@ function manilaTodayIso(): string {
 type Admin = ReturnType<typeof createAdminClient>;
 
 /**
- * Re-applies all recorded payments oldest-month-first and syncs each period's
- * lifecycle status: a fully-covered month becomes "paid"; a month that a
- * deletion just uncovered reverts to due/overdue/upcoming. Partially-paid and
- * waived months keep their existing status (the ledger shows the partial split).
+ * Recomputes each period's status from the payments recorded **against that
+ * month** (period_id). A fully-covered month becomes "paid"; a month a deletion
+ * just uncovered reverts to due/overdue/upcoming. Partial and waived months keep
+ * their status (the ledger shows the split). Legacy payments with no period_id
+ * are applied oldest-first as a fallback.
  */
 async function resyncAgreement(admin: Admin, agreementId: string): Promise<void> {
   const [{ data: ag }, { data: periodsData }, { data: paymentsData }] =
@@ -259,7 +260,10 @@ async function resyncAgreement(admin: Admin, agreementId: string): Promise<void>
         .select("id, due_date, amount_php, status")
         .eq("agreement_id", agreementId)
         .order("due_date", { ascending: true }),
-      admin.from("payments").select("amount_php").eq("agreement_id", agreementId),
+      admin
+        .from("payments")
+        .select("period_id, amount_php")
+        .eq("agreement_id", agreementId),
     ]);
 
   const grace = (ag as { grace_days?: number } | null)?.grace_days ?? 0;
@@ -269,16 +273,25 @@ async function resyncAgreement(admin: Admin, agreementId: string): Promise<void>
     amount_php: number;
     status: string;
   }[];
-  let pool = (paymentsData ?? []).reduce(
-    (s, p) => s + ((p as { amount_php: number }).amount_php || 0),
-    0,
-  );
+
+  const assigned = new Map<string, number>();
+  let pool = 0;
+  for (const raw of paymentsData ?? []) {
+    const p = raw as { period_id: string | null; amount_php: number };
+    const amt = p.amount_php || 0;
+    if (p.period_id) assigned.set(p.period_id, (assigned.get(p.period_id) ?? 0) + amt);
+    else pool += amt;
+  }
   const today = manilaTodayIso();
 
   for (const p of periods) {
     if (p.status === "waived") continue;
-    const applied = Math.min(pool, p.amount_php);
-    pool -= applied;
+    let applied = assigned.get(p.id) ?? 0;
+    if (pool > 0 && applied < p.amount_php) {
+      const add = Math.min(pool, p.amount_php - applied);
+      applied += add;
+      pool -= add;
+    }
     const fullyPaid = applied >= p.amount_php;
 
     if (fullyPaid && p.status !== "paid") {
@@ -303,10 +316,11 @@ async function resyncAgreement(admin: Admin, agreementId: string): Promise<void>
   }
 }
 
-/** Records a payment the lessor received; it settles the oldest month first. */
+/** Records a payment against a specific month (period_id) — no spillover. */
 export async function recordPayment(formData: FormData): Promise<void> {
   const { user, supabase } = await requireUser();
   const agreementId = String(formData.get("agreement_id"));
+  const periodId = String(formData.get("period_id") ?? "");
   const amountRaw = String(formData.get("amount") ?? "");
 
   const { data: ag } = await supabase
@@ -315,6 +329,7 @@ export async function recordPayment(formData: FormData): Promise<void> {
     .eq("id", agreementId)
     .single();
   if (!ag || (ag as { lessor_id: string }).lessor_id !== user.id) return;
+  if (!periodId) return;
 
   const centavos = pesosToCentavos(amountRaw);
   if (!Number.isFinite(centavos) || centavos <= 0) return;
@@ -322,6 +337,7 @@ export async function recordPayment(formData: FormData): Promise<void> {
   const admin = createAdminClient();
   await admin.from("payments").insert({
     agreement_id: agreementId,
+    period_id: periodId,
     amount_php: centavos,
     recorded_by: user.id,
   });

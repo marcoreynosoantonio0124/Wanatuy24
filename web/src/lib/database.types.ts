@@ -101,6 +101,7 @@ export interface PaymentProofRow {
 export interface PaymentRow {
   id: string;
   agreement_id: string;
+  period_id: string | null;
   amount_php: number;
   received_on: string;
   note: string | null;

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { EditAgreementForm } from "@/components/edit-agreement-form";
+import { ContractBox } from "@/components/contract-box";
 import type { AgreementRow } from "@/lib/database.types";
 
 export const dynamic = "force-dynamic";
@@ -38,6 +39,19 @@ export default async function EditAgreementPage({
         </p>
       </div>
       <EditAgreementForm agreement={agreement} />
+
+      <section className="space-y-2">
+        <h2 className="text-sm font-semibold text-slate-700">Signed contract</h2>
+        <p className="text-xs text-slate-500">
+          {agreement.contract_file_path
+            ? "A contract is on file. Upload a new one to replace it."
+            : "No contract attached yet — add the signed copy here."}
+        </p>
+        <ContractBox
+          agreementId={agreement.id}
+          hasContract={Boolean(agreement.contract_file_path)}
+        />
+      </section>
     </div>
   );
 }
