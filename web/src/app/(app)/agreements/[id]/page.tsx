@@ -119,9 +119,17 @@ export default async function AgreementDetailPage({
                 : " · open-ended"}
             </p>
           </div>
-          <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-600">
-            {agreement.status}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium uppercase tracking-wide text-slate-600">
+              {agreement.status}
+            </span>
+            <a
+              href={`/agreements/${id}/edit`}
+              className="rounded-md border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-600 transition hover:bg-slate-50 active:scale-95"
+            >
+              ✏️ Edit
+            </a>
+          </div>
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-4">
