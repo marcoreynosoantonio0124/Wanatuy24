@@ -4,6 +4,16 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createAdminClient } from "@/lib/supabase/server";
 import { pesosToCentavos, ALL_PAYMENT_METHODS } from "@/lib/format";
+import { sendEmail } from "@/lib/email";
+import { sendSms } from "@/lib/sms";
+import { sendPush } from "@/lib/webpush";
+
+function esc(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
 
 const schema = z.object({
   token: z.string().min(10),
@@ -41,12 +51,19 @@ export async function submitProof(
   const admin = createAdminClient();
 
   // Authorize: the period must belong to the agreement holding this token.
-  const { data: agreement } = await admin
+  const { data: agreementData } = await admin
     .from("agreements")
-    .select("id")
+    .select("id, lessor_id, lessor_phone, renter_name, asset:assets(label)")
     .eq("renter_access_token", v.token)
     .single();
-  if (!agreement) return { error: "This link is no longer valid." };
+  if (!agreementData) return { error: "This link is no longer valid." };
+  const agreement = agreementData as unknown as {
+    id: string;
+    lessor_id: string;
+    lessor_phone: string | null;
+    renter_name: string;
+    asset: { label: string } | null;
+  };
 
   const { data: period } = await admin
     .from("periods")
@@ -94,6 +111,56 @@ export async function submitProof(
     .update({ status: "proof_submitted" })
     .eq("id", v.period_id)
     .in("status", ["upcoming", "due", "overdue"]);
+
+  // Best-effort: alert the lessor that a proof arrived (email + SMS + push).
+  try {
+    const who = agreement.renter_name || "Your tenant";
+    const unit = agreement.asset?.label ?? "your unit";
+    const base = process.env.APP_BASE_URL || "";
+    const link = base ? `${base}/agreements/${agreement.id}` : "";
+
+    const { data: lessor } = await admin
+      .from("users")
+      .select("email")
+      .eq("id", agreement.lessor_id)
+      .single();
+    const lessorEmail = (lessor as { email?: string } | null)?.email;
+    if (lessorEmail) {
+      await sendEmail(
+        lessorEmail,
+        "📩 New proof of payment",
+        `<div style="font-family:ui-sans-serif,system-ui,Arial,sans-serif;max-width:480px;margin:0 auto;color:#0f172a">
+          <p style="color:#059669;font-weight:700;margin:0 0 8px">DueMeet</p>
+          <p><strong>${esc(who)}</strong> just sent proof of payment for <strong>${esc(unit)}</strong>.</p>
+          <p style="color:#475569">Open DueMeet to view it and record the amount you received.</p>
+          ${link ? `<p style="margin:20px 0"><a href="${link}" style="background:#059669;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none">Review it</a></p>` : ""}
+        </div>`,
+      );
+    }
+    if (agreement.lessor_phone) {
+      await sendSms(
+        agreement.lessor_phone,
+        `DueMeet: ${who} sent proof of payment. Pakicheck po sa app.`,
+      );
+    }
+    const { data: subs } = await admin
+      .from("push_subscriptions")
+      .select("endpoint, p256dh, auth")
+      .eq("user_id", agreement.lessor_id);
+    for (const s of (subs ?? []) as {
+      endpoint: string;
+      p256dh: string;
+      auth: string;
+    }[]) {
+      await sendPush(s, {
+        title: "New proof of payment",
+        body: `${who} sent proof for ${unit}.`,
+        url: `/agreements/${agreement.id}`,
+      });
+    }
+  } catch {
+    // Alerts are best-effort; never fail the tenant's submission over them.
+  }
 
   revalidatePath(`/r/${v.token}`);
   return { ok: true };

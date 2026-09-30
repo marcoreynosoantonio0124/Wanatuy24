@@ -76,6 +76,22 @@ export function AgreementForm({ assets }: { assets: AssetOption[] }) {
             className={input}
           />
         </div>
+        <div>
+          <label htmlFor="lessor_phone" className={label}>
+            Your mobile number{" "}
+            <span className="text-slate-400">(for payment alerts)</span>
+          </label>
+          <input
+            id="lessor_phone"
+            name="lessor_phone"
+            placeholder="+639171234567"
+            className={input}
+          />
+          <p className="mt-1 text-xs text-slate-400">
+            We&apos;ll text &amp; email you here when this tenant sends proof of
+            payment.
+          </p>
+        </div>
       </fieldset>
 
       <fieldset className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">

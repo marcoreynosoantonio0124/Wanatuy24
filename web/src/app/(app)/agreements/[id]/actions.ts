@@ -234,3 +234,142 @@ export async function addCharge(formData: FormData): Promise<void> {
   });
   revalidate(v.agreement_id);
 }
+
+// ---- Payments ledger -------------------------------------------------------
+
+function manilaTodayIso(): string {
+  const manila = new Date(Date.now() + 8 * 60 * 60 * 1000);
+  return manila.toISOString().slice(0, 10);
+}
+
+type Admin = ReturnType<typeof createAdminClient>;
+
+/**
+ * Re-applies all recorded payments oldest-month-first and syncs each period's
+ * lifecycle status: a fully-covered month becomes "paid"; a month that a
+ * deletion just uncovered reverts to due/overdue/upcoming. Partially-paid and
+ * waived months keep their existing status (the ledger shows the partial split).
+ */
+async function resyncAgreement(admin: Admin, agreementId: string): Promise<void> {
+  const [{ data: ag }, { data: periodsData }, { data: paymentsData }] =
+    await Promise.all([
+      admin.from("agreements").select("grace_days").eq("id", agreementId).single(),
+      admin
+        .from("periods")
+        .select("id, due_date, amount_php, status")
+        .eq("agreement_id", agreementId)
+        .order("due_date", { ascending: true }),
+      admin.from("payments").select("amount_php").eq("agreement_id", agreementId),
+    ]);
+
+  const grace = (ag as { grace_days?: number } | null)?.grace_days ?? 0;
+  const periods = (periodsData ?? []) as {
+    id: string;
+    due_date: string;
+    amount_php: number;
+    status: string;
+  }[];
+  let pool = (paymentsData ?? []).reduce(
+    (s, p) => s + ((p as { amount_php: number }).amount_php || 0),
+    0,
+  );
+  const today = manilaTodayIso();
+
+  for (const p of periods) {
+    if (p.status === "waived") continue;
+    const applied = Math.min(pool, p.amount_php);
+    pool -= applied;
+    const fullyPaid = applied >= p.amount_php;
+
+    if (fullyPaid && p.status !== "paid") {
+      await admin
+        .from("periods")
+        .update({ status: "paid", paid_at: new Date().toISOString() })
+        .eq("id", p.id);
+    } else if (!fullyPaid && p.status === "paid") {
+      const graceDate = new Date(
+        new Date(`${p.due_date}T00:00:00+08:00`).getTime() +
+          grace * 24 * 60 * 60 * 1000,
+      )
+        .toISOString()
+        .slice(0, 10);
+      const reverted =
+        graceDate < today ? "overdue" : p.due_date <= today ? "due" : "upcoming";
+      await admin
+        .from("periods")
+        .update({ status: reverted, paid_at: null })
+        .eq("id", p.id);
+    }
+  }
+}
+
+/** Records a payment the lessor received; it settles the oldest month first. */
+export async function recordPayment(formData: FormData): Promise<void> {
+  const { user, supabase } = await requireUser();
+  const agreementId = String(formData.get("agreement_id"));
+  const amountRaw = String(formData.get("amount") ?? "");
+
+  const { data: ag } = await supabase
+    .from("agreements")
+    .select("id, lessor_id")
+    .eq("id", agreementId)
+    .single();
+  if (!ag || (ag as { lessor_id: string }).lessor_id !== user.id) return;
+
+  const centavos = pesosToCentavos(amountRaw);
+  if (!Number.isFinite(centavos) || centavos <= 0) return;
+
+  const admin = createAdminClient();
+  await admin.from("payments").insert({
+    agreement_id: agreementId,
+    amount_php: centavos,
+    recorded_by: user.id,
+  });
+  await resyncAgreement(admin, agreementId);
+  revalidate(agreementId);
+}
+
+/** Removes a mistaken payment entry and recomputes the ledger. */
+export async function deletePayment(formData: FormData): Promise<void> {
+  const { user, supabase } = await requireUser();
+  const paymentId = String(formData.get("payment_id"));
+  const agreementId = String(formData.get("agreement_id"));
+
+  const { data: ag } = await supabase
+    .from("agreements")
+    .select("lessor_id")
+    .eq("id", agreementId)
+    .single();
+  if (!ag || (ag as { lessor_id: string }).lessor_id !== user.id) return;
+
+  const admin = createAdminClient();
+  await admin
+    .from("payments")
+    .delete()
+    .eq("id", paymentId)
+    .eq("agreement_id", agreementId);
+  await resyncAgreement(admin, agreementId);
+  revalidate(agreementId);
+}
+
+/** Marks a tenant's proof as seen so its badge stops blinking. */
+export async function markProofSeen(formData: FormData): Promise<void> {
+  const { user, supabase } = await requireUser();
+  const proofId = String(formData.get("proof_id"));
+  const agreementId = String(formData.get("agreement_id"));
+
+  const { data: ag } = await supabase
+    .from("agreements")
+    .select("lessor_id")
+    .eq("id", agreementId)
+    .single();
+  if (!ag || (ag as { lessor_id: string }).lessor_id !== user.id) return;
+
+  const admin = createAdminClient();
+  await admin
+    .from("payment_proofs")
+    .update({ seen_at: new Date().toISOString() })
+    .eq("id", proofId)
+    .is("seen_at", null);
+  revalidate(agreementId);
+}
