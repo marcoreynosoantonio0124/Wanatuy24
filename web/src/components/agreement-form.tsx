@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useState, useRef, useEffect } from "react";
 import {
   createAgreement,
   type AgreementFormState,
@@ -27,8 +27,111 @@ export function AgreementForm({ assets }: { assets: AssetOption[] }) {
   const [frequency, setFrequency] = useState<AgreementFrequency>("monthly");
   const isWeekly = frequency === "weekly" || frequency === "biweekly";
 
+  const formRef = useRef<HTMLFormElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [prefill, setPrefill] = useState<Record<string, unknown> | null>(null);
+  const [ai, setAi] = useState<{ loading?: boolean; msg?: string; error?: string }>(
+    {},
+  );
+
+  // Apply extracted values once (after any frequency change has re-rendered).
+  useEffect(() => {
+    if (!prefill || !formRef.current) return;
+    const f = formRef.current;
+    const setVal = (name: string, val: unknown) => {
+      if (val === null || val === undefined || val === "") return;
+      const el = f.elements.namedItem(name) as
+        | HTMLInputElement
+        | HTMLTextAreaElement
+        | HTMLSelectElement
+        | null;
+      if (el) el.value = String(val);
+    };
+    setVal("renter_name", prefill.renter_name);
+    setVal("renter_phone", prefill.renter_phone);
+    setVal("renter_email", prefill.renter_email);
+    setVal("amount", prefill.amount_php);
+    setVal("start_date", prefill.start_date);
+    setVal("payment_instructions", prefill.payment_instructions);
+    setVal("due_day", prefill.due_day);
+    setPrefill(null);
+  }, [prefill, frequency]);
+
+  async function autoFill() {
+    const file = fileRef.current?.files?.[0];
+    if (!file) {
+      setAi({ error: "Choose a contract file first." });
+      return;
+    }
+    setAi({ loading: true });
+    try {
+      const fd = new FormData();
+      fd.set("file", file);
+      const res = await fetch("/api/contract/extract", {
+        method: "POST",
+        body: fd,
+      });
+      const json = await res.json();
+      if (json.configured === false) {
+        setAi({ error: "Auto-read isn't set up yet — fill the form manually." });
+        return;
+      }
+      if (json.error || !json.fields) {
+        setAi({ error: json.error ?? "Couldn't read that file." });
+        return;
+      }
+      const fields = json.fields as Record<string, unknown>;
+      const freq = fields.frequency;
+      if (
+        freq === "monthly" ||
+        freq === "weekly" ||
+        freq === "biweekly" ||
+        freq === "quarterly"
+      ) {
+        setFrequency(freq);
+      }
+      setPrefill(fields);
+      setAi({ msg: "Filled from your contract — please review everything below." });
+    } catch {
+      setAi({ error: "Something went wrong reading the file." });
+    }
+  }
+
   return (
-    <form action={action} className="space-y-5">
+    <form ref={formRef} action={action} className="space-y-5">
+      <fieldset className="space-y-3 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
+        <legend className="px-1 text-sm font-semibold text-emerald-800">
+          ✨ Auto-fill from contract (optional)
+        </legend>
+        <p className="text-xs text-emerald-900/70">
+          Upload the signed contract (PDF or photo) and AI will read it and fill
+          the details below. Always review before saving.
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/pdf,image/png,image/jpeg,image/webp"
+            className="text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-emerald-600 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-emerald-700"
+          />
+          <button
+            type="button"
+            onClick={autoFill}
+            disabled={ai.loading}
+            className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-medium text-white transition hover:bg-emerald-700 active:scale-95 disabled:opacity-60"
+          >
+            {ai.loading && (
+              <span
+                aria-hidden
+                className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
+              />
+            )}
+            {ai.loading ? "Reading…" : "✨ Auto-fill"}
+          </button>
+        </div>
+        {ai.error && <p className="text-sm text-red-600">{ai.error}</p>}
+        {ai.msg && <p className="text-sm text-emerald-700">{ai.msg}</p>}
+      </fieldset>
       <fieldset className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
         <legend className="px-1 text-sm font-semibold text-slate-700">
           Unit & renter
