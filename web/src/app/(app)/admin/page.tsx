@@ -20,9 +20,26 @@ export default async function AdminPage() {
 
   // Platform-wide numbers (service role bypasses RLS).
   const admin = createAdminClient();
-  // Current time is inherently dynamic; this server component is force-dynamic.
-  // eslint-disable-next-line react-hooks/purity
-  const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  // Estimated Semaphore cost per (1-segment) SMS, in centavos. Override with
+  // SEMAPHORE_PESO_PER_SMS if your credit price differs.
+  const SMS_COST_CENTAVOS = Math.round(
+    Number(process.env.SEMAPHORE_PESO_PER_SMS ?? "0.50") * 100,
+  );
+
+  // Time windows. Current time is inherently dynamic; this page is force-dynamic.
+  const now = new Date();
+  const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  // Manila is UTC+8 (no DST) — compute the start of today and this month there.
+  const manila = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+  const startTodayIso = new Date(
+    Date.UTC(manila.getUTCFullYear(), manila.getUTCMonth(), manila.getUTCDate()) -
+      8 * 60 * 60 * 1000,
+  ).toISOString();
+  const startMonthIso = new Date(
+    Date.UTC(manila.getUTCFullYear(), manila.getUTCMonth(), 1) -
+      8 * 60 * 60 * 1000,
+  ).toISOString();
 
   const [
     usersTotal,
@@ -35,6 +52,8 @@ export default async function AdminPage() {
     recentRes,
     paidRes,
     dueRes,
+    smsToday,
+    smsMonth,
   ] = await Promise.all([
     admin.from("users").select("id", { count: "exact", head: true }),
     admin
@@ -69,6 +88,18 @@ export default async function AdminPage() {
       .select("amount_php, status")
       .in("status", ["due", "overdue"])
       .limit(10000),
+    admin
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("channel", "sms")
+      .eq("status", "sent")
+      .gte("sent_at", startTodayIso),
+    admin
+      .from("notifications")
+      .select("id", { count: "exact", head: true })
+      .eq("channel", "sms")
+      .eq("status", "sent")
+      .gte("sent_at", startMonthIso),
   ]);
 
   const paid = (paidRes.data ?? []) as { amount_php: number }[];
@@ -81,6 +112,12 @@ export default async function AdminPage() {
     role: string | null;
     created_at: string;
   }[];
+
+  const smsTodayCount = smsToday.count ?? 0;
+  const smsMonthCount = smsMonth.count ?? 0;
+  const smsCostText = (SMS_COST_CENTAVOS / 100).toLocaleString("en-PH", {
+    minimumFractionDigits: 2,
+  });
 
   return (
     <div className="space-y-8">
@@ -136,6 +173,33 @@ export default async function AdminPage() {
             tone={outstanding ? "amber" : "slate"}
           />
         </div>
+      </section>
+
+      {/* SMS cost */}
+      <section>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+          Automatic SMS reminders
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-4">
+          <Stat icon="📩" label="Texts sent today" value={smsTodayCount} />
+          <Stat
+            icon="💸"
+            label="Est. cost today"
+            value={formatPeso(smsTodayCount * SMS_COST_CENTAVOS)}
+            tone="amber"
+          />
+          <Stat icon="📅" label="Texts this month" value={smsMonthCount} />
+          <Stat
+            icon="🧮"
+            label="Est. cost this month"
+            value={formatPeso(smsMonthCount * SMS_COST_CENTAVOS)}
+            tone="amber"
+          />
+        </div>
+        <p className="mt-2 text-xs text-slate-400">
+          Estimated at ₱{smsCostText} per text (Semaphore, 1 credit). Counts only
+          the automatic daily reminders that were sent successfully.
+        </p>
       </section>
 
       {/* Needs attention */}
