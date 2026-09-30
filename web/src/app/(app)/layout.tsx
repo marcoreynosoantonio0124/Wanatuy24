@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
+import { NavLink } from "@/components/nav-link";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const { user, supabase } = await requireUser();
@@ -22,7 +23,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
           <nav className="flex items-center gap-1 sm:gap-4">
             <Link
               href={isLessor ? "/dashboard" : "/my-rentals"}
-              className="mr-2 font-bold text-emerald-700"
+              className="mr-2 rounded-md px-1 py-0.5 font-bold text-emerald-700 transition hover:text-emerald-800 active:scale-95"
             >
               Due<span className="text-slate-400">Meet</span>
             </Link>
@@ -42,7 +43,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             <form action="/auth/signout" method="post">
               <button
                 type="submit"
-                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 hover:bg-slate-100"
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 transition hover:bg-slate-100 active:scale-95"
               >
                 Sign out
               </button>
@@ -52,16 +53,5 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
       </header>
       <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</div>
     </div>
-  );
-}
-
-function NavLink({ href, children }: { href: string; children: React.ReactNode }) {
-  return (
-    <Link
-      href={href}
-      className="rounded-md px-2 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-    >
-      {children}
-    </Link>
   );
 }
