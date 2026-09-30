@@ -73,7 +73,22 @@ export async function sendReminderNow(
       agreement.renter_phone,
       reminderSms({ firstName, amountPhp: period.amount_php, dueText }),
     );
-    if (r === "sent") channels.push("SMS");
+    if (r === "sent") {
+      channels.push("SMS");
+      // Log it so the Command Center counts manual sends toward SMS cost.
+      const nowIso = new Date().toISOString();
+      await admin.from("notifications").insert({
+        agreement_id: agreementId,
+        period_id: periodId,
+        recipient: "renter",
+        channel: "sms",
+        template_key: "manual_reminder",
+        scheduled_for: nowIso,
+        status: "sent",
+        sent_at: nowIso,
+        dedupe_key: `manual:${periodId}:sms:${Date.now()}`,
+      });
+    }
   }
 
   // Push (to the renter's device subscriptions for this agreement)

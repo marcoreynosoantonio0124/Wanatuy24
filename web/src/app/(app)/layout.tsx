@@ -14,13 +14,17 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         .from("agreements")
         .select("id", { count: "exact", head: true })
         .eq("renter_user_id", user.id),
-      supabase.from("users").select("role").eq("id", user.id).single(),
+      supabase.from("users").select("role, is_admin").eq("id", user.id).single(),
     ]);
 
   // First-time users (role not yet chosen) go to the welcome screen. We only
   // gate when the column is actually readable, so the app still works if the
   // migration hasn't been run yet (profileRes.error covers that case).
-  const role = (profileRes.data as { role?: string | null } | null)?.role ?? null;
+  const profile = profileRes.data as
+    | { role?: string | null; is_admin?: boolean | null }
+    | null;
+  const role = profile?.role ?? null;
+  const isAdmin = profile?.is_admin === true;
   if (!profileRes.error && !role) {
     redirect("/welcome");
   }
@@ -47,6 +51,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
               </>
             )}
             {isRenter && <NavLink href="/my-rentals">My rentals</NavLink>}
+            {isAdmin && <NavLink href="/admin">🎛️ Command Center</NavLink>}
           </nav>
           <div className="flex items-center gap-3">
             <span className="hidden text-sm text-slate-500 sm:inline">
