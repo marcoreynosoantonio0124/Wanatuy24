@@ -108,6 +108,8 @@ function CardButton({
       : "hover:border-amber-400/70 hover:shadow-amber-500/20";
   const dot = accent === "emerald" ? "text-emerald-300" : "text-amber-300";
   const bubbleText = accent === "emerald" ? "text-emerald-700" : "text-amber-700";
+  const bubbleBorder =
+    accent === "emerald" ? "border-emerald-300" : "border-amber-300";
   const ctaBg =
     accent === "emerald"
       ? "bg-emerald-500 text-slate-950"
@@ -119,15 +121,17 @@ function CardButton({
       disabled={pending}
       className={`flex h-full w-full flex-col rounded-2xl border border-white/15 bg-white/10 p-4 text-left backdrop-blur-md transition hover:-translate-y-1 hover:bg-white/15 hover:shadow-2xl active:translate-y-0 active:scale-[0.98] disabled:opacity-70 sm:rounded-3xl sm:p-6 ${ring}`}
     >
-      {/* illustration + Tagalog speech bubble */}
+      {/* illustration + Tagalog signboard */}
       <div className="relative mx-auto mb-2 w-full max-w-[200px]">
-        <div className="pointer-events-none absolute -top-1 right-0 z-10">
+        <div className="pointer-events-none absolute -top-2 right-0 z-10">
           <span
-            className={`block rounded-full bg-white px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide shadow-lg sm:px-3 sm:py-1 sm:text-xs ${bubbleText} ${fontClass}`}
+            className={`block rounded-xl border-2 bg-white px-3.5 py-1.5 text-base font-bold uppercase tracking-wide shadow-xl sm:px-5 sm:py-2 sm:text-xl ${bubbleBorder} ${bubbleText} ${fontClass}`}
           >
             {tagalog}
           </span>
-          <span className="absolute -bottom-1 left-4 h-2.5 w-2.5 rotate-45 rounded-[2px] bg-white shadow-lg sm:left-5 sm:h-3 sm:w-3" />
+          <span
+            className={`absolute -bottom-1.5 left-6 h-3.5 w-3.5 rotate-45 rounded-[3px] border-b-2 border-r-2 bg-white shadow-md sm:left-8 sm:h-4 sm:w-4 ${bubbleBorder}`}
+          />
         </div>
         {scene}
       </div>
