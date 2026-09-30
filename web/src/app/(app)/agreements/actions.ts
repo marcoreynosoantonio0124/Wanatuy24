@@ -4,8 +4,18 @@ import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireUser } from "@/lib/auth";
+import { createAdminClient } from "@/lib/supabase/server";
 import { pesosToCentavos } from "@/lib/format";
 import { ALL_PAYMENT_METHODS } from "@/lib/format";
+
+const CONTRACT_BUCKET = "contracts";
+const CONTRACT_MAX_BYTES = 20 * 1024 * 1024;
+const CONTRACT_TYPES = [
+  "application/pdf",
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+];
 
 const schema = z
   .object({
@@ -107,6 +117,29 @@ export async function createAgreement(
   });
   if (rpcError) {
     return { error: `Agreement saved, but scheduling failed: ${rpcError.message}` };
+  }
+
+  // If a signed contract was uploaded, keep it in the vault too.
+  const file = formData.get("contract");
+  if (
+    file instanceof File &&
+    file.size > 0 &&
+    file.size <= CONTRACT_MAX_BYTES &&
+    CONTRACT_TYPES.includes(file.type)
+  ) {
+    const admin = createAdminClient();
+    const ext = file.name.includes(".") ? file.name.split(".").pop() : "bin";
+    const path = `${inserted.id}/contract-${Date.now()}.${ext}`;
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const { error: upErr } = await admin.storage
+      .from(CONTRACT_BUCKET)
+      .upload(path, bytes, { contentType: file.type, upsert: false });
+    if (!upErr) {
+      await admin
+        .from("agreements")
+        .update({ contract_file_path: path })
+        .eq("id", inserted.id);
+    }
   }
 
   revalidatePath("/dashboard");

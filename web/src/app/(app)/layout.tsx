@@ -47,7 +47,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
               <>
                 <NavLink href="/dashboard">Dashboard</NavLink>
                 <NavLink href="/assets">Units</NavLink>
-                <NavLink href="/agreements/new">New agreement</NavLink>
+                <NavLink href="/agreements/new">Make an agreement</NavLink>
                 <NavLink href="/contracts">🗂️ Contracts</NavLink>
               </>
             )}

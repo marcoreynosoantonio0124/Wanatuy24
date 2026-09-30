@@ -12,7 +12,6 @@ import { buildLedger, type LedgerStatus } from "@/lib/ledger";
 import { CopyButton } from "@/components/copy-button";
 import { SubmitButton } from "@/components/submit-button";
 import { ProofCell } from "@/components/proof-cell";
-import { ContractBox } from "@/components/contract-box";
 import { SendReminderNowButton } from "@/components/send-reminder-now";
 import type {
   AgreementRow,
@@ -64,7 +63,6 @@ export default async function AgreementDetailPage({
   ]);
   const periods = (periodsData ?? []) as PeriodRow[];
   const payments = (paymentsData ?? []) as PaymentRow[];
-  const totalPaid = payments.reduce((s, p) => s + p.amount_php, 0);
 
   // Latest proof per period, plus signed view/download links for its file.
   const periodIds = periods.map((p) => p.id);
@@ -120,7 +118,8 @@ export default async function AgreementDetailPage({
   const today = new Date(new Date().getTime() + 8 * 60 * 60 * 1000)
     .toISOString()
     .slice(0, 10);
-  const ledger = buildLedger(periods, totalPaid, today);
+  const ledger = buildLedger(periods, payments, today);
+  const periodDueById = new Map(periods.map((p) => [p.id, p.due_date]));
 
   const origin = (await headers()).get("origin") ?? "";
   const renterLink = `${origin}/r/${agreement.renter_access_token}`;
@@ -231,12 +230,10 @@ export default async function AgreementDetailPage({
             </div>
           </div>
         ) : (
-          <ContractBox agreementId={id} hasContract={false} />
-        )}
-        {agreement.contract_file_path && (
-          <div className="mt-3">
-            <ContractBox agreementId={id} hasContract={true} />
-          </div>
+          <p className="rounded-xl border border-dashed border-slate-300 bg-white p-4 text-sm text-slate-500">
+            No contract attached yet. Add one when you make the agreement, or tap
+            ✏️ Edit above.
+          </p>
         )}
       </section>
 
@@ -293,6 +290,11 @@ export default async function AgreementDetailPage({
                           >
                             <input type="hidden" name="agreement_id" value={id} />
                             <input
+                              type="hidden"
+                              name="period_id"
+                              value={row.period.id}
+                            />
+                            <input
                               name="amount"
                               inputMode="decimal"
                               placeholder="₱ amount"
@@ -307,6 +309,11 @@ export default async function AgreementDetailPage({
                           </form>
                           <form action={recordPayment}>
                             <input type="hidden" name="agreement_id" value={id} />
+                            <input
+                              type="hidden"
+                              name="period_id"
+                              value={row.period.id}
+                            />
                             <input
                               type="hidden"
                               name="amount"
@@ -357,10 +364,18 @@ export default async function AgreementDetailPage({
           </table>
         </div>
         <p className="mt-2 text-xs text-slate-400">
-          Enter what you actually received — partial payments are fine. Amounts
-          settle the oldest unpaid month first, and the remaining balance updates
-          automatically.
+          Enter what you actually received on each month&apos;s row — partial
+          payments are fine and stay on that month. If a tenant pays two months at
+          once, record each month separately so the records don&apos;t mix up.
         </p>
+        <div className="mt-3 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <span className="text-sm font-medium text-slate-700">
+            Remaining balance up to date
+          </span>
+          <span className="text-lg font-bold text-amber-700">
+            {formatPeso(ledger.outstanding)}
+          </span>
+        </div>
       </section>
 
       {/* Payment history */}
@@ -378,6 +393,11 @@ export default async function AgreementDetailPage({
                 <div>
                   <p className="font-medium text-slate-900">
                     {formatPeso(p.amount_php)}
+                    <span className="ml-2 text-xs font-normal text-slate-500">
+                      {p.period_id && periodDueById.get(p.period_id)
+                        ? `for ${formatDate(periodDueById.get(p.period_id) as string)}`
+                        : "unassigned"}
+                    </span>
                   </p>
                   <p className="text-xs text-slate-400">
                     Received {formatDate(p.received_on)}

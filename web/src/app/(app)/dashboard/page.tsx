@@ -65,7 +65,7 @@ export default async function DashboardPage() {
     agIds.length
       ? supabase
           .from("payments")
-          .select("agreement_id, amount_php")
+          .select("agreement_id, period_id, amount_php")
           .in("agreement_id", agIds)
       : Promise.resolve({ data: [] as unknown[] }),
   ]);
@@ -74,23 +74,30 @@ export default async function DashboardPage() {
   })[];
   const allPayments = (paymentsRes.data ?? []) as {
     agreement_id: string;
+    period_id: string | null;
     amount_php: number;
   }[];
 
   const today = new Date(new Date().getTime() + 8 * 60 * 60 * 1000)
     .toISOString()
     .slice(0, 10);
-  const paidByAgreement = new Map<string, number>();
+  const paymentsByAgreement = new Map<
+    string,
+    { period_id: string | null; amount_php: number }[]
+  >();
   for (const p of allPayments) {
-    paidByAgreement.set(
-      p.agreement_id,
-      (paidByAgreement.get(p.agreement_id) ?? 0) + p.amount_php,
-    );
+    const list = paymentsByAgreement.get(p.agreement_id) ?? [];
+    list.push({ period_id: p.period_id, amount_php: p.amount_php });
+    paymentsByAgreement.set(p.agreement_id, list);
   }
   const balances = ags
     .map((a) => {
       const ps = allPeriods.filter((p) => p.agreement_id === a.id);
-      const owed = buildLedger(ps, paidByAgreement.get(a.id) ?? 0, today).outstanding;
+      const owed = buildLedger(
+        ps,
+        paymentsByAgreement.get(a.id) ?? [],
+        today,
+      ).outstanding;
       return { ...a, owed };
     })
     .filter((b) => b.owed > 0)
@@ -122,7 +129,7 @@ export default async function DashboardPage() {
               href="/agreements/new"
               className="inline-block rounded-xl bg-emerald-500 px-5 py-2.5 text-sm font-semibold text-slate-950 shadow-lg shadow-emerald-500/20 transition hover:bg-emerald-400 hover:shadow-emerald-500/40 active:scale-95"
             >
-              + New agreement
+              + Make an agreement
             </Link>
           </div>
         </div>
