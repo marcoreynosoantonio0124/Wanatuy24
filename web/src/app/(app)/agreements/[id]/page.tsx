@@ -12,6 +12,7 @@ import { buildLedger, type LedgerStatus } from "@/lib/ledger";
 import { CopyButton } from "@/components/copy-button";
 import { SubmitButton } from "@/components/submit-button";
 import { ProofCell } from "@/components/proof-cell";
+import { ContractBox } from "@/components/contract-box";
 import { SendReminderNowButton } from "@/components/send-reminder-now";
 import type {
   AgreementRow,
