@@ -112,3 +112,79 @@ export async function createAgreement(
   revalidatePath("/dashboard");
   redirect(`/agreements/${inserted.id}`);
 }
+
+const editSchema = z.object({
+  id: z.string().uuid(),
+  renter_name: z.string().trim().min(1, "Renter name is required.").max(120),
+  renter_email: z.string().trim().email().optional().or(z.literal("")),
+  renter_phone: z
+    .string()
+    .trim()
+    .regex(/^\+[1-9]\d{7,14}$/, "Use E.164 format, e.g. +639171234567.")
+    .optional()
+    .or(z.literal("")),
+  lessor_phone: z
+    .string()
+    .trim()
+    .regex(/^\+[1-9]\d{7,14}$/, "Use E.164 format, e.g. +639171234567.")
+    .optional()
+    .or(z.literal("")),
+  payment_methods: z
+    .array(z.enum(ALL_PAYMENT_METHODS))
+    .min(1, "Pick at least one payment method."),
+  payment_instructions: z.string().trim().max(1000).optional().or(z.literal("")),
+  status: z.enum(["active", "ended", "cancelled", "draft"]),
+});
+
+export type EditAgreementState = { error?: string };
+
+/** Updates an agreement's contact info, payment settings, and status. */
+export async function updateAgreement(
+  _prev: EditAgreementState,
+  formData: FormData,
+): Promise<EditAgreementState> {
+  const { user, supabase } = await requireUser();
+
+  const parsed = editSchema.safeParse({
+    id: formData.get("id"),
+    renter_name: formData.get("renter_name"),
+    renter_email: formData.get("renter_email") ?? "",
+    renter_phone: formData.get("renter_phone") ?? "",
+    lessor_phone: formData.get("lessor_phone") ?? "",
+    payment_methods: formData.getAll("payment_methods"),
+    payment_instructions: formData.get("payment_instructions") ?? "",
+    status: formData.get("status"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
+  }
+  const v = parsed.data;
+
+  // Ownership check via RLS-scoped client.
+  const { data: existing } = await supabase
+    .from("agreements")
+    .select("id, lessor_id")
+    .eq("id", v.id)
+    .single();
+  if (!existing || (existing as { lessor_id: string }).lessor_id !== user.id) {
+    return { error: "Agreement not found." };
+  }
+
+  const { error } = await supabase
+    .from("agreements")
+    .update({
+      renter_name: v.renter_name,
+      renter_email: v.renter_email || null,
+      renter_phone: v.renter_phone || null,
+      lessor_phone: v.lessor_phone || null,
+      accepted_payment_methods: v.payment_methods,
+      payment_instructions: v.payment_instructions || null,
+      status: v.status,
+    })
+    .eq("id", v.id);
+  if (error) return { error: error.message };
+
+  revalidatePath(`/agreements/${v.id}`);
+  revalidatePath("/dashboard");
+  redirect(`/agreements/${v.id}`);
+}
