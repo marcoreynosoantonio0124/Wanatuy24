@@ -19,6 +19,7 @@ export interface UserRow {
   phone: string | null;
   avatar_url: string | null;
   role: UserRole | null;
+  is_admin: boolean;
   created_at: string;
 }
 
