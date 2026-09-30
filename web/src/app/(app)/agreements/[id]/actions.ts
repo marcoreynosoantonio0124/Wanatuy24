@@ -373,3 +373,95 @@ export async function markProofSeen(formData: FormData): Promise<void> {
     .is("seen_at", null);
   revalidate(agreementId);
 }
+
+// ---- Contract attachment ---------------------------------------------------
+
+const CONTRACT_BUCKET = "contracts";
+const CONTRACT_MAX_BYTES = 20 * 1024 * 1024;
+const CONTRACT_TYPES = [
+  "application/pdf",
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+];
+
+export type ContractState = { error?: string; ok?: boolean };
+
+/** Uploads (or replaces) the signed contract file for an agreement. */
+export async function uploadContract(
+  _prev: ContractState,
+  formData: FormData,
+): Promise<ContractState> {
+  const { user, supabase } = await requireUser();
+  const agreementId = String(formData.get("agreement_id"));
+
+  const { data: ag } = await supabase
+    .from("agreements")
+    .select("id, lessor_id, contract_file_path")
+    .eq("id", agreementId)
+    .single();
+  const owned = ag as { lessor_id: string; contract_file_path: string | null } | null;
+  if (!owned || owned.lessor_id !== user.id) {
+    return { error: "Agreement not found." };
+  }
+
+  const file = formData.get("file");
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Choose a file to upload." };
+  }
+  if (file.size > CONTRACT_MAX_BYTES) {
+    return { error: "That file is larger than 20 MB." };
+  }
+  if (!CONTRACT_TYPES.includes(file.type)) {
+    return { error: "Upload a PDF, PNG, JPG, or WebP." };
+  }
+
+  const admin = createAdminClient();
+  const ext = file.name.includes(".") ? file.name.split(".").pop() : "bin";
+  const path = `${agreementId}/contract-${Date.now()}.${ext}`;
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const { error: uploadError } = await admin.storage
+    .from(CONTRACT_BUCKET)
+    .upload(path, bytes, { contentType: file.type, upsert: false });
+  if (uploadError) return { error: `Upload failed: ${uploadError.message}` };
+
+  await admin
+    .from("agreements")
+    .update({ contract_file_path: path })
+    .eq("id", agreementId);
+
+  // Best-effort: remove the previous file so the vault doesn't accumulate.
+  if (owned.contract_file_path && owned.contract_file_path !== path) {
+    await admin.storage.from(CONTRACT_BUCKET).remove([owned.contract_file_path]);
+  }
+
+  revalidate(agreementId);
+  revalidatePath("/contracts");
+  return { ok: true };
+}
+
+/** Removes the attached contract from an agreement. */
+export async function removeContract(formData: FormData): Promise<void> {
+  const { user, supabase } = await requireUser();
+  const agreementId = String(formData.get("agreement_id"));
+
+  const { data: ag } = await supabase
+    .from("agreements")
+    .select("lessor_id, contract_file_path")
+    .eq("id", agreementId)
+    .single();
+  const owned = ag as { lessor_id: string; contract_file_path: string | null } | null;
+  if (!owned || owned.lessor_id !== user.id) return;
+
+  const admin = createAdminClient();
+  if (owned.contract_file_path) {
+    await admin.storage.from(CONTRACT_BUCKET).remove([owned.contract_file_path]);
+  }
+  await admin
+    .from("agreements")
+    .update({ contract_file_path: null })
+    .eq("id", agreementId);
+
+  revalidate(agreementId);
+  revalidatePath("/contracts");
+}

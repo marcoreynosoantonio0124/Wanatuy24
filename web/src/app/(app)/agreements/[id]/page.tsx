@@ -12,6 +12,7 @@ import { buildLedger, type LedgerStatus } from "@/lib/ledger";
 import { CopyButton } from "@/components/copy-button";
 import { SubmitButton } from "@/components/submit-button";
 import { ProofCell } from "@/components/proof-cell";
+import { ContractBox } from "@/components/contract-box";
 import { SendReminderNowButton } from "@/components/send-reminder-now";
 import type {
   AgreementRow,
@@ -21,7 +22,13 @@ import type {
   PaymentRow,
   PeriodRow,
 } from "@/lib/database.types";
-import { addCharge, recordPayment, deletePayment, waivePeriod } from "./actions";
+import {
+  addCharge,
+  recordPayment,
+  deletePayment,
+  waivePeriod,
+  removeContract,
+} from "./actions";
 
 export const dynamic = "force-dynamic";
 
@@ -92,6 +99,24 @@ export default async function AgreementDetailPage({
     }),
   );
 
+  // Signed links for the attached contract, if any.
+  let contractView: string | null = null;
+  let contractDownload: string | null = null;
+  if (agreement.contract_file_path) {
+    const [{ data: cv }, { data: cd }] = await Promise.all([
+      admin.storage
+        .from("contracts")
+        .createSignedUrl(agreement.contract_file_path, 60 * 60),
+      admin.storage
+        .from("contracts")
+        .createSignedUrl(agreement.contract_file_path, 60 * 60, {
+          download: true,
+        }),
+    ]);
+    contractView = cv?.signedUrl ?? null;
+    contractDownload = cd?.signedUrl ?? null;
+  }
+
   const today = new Date(new Date().getTime() + 8 * 60 * 60 * 1000)
     .toISOString()
     .slice(0, 10);
@@ -157,6 +182,63 @@ export default async function AgreementDetailPage({
           </p>
         )}
       </div>
+
+      {/* Contract */}
+      <section>
+        <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+          Contract
+        </h2>
+        {agreement.contract_file_path ? (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-white p-4">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">📄</span>
+              <div>
+                <p className="font-medium text-slate-900">Signed contract on file</p>
+                <p className="text-xs text-slate-500">
+                  Kept private in your vault · the renter can view this on their
+                  page.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {contractView && (
+                <a
+                  href={contractView}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 active:scale-95"
+                >
+                  View
+                </a>
+              )}
+              {contractDownload && (
+                <a
+                  href={contractDownload}
+                  className="rounded-md border border-emerald-300 px-3 py-1.5 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50 active:scale-95"
+                >
+                  ⬇️ Download
+                </a>
+              )}
+              <form action={removeContract}>
+                <input type="hidden" name="agreement_id" value={id} />
+                <SubmitButton
+                  pendingText="Removing…"
+                  className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-500 hover:bg-slate-50 active:scale-95"
+                >
+                  Remove
+                </SubmitButton>
+              </form>
+            </div>
+          </div>
+        ) : (
+          <ContractBox agreementId={id} hasContract={false} />
+        )}
+        {agreement.contract_file_path && (
+          <div className="mt-3">
+            <ContractBox agreementId={id} hasContract={true} />
+          </div>
+        )}
+      </section>
 
       {/* Payment ledger */}
       <section>

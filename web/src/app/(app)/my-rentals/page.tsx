@@ -25,6 +25,7 @@ type Agreement = Pick<
   | "accepted_payment_methods"
   | "renter_access_token"
   | "asset_id"
+  | "contract_file_path"
 >;
 
 export default async function MyRentalsPage() {
@@ -33,7 +34,7 @@ export default async function MyRentalsPage() {
   const { data: agData } = await supabase
     .from("agreements")
     .select(
-      "id, renter_name, amount_php, frequency, due_day, status, payment_instructions, accepted_payment_methods, renter_access_token, asset_id",
+      "id, renter_name, amount_php, frequency, due_day, status, payment_instructions, accepted_payment_methods, renter_access_token, asset_id, contract_file_path",
     )
     .eq("renter_user_id", user.id)
     .order("created_at", { ascending: false });
@@ -52,6 +53,31 @@ export default async function MyRentalsPage() {
     for (const row of (assetRows ?? []) as { id: string; label: string }[]) {
       labelById.set(row.id, row.label);
     }
+  }
+
+  // Signed links to each rental's contract (renter sees only their own).
+  const contractLinks = new Map<string, { view: string | null; download: string | null }>();
+  const withContract = agreements.filter((a) => a.contract_file_path);
+  if (withContract.length) {
+    const admin = createAdminClient();
+    await Promise.all(
+      withContract.map(async (a) => {
+        const [{ data: v }, { data: d }] = await Promise.all([
+          admin.storage
+            .from("contracts")
+            .createSignedUrl(a.contract_file_path as string, 60 * 60),
+          admin.storage
+            .from("contracts")
+            .createSignedUrl(a.contract_file_path as string, 60 * 60, {
+              download: true,
+            }),
+        ]);
+        contractLinks.set(a.id, {
+          view: v?.signedUrl ?? null,
+          download: d?.signedUrl ?? null,
+        });
+      }),
+    );
   }
 
   const ids = agreements.map((a) => a.id);
@@ -140,6 +166,34 @@ export default async function MyRentalsPage() {
                       .map((m) => PAYMENT_METHOD_LABELS[m])
                       .join(", ")}
                   </p>
+                </div>
+              )}
+
+              {a.contract_file_path && contractLinks.get(a.id) && (
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                  <span className="flex items-center gap-2 text-sm text-slate-700">
+                    📄 Your signed contract
+                  </span>
+                  <span className="flex gap-2">
+                    {contractLinks.get(a.id)?.view && (
+                      <a
+                        href={contractLinks.get(a.id)!.view!}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-white active:scale-95"
+                      >
+                        View
+                      </a>
+                    )}
+                    {contractLinks.get(a.id)?.download && (
+                      <a
+                        href={contractLinks.get(a.id)!.download!}
+                        className="rounded-md border border-emerald-300 px-3 py-1.5 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50 active:scale-95"
+                      >
+                        ⬇️ Download
+                      </a>
+                    )}
+                  </span>
                 </div>
               )}
 
