@@ -18,6 +18,12 @@ const schema = z
       .regex(/^\+[1-9]\d{7,14}$/, "Use E.164 format, e.g. +639171234567.")
       .optional()
       .or(z.literal("")),
+    lessor_phone: z
+      .string()
+      .trim()
+      .regex(/^\+[1-9]\d{7,14}$/, "Use E.164 format, e.g. +639171234567.")
+      .optional()
+      .or(z.literal("")),
     amount: z.string().min(1, "Enter the rent amount."),
     frequency: z.enum(["monthly", "weekly", "biweekly", "quarterly"]),
     due_day: z.coerce.number().int().min(0).max(31),
@@ -51,6 +57,7 @@ export async function createAgreement(
     renter_name: formData.get("renter_name"),
     renter_email: formData.get("renter_email") ?? "",
     renter_phone: formData.get("renter_phone") ?? "",
+    lessor_phone: formData.get("lessor_phone") ?? "",
     amount: formData.get("amount"),
     frequency: formData.get("frequency"),
     due_day: formData.get("due_day"),
@@ -73,6 +80,7 @@ export async function createAgreement(
       renter_name: v.renter_name,
       renter_email: v.renter_email || null,
       renter_phone: v.renter_phone || null,
+      lessor_phone: v.lessor_phone || null,
       amount_php: pesosToCentavos(v.amount),
       frequency: v.frequency,
       due_day: v.due_day,

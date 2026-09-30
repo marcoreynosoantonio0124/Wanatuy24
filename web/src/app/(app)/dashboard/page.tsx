@@ -1,10 +1,11 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth";
 import { formatPeso, formatDate } from "@/lib/format";
+import { buildLedger } from "@/lib/ledger";
 import { PeriodStatusBadge } from "@/components/period-status-badge";
 import { PushToggle } from "@/components/push-toggle";
 import { DuskScene } from "@/components/dusk-scene";
-import type { PeriodStatus } from "@/lib/database.types";
+import type { PeriodStatus, PeriodRow } from "@/lib/database.types";
 
 export const dynamic = "force-dynamic";
 
@@ -41,9 +42,61 @@ export default async function DashboardPage() {
   const rows = (attention ?? []) as unknown as AttentionPeriod[];
   const overdue = rows.filter((r) => r.status === "overdue");
   const awaitingReview = rows.filter((r) => r.status === "proof_submitted");
-  const outstanding = rows
-    .filter((r) => r.status !== "proof_submitted")
-    .reduce((sum, r) => sum + r.amount_php, 0);
+
+  // Balance still owed per tenant, using oldest-first payment allocation.
+  const { data: activeAgreements } = await supabase
+    .from("agreements")
+    .select("id, renter_name, asset:assets(label)")
+    .eq("status", "active");
+  const ags = (activeAgreements ?? []) as unknown as {
+    id: string;
+    renter_name: string;
+    asset: { label: string } | null;
+  }[];
+  const agIds = ags.map((a) => a.id);
+
+  const [periodsRes, paymentsRes] = await Promise.all([
+    agIds.length
+      ? supabase
+          .from("periods")
+          .select("id, agreement_id, due_date, amount_php, status")
+          .in("agreement_id", agIds)
+      : Promise.resolve({ data: [] as unknown[] }),
+    agIds.length
+      ? supabase
+          .from("payments")
+          .select("agreement_id, amount_php")
+          .in("agreement_id", agIds)
+      : Promise.resolve({ data: [] as unknown[] }),
+  ]);
+  const allPeriods = (periodsRes.data ?? []) as (PeriodRow & {
+    agreement_id: string;
+  })[];
+  const allPayments = (paymentsRes.data ?? []) as {
+    agreement_id: string;
+    amount_php: number;
+  }[];
+
+  const today = new Date(new Date().getTime() + 8 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+  const paidByAgreement = new Map<string, number>();
+  for (const p of allPayments) {
+    paidByAgreement.set(
+      p.agreement_id,
+      (paidByAgreement.get(p.agreement_id) ?? 0) + p.amount_php,
+    );
+  }
+  const balances = ags
+    .map((a) => {
+      const ps = allPeriods.filter((p) => p.agreement_id === a.id);
+      const owed = buildLedger(ps, paidByAgreement.get(a.id) ?? 0, today).outstanding;
+      return { ...a, owed };
+    })
+    .filter((b) => b.owed > 0)
+    .sort((x, y) => y.owed - x.owed);
+
+  const outstanding = balances.reduce((sum, b) => sum + b.owed, 0);
 
   return (
     <div className="space-y-8">
@@ -102,6 +155,37 @@ export default async function DashboardPage() {
       <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
         <PushToggle />
       </div>
+
+      {/* balances by tenant */}
+      {balances.length > 0 && (
+        <section>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wide text-slate-500">
+            Balances by tenant
+          </h2>
+          <ul className="divide-y divide-slate-100 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            {balances.map((b) => (
+              <li key={b.id}>
+                <Link
+                  href={`/agreements/${b.id}`}
+                  className="flex items-center justify-between gap-4 px-5 py-4 transition hover:bg-amber-50/60 active:bg-amber-100/60"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-slate-900">
+                      {b.renter_name}
+                    </p>
+                    <p className="truncate text-sm text-slate-500">
+                      {b.asset?.label ?? "Unit"}
+                    </p>
+                  </div>
+                  <span className="shrink-0 font-semibold text-amber-700">
+                    {formatPeso(b.owed)} owed
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       {/* needs attention */}
       <section>

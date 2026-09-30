@@ -40,6 +40,7 @@ export interface AgreementRow {
   renter_name: string;
   renter_email: string | null;
   renter_phone: string | null;
+  lessor_phone: string | null;
   renter_user_id: string | null;
   amount_php: number;
   frequency: AgreementFrequency;
@@ -93,6 +94,17 @@ export interface PaymentProofRow {
   status: ProofStatus;
   reviewed_at: string | null;
   rejection_reason: string | null;
+  seen_at: string | null;
+  created_at: string;
+}
+
+export interface PaymentRow {
+  id: string;
+  agreement_id: string;
+  amount_php: number;
+  received_on: string;
+  note: string | null;
+  recorded_by: string | null;
   created_at: string;
 }
 
