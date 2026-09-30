@@ -197,8 +197,9 @@ export default async function AdminPage() {
           />
         </div>
         <p className="mt-2 text-xs text-slate-400">
-          Estimated at ₱{smsCostText} per text (Semaphore, 1 credit). Counts only
-          the automatic daily reminders that were sent successfully.
+          Estimated at ₱{smsCostText} per text (Semaphore, 1 credit). Counts every
+          reminder text sent successfully — automatic daily ones and manual
+          “Send reminder” taps.
         </p>
       </section>
 
