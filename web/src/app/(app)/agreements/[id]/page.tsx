@@ -98,6 +98,33 @@ export default async function AgreementDetailPage({
     }),
   );
 
+  // Text (SMS) reminders already sent per month — both the automated ones
+  // (3 days before / on the due date / 3 days after) and any you tapped by
+  // hand. We show a little badge in the ledger so you can see at a glance
+  // that a tenant was already texted.
+  const { data: smsSentData } = periodIds.length
+    ? await admin
+        .from("notifications")
+        .select("period_id, sent_at")
+        .in("period_id", periodIds)
+        .eq("channel", "sms")
+        .eq("status", "sent")
+        .order("sent_at", { ascending: false })
+    : { data: [] };
+  const textSentByPeriod = new Map<
+    string,
+    { count: number; lastSentAt: string | null }
+  >();
+  for (const n of (smsSentData ?? []) as {
+    period_id: string | null;
+    sent_at: string | null;
+  }[]) {
+    if (!n.period_id) continue;
+    const prev = textSentByPeriod.get(n.period_id);
+    if (prev) prev.count += 1;
+    else textSentByPeriod.set(n.period_id, { count: 1, lastSentAt: n.sent_at });
+  }
+
   // Signed links for the attached contract, if any.
   let contractView: string | null = null;
   let contractDownload: string | null = null;
@@ -260,6 +287,7 @@ export default async function AgreementDetailPage({
                 const proof = latestProofByPeriod.get(row.period.id);
                 const links = proof ? proofLinks.get(proof.id) : undefined;
                 const open = row.status !== "paid" && row.status !== "waived";
+                const textSent = textSentByPeriod.get(row.period.id);
                 return (
                   <tr key={row.period.id} className="align-top">
                     <td className="px-4 py-3 font-medium text-slate-900">
@@ -345,6 +373,24 @@ export default async function AgreementDetailPage({
                     </td>
                     <td className="px-4 py-3">
                       <RemarkPill status={row.status} overdue={row.overdue} />
+                      {textSent && (
+                        <div className="mt-1.5">
+                          <span
+                            title={
+                              textSent.count > 1
+                                ? `${textSent.count} text reminders sent to the tenant`
+                                : "A text reminder was sent to the tenant"
+                            }
+                            className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-medium text-sky-700 ring-1 ring-sky-200"
+                          >
+                            📩 Text sent
+                            {textSent.lastSentAt
+                              ? ` · ${formatDate(textSent.lastSentAt.slice(0, 10))}`
+                              : ""}
+                            {textSent.count > 1 ? ` · ×${textSent.count}` : ""}
+                          </span>
+                        </div>
+                      )}
                       {open && (
                         <div className="mt-1.5">
                           <SendReminderNowButton periodId={row.period.id} agreementId={id} />
@@ -368,6 +414,12 @@ export default async function AgreementDetailPage({
           Enter what you actually received on each month&apos;s row — partial
           payments are fine and stay on that month. If a tenant pays two months at
           once, record each month separately so the records don&apos;t mix up.
+        </p>
+        <p className="mt-1 text-xs text-slate-400">
+          📩 We automatically text the tenant 3 days before the due date, on the
+          due date, and 3 days after. A{" "}
+          <span className="font-medium text-sky-700">Text sent</span> badge shows
+          on a month once a reminder has gone out.
         </p>
         <div className="mt-3 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
           <span className="text-sm font-medium text-slate-700">
