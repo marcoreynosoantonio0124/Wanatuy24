@@ -9,6 +9,8 @@ import {
 import { PeriodStatusBadge } from "@/components/period-status-badge";
 import { RenterProofForm } from "@/components/renter-proof-form";
 import { DuskScene } from "@/components/dusk-scene";
+import { ReminderBadge, type ReminderRecord } from "@/components/reminder-badge";
+import { reminderKindLabel } from "@/lib/sms";
 import type { AgreementRow, PaymentMethod, PeriodRow } from "@/lib/database.types";
 
 export const dynamic = "force-dynamic";
@@ -94,6 +96,35 @@ export default async function MyRentalsPage() {
     const arr = byAgreement.get(p.agreement_id) ?? [];
     arr.push(p);
     byAgreement.set(p.agreement_id, arr);
+  }
+
+  // Reminder texts sent per month (via admin — scoped to this renter's own
+  // agreements), so the tenant sees the same record the lessor does.
+  const remindersByPeriod = new Map<string, ReminderRecord[]>();
+  if (ids.length) {
+    const admin = createAdminClient();
+    const { data: smsData } = await admin
+      .from("notifications")
+      .select("period_id, sent_at, template_key, body")
+      .in("agreement_id", ids)
+      .eq("channel", "sms")
+      .eq("status", "sent")
+      .order("sent_at", { ascending: false });
+    for (const n of (smsData ?? []) as {
+      period_id: string | null;
+      sent_at: string | null;
+      template_key: string | null;
+      body: string | null;
+    }[]) {
+      if (!n.period_id || !n.sent_at) continue;
+      const list = remindersByPeriod.get(n.period_id) ?? [];
+      list.push({
+        sentAt: n.sent_at,
+        label: reminderKindLabel(n.template_key ?? ""),
+        body: n.body ?? "",
+      });
+      remindersByPeriod.set(n.period_id, list);
+    }
   }
 
   return (
@@ -203,27 +234,39 @@ export default async function MyRentalsPage() {
                   Payment records
                 </h3>
                 <ul className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200">
-                  {ps.map((p) => (
-                    <li
-                      key={p.id}
-                      className="flex items-center justify-between px-4 py-2.5 text-sm"
-                    >
-                      <span className="text-slate-700">
-                        {formatDate(p.due_date)}
-                        {p.paid_at && (
-                          <span className="ml-2 text-xs text-emerald-600">
-                            paid {formatDate(p.paid_at.slice(0, 10))}
+                  {ps.map((p) => {
+                    const reminders = remindersByPeriod.get(p.id) ?? [];
+                    return (
+                      <li
+                        key={p.id}
+                        className="flex flex-col gap-2 px-4 py-2.5 text-sm"
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-slate-700">
+                            {formatDate(p.due_date)}
+                            {p.paid_at && (
+                              <span className="ml-2 text-xs text-emerald-600">
+                                paid {formatDate(p.paid_at.slice(0, 10))}
+                              </span>
+                            )}
                           </span>
+                          <span className="flex items-center gap-3">
+                            <span className="font-medium text-slate-900">
+                              {formatPeso(p.amount_php)}
+                            </span>
+                            <PeriodStatusBadge status={p.status} />
+                          </span>
+                        </div>
+                        {reminders.length > 0 && (
+                          <ReminderBadge
+                            records={reminders}
+                            monthLabel={formatDate(p.due_date)}
+                            audience="tenant"
+                          />
                         )}
-                      </span>
-                      <span className="flex items-center gap-3">
-                        <span className="font-medium text-slate-900">
-                          {formatPeso(p.amount_php)}
-                        </span>
-                        <PeriodStatusBadge status={p.status} />
-                      </span>
-                    </li>
-                  ))}
+                      </li>
+                    );
+                  })}
                 </ul>
               </div>
 

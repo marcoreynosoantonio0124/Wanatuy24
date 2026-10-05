@@ -9,6 +9,8 @@ import {
 import { PeriodStatusBadge } from "@/components/period-status-badge";
 import { RenterProofForm } from "@/components/renter-proof-form";
 import { RenterPushToggle } from "@/components/renter-push-toggle";
+import { ReminderBadge, type ReminderRecord } from "@/components/reminder-badge";
+import { reminderKindLabel } from "@/lib/sms";
 import type {
   AgreementRow,
   AssetRow,
@@ -40,6 +42,35 @@ export default async function RenterPortalPage({
     .eq("agreement_id", agreement.id)
     .order("due_date", { ascending: true });
   const periods = (periodsData ?? []) as PeriodRow[];
+
+  // Reminder texts sent per month, so the tenant sees the same record the
+  // lessor does (most recent first).
+  const periodIds = periods.map((p) => p.id);
+  const { data: smsData } = periodIds.length
+    ? await admin
+        .from("notifications")
+        .select("period_id, sent_at, template_key, body")
+        .in("period_id", periodIds)
+        .eq("channel", "sms")
+        .eq("status", "sent")
+        .order("sent_at", { ascending: false })
+    : { data: [] };
+  const remindersByPeriod = new Map<string, ReminderRecord[]>();
+  for (const n of (smsData ?? []) as {
+    period_id: string | null;
+    sent_at: string | null;
+    template_key: string | null;
+    body: string | null;
+  }[]) {
+    if (!n.period_id || !n.sent_at) continue;
+    const list = remindersByPeriod.get(n.period_id) ?? [];
+    list.push({
+      sentAt: n.sent_at,
+      label: reminderKindLabel(n.template_key ?? ""),
+      body: n.body ?? "",
+    });
+    remindersByPeriod.set(n.period_id, list);
+  }
 
   const unpaid = periods.filter((p) =>
     ["upcoming", "due", "overdue"].includes(p.status),
@@ -114,20 +145,29 @@ export default async function RenterPortalPage({
           History
         </h2>
         <ul className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 bg-white">
-          {periods.map((p) => (
-            <li
-              key={p.id}
-              className="flex items-center justify-between px-4 py-2.5 text-sm"
-            >
-              <span className="text-slate-700">{formatDate(p.due_date)}</span>
-              <span className="flex items-center gap-3">
-                <span className="text-slate-500">
-                  {formatPeso(p.amount_php)}
-                </span>
-                <PeriodStatusBadge status={p.status} />
-              </span>
-            </li>
-          ))}
+          {periods.map((p) => {
+            const reminders = remindersByPeriod.get(p.id) ?? [];
+            return (
+              <li key={p.id} className="flex flex-col gap-2 px-4 py-2.5 text-sm">
+                <div className="flex items-center justify-between">
+                  <span className="text-slate-700">{formatDate(p.due_date)}</span>
+                  <span className="flex items-center gap-3">
+                    <span className="text-slate-500">
+                      {formatPeso(p.amount_php)}
+                    </span>
+                    <PeriodStatusBadge status={p.status} />
+                  </span>
+                </div>
+                {reminders.length > 0 && (
+                  <ReminderBadge
+                    records={reminders}
+                    monthLabel={formatDate(p.due_date)}
+                    audience="tenant"
+                  />
+                )}
+              </li>
+            );
+          })}
         </ul>
       </section>
     </main>

@@ -12,8 +12,8 @@ import { buildLedger, type LedgerStatus } from "@/lib/ledger";
 import { CopyButton } from "@/components/copy-button";
 import { SubmitButton } from "@/components/submit-button";
 import { ProofCell } from "@/components/proof-cell";
-import { ContractBox } from "@/components/contract-box";
-import { SendReminderNowButton } from "@/components/send-reminder-now";
+import { ReminderBadge, type ReminderRecord } from "@/components/reminder-badge";
+import { reminderKindLabel } from "@/lib/sms";
 import type {
   AgreementRow,
   AssetRow,
@@ -105,24 +105,29 @@ export default async function AgreementDetailPage({
   const { data: smsSentData } = periodIds.length
     ? await admin
         .from("notifications")
-        .select("period_id, sent_at")
+        .select("period_id, sent_at, template_key, body")
         .in("period_id", periodIds)
         .eq("channel", "sms")
         .eq("status", "sent")
         .order("sent_at", { ascending: false })
     : { data: [] };
-  const textSentByPeriod = new Map<
-    string,
-    { count: number; lastSentAt: string | null }
-  >();
+  // Per month: the full list of texts we sent (most recent first), for the
+  // tappable reminder badge and its record.
+  const remindersByPeriod = new Map<string, ReminderRecord[]>();
   for (const n of (smsSentData ?? []) as {
     period_id: string | null;
     sent_at: string | null;
+    template_key: string | null;
+    body: string | null;
   }[]) {
-    if (!n.period_id) continue;
-    const prev = textSentByPeriod.get(n.period_id);
-    if (prev) prev.count += 1;
-    else textSentByPeriod.set(n.period_id, { count: 1, lastSentAt: n.sent_at });
+    if (!n.period_id || !n.sent_at) continue;
+    const list = remindersByPeriod.get(n.period_id) ?? [];
+    list.push({
+      sentAt: n.sent_at,
+      label: reminderKindLabel(n.template_key ?? ""),
+      body: n.body ?? "",
+    });
+    remindersByPeriod.set(n.period_id, list);
   }
 
   // Signed links for the attached contract, if any.
@@ -287,7 +292,7 @@ export default async function AgreementDetailPage({
                 const proof = latestProofByPeriod.get(row.period.id);
                 const links = proof ? proofLinks.get(proof.id) : undefined;
                 const open = row.status !== "paid" && row.status !== "waived";
-                const textSent = textSentByPeriod.get(row.period.id);
+                const reminders = remindersByPeriod.get(row.period.id) ?? [];
                 return (
                   <tr key={row.period.id} className="align-top">
                     <td className="px-4 py-3 font-medium text-slate-900">
@@ -373,29 +378,20 @@ export default async function AgreementDetailPage({
                     </td>
                     <td className="px-4 py-3">
                       <RemarkPill status={row.status} overdue={row.overdue} />
-                      {textSent && (
-                        <div className="mt-1.5">
-                          <span
-                            title={
-                              textSent.count > 1
-                                ? `${textSent.count} text reminders sent to the tenant`
-                                : "A text reminder was sent to the tenant"
-                            }
-                            className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-medium text-sky-700 ring-1 ring-sky-200"
-                          >
-                            📩 Text sent
-                            {textSent.lastSentAt
-                              ? ` · ${formatDate(textSent.lastSentAt.slice(0, 10))}`
-                              : ""}
-                            {textSent.count > 1 ? ` · ×${textSent.count}` : ""}
-                          </span>
-                        </div>
-                      )}
-                      {open && (
-                        <div className="mt-1.5">
-                          <SendReminderNowButton periodId={row.period.id} agreementId={id} />
-                        </div>
-                      )}
+                      <div className="mt-1.5">
+                        {reminders.length > 0 ? (
+                          <ReminderBadge
+                            records={reminders}
+                            monthLabel={formatDate(row.period.due_date)}
+                          />
+                        ) : (
+                          open && (
+                            <span className="text-[11px] text-slate-400">
+                              No text yet — sends automatically
+                            </span>
+                          )
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );
@@ -416,10 +412,11 @@ export default async function AgreementDetailPage({
           once, record each month separately so the records don&apos;t mix up.
         </p>
         <p className="mt-1 text-xs text-slate-400">
-          📩 We automatically text the tenant 3 days before the due date, on the
-          due date, and 3 days after. A{" "}
-          <span className="font-medium text-sky-700">Text sent</span> badge shows
-          on a month once a reminder has gone out.
+          📩 DueMeet texts the tenant automatically — 3 days before the due date,
+          on the due date, 3 days after, then every 7 days until the month is
+          fully paid. Tap a{" "}
+          <span className="font-semibold text-indigo-600">Reminded</span> badge to
+          see every text that went out. No sending for you to do.
         </p>
         <div className="mt-3 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
           <span className="text-sm font-medium text-slate-700">
