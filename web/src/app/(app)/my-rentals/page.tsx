@@ -6,7 +6,7 @@ import {
   describeSchedule,
   PAYMENT_METHOD_LABELS,
 } from "@/lib/format";
-import { PeriodStatusBadge } from "@/components/period-status-badge";
+import { LedgerPill } from "@/components/ledger-pill";
 import { RenterProofForm } from "@/components/renter-proof-form";
 import { DuskScene } from "@/components/dusk-scene";
 import { ReminderBadge, type ReminderRecord } from "@/components/reminder-badge";
@@ -159,12 +159,14 @@ export default async function MyRentalsPage() {
       ) : (
         agreements.map((a) => {
           const ps = byAgreement.get(a.id) ?? [];
-          const unpaid = ps.filter((p) =>
-            ["upcoming", "due", "overdue"].includes(p.status),
+          const ledger = buildLedger(
+            ps,
+            paymentsByAgreement.get(a.id) ?? [],
+            today,
           );
-          const paid = ps
-            .filter((p) => p.status === "paid")
-            .reduce((s, p) => s + p.amount_php, 0);
+          const unpaidRows = ledger.rows.filter(
+            (r) => r.status !== "waived" && r.remaining > 0,
+          );
           return (
             <section
               key={a.id}
@@ -181,7 +183,7 @@ export default async function MyRentalsPage() {
                   </p>
                 </div>
                 <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-                  Total paid: {formatPeso(paid)}
+                  Total paid: {formatPeso(ledger.collected)}
                 </span>
               </div>
 
@@ -268,20 +270,28 @@ export default async function MyRentalsPage() {
                     );
                   })}
                 </ul>
+                <div className="mt-3 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5">
+                  <span className="text-sm font-medium text-slate-700">
+                    Balance up to date
+                  </span>
+                  <span className="text-base font-bold text-amber-700">
+                    {formatPeso(ledger.outstanding)}
+                  </span>
+                </div>
               </div>
 
               {/* submit proof */}
-              {unpaid.length > 0 && (
+              {unpaidRows.length > 0 && (
                 <div>
                   <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
                     Send proof of payment
                   </h3>
                   <RenterProofForm
                     token={a.renter_access_token}
-                    periods={unpaid.map((p) => ({
-                      id: p.id,
-                      due_date: p.due_date,
-                      amount_php: p.amount_php,
+                    periods={unpaidRows.map((r) => ({
+                      id: r.period.id,
+                      due_date: r.period.due_date,
+                      amount_php: r.remaining,
                     }))}
                     methods={a.accepted_payment_methods as PaymentMethod[]}
                   />
