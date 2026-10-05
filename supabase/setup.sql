@@ -771,3 +771,10 @@ alter table public.payments
   add column if not exists period_id uuid references public.periods(id) on delete set null;
 
 create index if not exists payments_period_idx on public.payments(period_id);
+
+-- ---------------------------------------------------------------------------
+-- 0013_notification_body: keep the exact text of each reminder sent, so a
+-- month's reminder record shows the real messages.
+-- ---------------------------------------------------------------------------
+alter table public.notifications
+  add column if not exists body text;

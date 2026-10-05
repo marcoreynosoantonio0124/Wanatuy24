@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { sendPush } from "@/lib/webpush";
 import { sendEmail, reminderEmailHtml } from "@/lib/email";
-import { sendSms, reminderSms } from "@/lib/sms";
+import { sendSms, reminderSms, type ReminderKind } from "@/lib/sms";
 import { formatPeso, formatDate } from "@/lib/format";
 import type { AgreementRow, PeriodRow } from "@/lib/database.types";
 
@@ -50,10 +50,10 @@ async function run(request: NextRequest) {
   // 2) Materialize reminder notifications for periods in a ±window.
   const created = await materializeNotifications(admin);
 
-  // 3) Deliver due push + email + SMS notifications.
+  // 3) Deliver due push + email, then send the automatic rent texts.
   const push = await deliverDuePush(admin);
   const email = await deliverDueEmail(admin);
-  const sms = await deliverDueSms(admin);
+  const sms = await sendSmsReminders(admin);
 
   return NextResponse.json({
     ok: true,
@@ -68,10 +68,6 @@ type Admin = ReturnType<typeof createAdminClient>;
 
 const WINDOW_BACK_DAYS = 7;
 const WINDOW_FWD_DAYS = 40;
-// SMS costs money per text, so only send it on a few key touchpoints
-// (3 days before, on the due date, 3 days after) even if the agreement's
-// reminder_schedule has more offsets. Push/email use the full schedule.
-const SMS_OFFSETS = [-3, 0, 3];
 
 async function materializeNotifications(admin: Admin): Promise<number> {
   const today = new Date();
@@ -109,10 +105,10 @@ async function materializeNotifications(admin: Admin): Promise<number> {
     const time = (a.reminder_time_local ?? "09:00:00").slice(0, 8).padEnd(8, ":00");
     for (const offset of offsets) {
       const when = manilaInstant(p.due_date, offset, time);
-      // Push always; email when we have an address; SMS only on key offsets.
+      // Push always; email when we have an address. SMS is handled separately
+      // (sendSmsReminders) so it can keep nudging weekly until the month is paid.
       const channels: string[] = ["push"];
       if (a.renter_email) channels.push("email");
-      if (a.renter_phone && SMS_OFFSETS.includes(offset)) channels.push("sms");
       for (const channel of channels) {
         toInsert.push({
           agreement_id: p.agreement_id,
@@ -272,55 +268,153 @@ function subjectFor(key: string): string {
   }
 }
 
-async function deliverDueSms(admin: Admin) {
-  const nowIso = new Date().toISOString();
-  const { data } = await admin
-    .from("notifications")
-    .select(
-      "id, period:periods(due_date, amount_php), agreement:agreements(renter_name, renter_phone, renter_access_token)",
-    )
-    .eq("status", "scheduled")
-    .eq("channel", "sms")
-    .lte("scheduled_for", nowIso)
-    .limit(200);
+// Automatic rent texts. Each still-owed month gets a warm reminder 3 days
+// before, on the due date, 3 days after, then every 7 days until it is fully
+// paid. A month that is settled (or partly paid down to zero) stops getting
+// texts. Every text we send is recorded (with its exact wording) so the lessor
+// and tenant can open the month's record.
+const SMS_FOLLOWUP_EVERY_DAYS = 7;
+const SMS_MAX_OVERDUE_DAYS = 365; // stop nudging after a year
 
-  type Row = {
+/** Whole days from `fromIso` to `toIso` (both plain YYYY-MM-DD dates). */
+function daysBetween(fromIso: string, toIso: string): number {
+  const a = Date.parse(`${fromIso}T00:00:00Z`);
+  const b = Date.parse(`${toIso}T00:00:00Z`);
+  return Math.round((b - a) / 86_400_000);
+}
+
+/** A short "Oct 1" style date for the heads-up message. */
+function shortDate(dateIso: string): string {
+  return new Date(`${dateIso}T00:00:00+08:00`).toLocaleDateString("en-PH", {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+async function sendSmsReminders(admin: Admin) {
+  const today = new Date(new Date().getTime() + 8 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
+  const { data: agData } = await admin
+    .from("agreements")
+    .select("id, renter_name, renter_phone")
+    .eq("status", "active")
+    .not("renter_phone", "is", null);
+  const agreements = (agData ?? []) as {
     id: string;
-    period: { due_date: string; amount_php: number } | null;
-    agreement: {
-      renter_name: string;
-      renter_phone: string | null;
-      renter_access_token: string;
-    } | null;
-  };
-  const rows = (data ?? []) as unknown as Row[];
+    renter_name: string;
+    renter_phone: string | null;
+  }[];
+  if (agreements.length === 0) return { smsSent: 0, smsSkipped: 0 };
+
+  const agIds = agreements.map((a) => a.id);
+  const agById = new Map(agreements.map((a) => [a.id, a]));
+
+  const [{ data: perData }, { data: payData }, { data: smsData }] =
+    await Promise.all([
+      admin
+        .from("periods")
+        .select("id, agreement_id, due_date, amount_php, status")
+        .in("agreement_id", agIds),
+      admin
+        .from("payments")
+        .select("period_id, amount_php")
+        .in("agreement_id", agIds),
+      admin
+        .from("notifications")
+        .select("period_id, sent_at")
+        .eq("channel", "sms")
+        .eq("status", "sent")
+        .in("agreement_id", agIds),
+    ]);
+
+  const periods = (perData ?? []) as {
+    id: string;
+    agreement_id: string;
+    due_date: string;
+    amount_php: number;
+    status: string;
+  }[];
+
+  const paidByPeriod = new Map<string, number>();
+  for (const p of (payData ?? []) as {
+    period_id: string | null;
+    amount_php: number;
+  }[]) {
+    if (p.period_id)
+      paidByPeriod.set(
+        p.period_id,
+        (paidByPeriod.get(p.period_id) ?? 0) + Math.max(0, p.amount_php || 0),
+      );
+  }
+
+  // Most recent text date per month (used for weekly spacing + same-day guard).
+  const lastSmsByPeriod = new Map<string, string>();
+  for (const n of (smsData ?? []) as {
+    period_id: string | null;
+    sent_at: string | null;
+  }[]) {
+    if (!n.period_id || !n.sent_at) continue;
+    const d = n.sent_at.slice(0, 10);
+    const prev = lastSmsByPeriod.get(n.period_id);
+    if (!prev || d > prev) lastSmsByPeriod.set(n.period_id, d);
+  }
 
   let sent = 0;
   let skipped = 0;
-  for (const n of rows) {
-    const to = n.agreement?.renter_phone;
-    if (!to) {
-      await admin.from("notifications").update({ status: "skipped" }).eq("id", n.id);
-      skipped++;
-      continue;
+  for (const p of periods) {
+    if (p.status === "paid" || p.status === "waived") continue;
+    const remaining = p.amount_php - (paidByPeriod.get(p.id) ?? 0);
+    if (remaining <= 0) continue;
+
+    const offset = daysBetween(p.due_date, today); // <0 before, 0 due, >0 overdue
+    if (offset > SMS_MAX_OVERDUE_DAYS) continue;
+
+    const last = lastSmsByPeriod.get(p.id);
+    if (last === today) continue; // never text a month twice in one day
+
+    let kind: ReminderKind | null = null;
+    if (offset === -3) kind = "before";
+    else if (offset === 0) kind = "due";
+    else if (offset === 3) kind = "after";
+    else if (offset > 3) {
+      if (!last || daysBetween(last, today) >= SMS_FOLLOWUP_EVERY_DAYS)
+        kind = "weekly";
     }
-    const message = reminderSms({
-      firstName: n.agreement?.renter_name?.split(" ")[0] ?? "there",
-      amountPhp: n.period?.amount_php ?? 0,
-      dueText: n.period ? `due ${formatDate(n.period.due_date)}` : "due soon",
+    if (!kind) continue;
+
+    const ag = agById.get(p.agreement_id);
+    if (!ag?.renter_phone) continue;
+
+    const body = reminderSms(kind, {
+      firstName: ag.renter_name?.split(" ")[0] ?? "there",
+      amountPhp: remaining,
+      dueDateShort: shortDate(p.due_date),
     });
-    const result = await sendSms(to, message);
+    const result = await sendSms(ag.renter_phone, body);
     if (result === "sent") {
-      await admin
-        .from("notifications")
-        .update({ status: "sent", sent_at: new Date().toISOString() })
-        .eq("id", n.id);
+      const nowIso = new Date().toISOString();
+      await admin.from("notifications").upsert(
+        {
+          agreement_id: p.agreement_id,
+          period_id: p.id,
+          recipient: "renter",
+          channel: "sms",
+          template_key: kind,
+          scheduled_for: nowIso,
+          sent_at: nowIso,
+          status: "sent",
+          body,
+          dedupe_key: `${p.id}:sms:${today}`,
+        },
+        { onConflict: "dedupe_key", ignoreDuplicates: true },
+      );
+      lastSmsByPeriod.set(p.id, today);
       sent++;
-    } else if (result === "skipped") {
-      // No provider configured — leave scheduled to send once SMS is wired.
-      skipped++;
     } else {
-      await admin.from("notifications").update({ status: "failed" }).eq("id", n.id);
+      // "skipped" (no SMS key) or "failed" — try again on the next run.
+      skipped++;
     }
   }
   return { smsSent: sent, smsSkipped: skipped };

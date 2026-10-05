@@ -37,18 +37,60 @@ export async function sendSms(
   }
 }
 
+/** The four reminder touchpoints, in the order they fire over a month. */
+export type ReminderKind = "before" | "due" | "after" | "weekly";
+
 /**
- * Short Taglish reminder kept to a single SMS segment (≤160 chars) and to the
- * GSM-7 charset — no peso sign, emoji, or link, which would force costly
- * multi-part / Unicode messages. (The full link still rides push/email.)
+ * Warm, personal Taglish reminders — written to feel like a real person, not a
+ * promo blast (the sender name already shows "DUEMEET"). Each stays within one
+ * SMS segment (≤160 chars) and the GSM-7 charset — no peso sign, emoji, or link,
+ * which would force costly multi-part / Unicode messages.
+ *
+ * `amountPhp` is the amount still owed at send time, so partial months show the
+ * remaining balance. `dueDateShort` is a short date like "Oct 1" (used by the
+ * first, heads-up message).
  */
-export function reminderSms(opts: {
-  firstName: string;
-  amountPhp: number;
-  dueText: string;
-}): string {
+export function reminderSms(
+  kind: ReminderKind,
+  opts: { firstName: string; amountPhp: number; dueDateShort: string },
+): string {
+  const name = opts.firstName || "there";
   const pesos = (opts.amountPhp / 100).toLocaleString("en-US", {
     maximumFractionDigits: 2,
   });
-  return `DueMeet: Hi ${opts.firstName}, PHP ${pesos} na upa, ${opts.dueText}. Pakibayad po. Salamat!`;
+  switch (kind) {
+    case "before":
+      return `Hi ${name}, reminder po — 3 araw na lang bago ang due ng upa na PHP ${pesos} (${opts.dueDateShort}). Salamat at ingat po!`;
+    case "due":
+      return `Hi ${name}, ngayon na po ang araw ng due date ng upa na PHP ${pesos}. Pakibayad po kapag may pagkakataon. Salamat po!`;
+    case "after":
+      return `Hi ${name}, overdue na po tayo this month sa upa na PHP ${pesos}. Reminder lang po para ma-settle. Salamat sa pag-unawa!`;
+    case "weekly":
+      return `Hi ${name}, follow up lang po sa natitirang upa na PHP ${pesos}. Pakibayad po kapag kaya na. Salamat po!`;
+  }
+}
+
+/** Short, human label for a reminder touchpoint (used in the record view). */
+export function reminderKindLabel(kind: string): string {
+  switch (kind) {
+    case "before":
+      return "3 days before";
+    case "due":
+      return "On due date";
+    case "after":
+      return "3 days after";
+    case "weekly":
+      return "Weekly follow-up";
+    // legacy keys from the earlier schedule
+    case "rent_due_soon":
+      return "Before due date";
+    case "rent_due_today":
+      return "On due date";
+    case "rent_overdue":
+      return "After due date";
+    case "manual_reminder":
+      return "Manual reminder";
+    default:
+      return "Reminder";
+  }
 }
