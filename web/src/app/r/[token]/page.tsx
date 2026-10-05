@@ -6,7 +6,8 @@ import {
   describeSchedule,
   PAYMENT_METHOD_LABELS,
 } from "@/lib/format";
-import { PeriodStatusBadge } from "@/components/period-status-badge";
+import { buildLedger } from "@/lib/ledger";
+import { LedgerPill } from "@/components/ledger-pill";
 import { RenterProofForm } from "@/components/renter-proof-form";
 import { RenterPushToggle } from "@/components/renter-push-toggle";
 import type {
@@ -34,17 +35,33 @@ export default async function RenterPortalPage({
     asset: Pick<AssetRow, "label" | "type"> | null;
   };
 
-  const { data: periodsData } = await admin
-    .from("periods")
-    .select("*")
-    .eq("agreement_id", agreement.id)
-    .order("due_date", { ascending: true });
+  const [{ data: periodsData }, { data: paymentsData }] = await Promise.all([
+    admin
+      .from("periods")
+      .select("*")
+      .eq("agreement_id", agreement.id)
+      .order("due_date", { ascending: true }),
+    admin
+      .from("payments")
+      .select("period_id, amount_php")
+      .eq("agreement_id", agreement.id),
+  ]);
   const periods = (periodsData ?? []) as PeriodRow[];
+  const payments = (paymentsData ?? []) as {
+    period_id: string | null;
+    amount_php: number;
+  }[];
 
-  const unpaid = periods.filter((p) =>
-    ["upcoming", "due", "overdue"].includes(p.status),
+  const today = new Date(new Date().getTime() + 8 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+  const ledger = buildLedger(periods, payments, today);
+
+  // Months with something still owed — earliest first (rows are already sorted).
+  const unpaidRows = ledger.rows.filter(
+    (r) => r.status !== "waived" && r.remaining > 0,
   );
-  const nextDue = unpaid[0];
+  const nextDue = unpaidRows[0];
 
   return (
     <main className="mx-auto w-full max-w-lg flex-1 px-4 py-8">
@@ -59,12 +76,20 @@ export default async function RenterPortalPage({
 
       {nextDue && (
         <div className="mt-5 rounded-xl border border-slate-200 bg-white p-5">
-          <p className="text-sm text-slate-500">Next payment</p>
+          <p className="text-sm text-slate-500">
+            {nextDue.allocated > 0 ? "Balance on this month" : "Next payment"}
+          </p>
           <p className="mt-1 text-3xl font-semibold text-slate-900">
-            {formatPeso(nextDue.amount_php)}
+            {formatPeso(nextDue.remaining)}
           </p>
           <p className="mt-1 text-sm text-slate-500">
-            Due {formatDate(nextDue.due_date)}
+            Due {formatDate(nextDue.period.due_date)}
+            {nextDue.allocated > 0 && (
+              <span className="text-emerald-600">
+                {" "}
+                · {formatPeso(nextDue.allocated)} already received
+              </span>
+            )}
           </p>
         </div>
       )}
@@ -92,13 +117,13 @@ export default async function RenterPortalPage({
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
           Submit a payment
         </h2>
-        {unpaid.length > 0 ? (
+        {unpaidRows.length > 0 ? (
           <RenterProofForm
             token={token}
-            periods={unpaid.map((p) => ({
-              id: p.id,
-              due_date: p.due_date,
-              amount_php: p.amount_php,
+            periods={unpaidRows.map((r) => ({
+              id: r.period.id,
+              due_date: r.period.due_date,
+              amount_php: r.remaining,
             }))}
             methods={agreement.accepted_payment_methods}
           />
@@ -111,24 +136,41 @@ export default async function RenterPortalPage({
 
       <section className="mt-8">
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
-          History
+          Your payment record
         </h2>
         <ul className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 bg-white">
-          {periods.map((p) => (
-            <li
-              key={p.id}
-              className="flex items-center justify-between px-4 py-2.5 text-sm"
-            >
-              <span className="text-slate-700">{formatDate(p.due_date)}</span>
-              <span className="flex items-center gap-3">
-                <span className="text-slate-500">
-                  {formatPeso(p.amount_php)}
+          {ledger.rows.map((r) => (
+            <li key={r.period.id} className="px-4 py-3 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="font-medium text-slate-800">
+                  {formatDate(r.period.due_date)}
                 </span>
-                <PeriodStatusBadge status={p.status} />
-              </span>
+                <LedgerPill row={r} />
+              </div>
+              <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-slate-500">
+                <span>Due {formatPeso(r.due)}</span>
+                {r.allocated > 0 && (
+                  <span className="text-emerald-600">
+                    Paid {formatPeso(r.allocated)}
+                  </span>
+                )}
+                {r.remaining > 0 && r.status !== "waived" && (
+                  <span className="text-amber-700">
+                    {formatPeso(r.remaining)} left
+                  </span>
+                )}
+              </div>
             </li>
           ))}
         </ul>
+        <div className="mt-3 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <span className="text-sm font-medium text-slate-700">
+            Balance up to date
+          </span>
+          <span className="text-lg font-bold text-amber-700">
+            {formatPeso(ledger.outstanding)}
+          </span>
+        </div>
       </section>
     </main>
   );

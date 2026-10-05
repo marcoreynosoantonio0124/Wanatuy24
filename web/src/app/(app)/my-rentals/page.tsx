@@ -6,9 +6,10 @@ import {
   describeSchedule,
   PAYMENT_METHOD_LABELS,
 } from "@/lib/format";
-import { PeriodStatusBadge } from "@/components/period-status-badge";
+import { LedgerPill } from "@/components/ledger-pill";
 import { RenterProofForm } from "@/components/renter-proof-form";
 import { DuskScene } from "@/components/dusk-scene";
+import { buildLedger } from "@/lib/ledger";
 import type { AgreementRow, PaymentMethod, PeriodRow } from "@/lib/database.types";
 
 export const dynamic = "force-dynamic";
@@ -96,6 +97,33 @@ export default async function MyRentalsPage() {
     byAgreement.set(p.agreement_id, arr);
   }
 
+  // Payments drive the per-month Paid / Remaining figures (same math the lessor
+  // sees). Fetched via admin, scoped to this renter's own agreements above.
+  const paymentsByAgreement = new Map<
+    string,
+    { period_id: string | null; amount_php: number }[]
+  >();
+  if (ids.length) {
+    const admin = createAdminClient();
+    const { data: payData } = await admin
+      .from("payments")
+      .select("agreement_id, period_id, amount_php")
+      .in("agreement_id", ids);
+    for (const p of (payData ?? []) as {
+      agreement_id: string;
+      period_id: string | null;
+      amount_php: number;
+    }[]) {
+      const arr = paymentsByAgreement.get(p.agreement_id) ?? [];
+      arr.push({ period_id: p.period_id, amount_php: p.amount_php });
+      paymentsByAgreement.set(p.agreement_id, arr);
+    }
+  }
+
+  const today = new Date(new Date().getTime() + 8 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
   return (
     <div className="space-y-8">
       {/* banner */}
@@ -128,12 +156,14 @@ export default async function MyRentalsPage() {
       ) : (
         agreements.map((a) => {
           const ps = byAgreement.get(a.id) ?? [];
-          const unpaid = ps.filter((p) =>
-            ["upcoming", "due", "overdue"].includes(p.status),
+          const ledger = buildLedger(
+            ps,
+            paymentsByAgreement.get(a.id) ?? [],
+            today,
           );
-          const paid = ps
-            .filter((p) => p.status === "paid")
-            .reduce((s, p) => s + p.amount_php, 0);
+          const unpaidRows = ledger.rows.filter(
+            (r) => r.status !== "waived" && r.remaining > 0,
+          );
           return (
             <section
               key={a.id}
@@ -150,7 +180,7 @@ export default async function MyRentalsPage() {
                   </p>
                 </div>
                 <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-                  Total paid: {formatPeso(paid)}
+                  Total paid: {formatPeso(ledger.collected)}
                 </span>
               </div>
 
@@ -203,42 +233,52 @@ export default async function MyRentalsPage() {
                   Payment records
                 </h3>
                 <ul className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200">
-                  {ps.map((p) => (
-                    <li
-                      key={p.id}
-                      className="flex items-center justify-between px-4 py-2.5 text-sm"
-                    >
-                      <span className="text-slate-700">
-                        {formatDate(p.due_date)}
-                        {p.paid_at && (
-                          <span className="ml-2 text-xs text-emerald-600">
-                            paid {formatDate(p.paid_at.slice(0, 10))}
+                  {ledger.rows.map((r) => (
+                    <li key={r.period.id} className="px-4 py-3 text-sm">
+                      <div className="flex items-center justify-between">
+                        <span className="font-medium text-slate-800">
+                          {formatDate(r.period.due_date)}
+                        </span>
+                        <LedgerPill row={r} />
+                      </div>
+                      <div className="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-slate-500">
+                        <span>Due {formatPeso(r.due)}</span>
+                        {r.allocated > 0 && (
+                          <span className="text-emerald-600">
+                            Paid {formatPeso(r.allocated)}
                           </span>
                         )}
-                      </span>
-                      <span className="flex items-center gap-3">
-                        <span className="font-medium text-slate-900">
-                          {formatPeso(p.amount_php)}
-                        </span>
-                        <PeriodStatusBadge status={p.status} />
-                      </span>
+                        {r.remaining > 0 && r.status !== "waived" && (
+                          <span className="text-amber-700">
+                            {formatPeso(r.remaining)} left
+                          </span>
+                        )}
+                      </div>
                     </li>
                   ))}
                 </ul>
+                <div className="mt-3 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5">
+                  <span className="text-sm font-medium text-slate-700">
+                    Balance up to date
+                  </span>
+                  <span className="text-base font-bold text-amber-700">
+                    {formatPeso(ledger.outstanding)}
+                  </span>
+                </div>
               </div>
 
               {/* submit proof */}
-              {unpaid.length > 0 && (
+              {unpaidRows.length > 0 && (
                 <div>
                   <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
                     Send proof of payment
                   </h3>
                   <RenterProofForm
                     token={a.renter_access_token}
-                    periods={unpaid.map((p) => ({
-                      id: p.id,
-                      due_date: p.due_date,
-                      amount_php: p.amount_php,
+                    periods={unpaidRows.map((r) => ({
+                      id: r.period.id,
+                      due_date: r.period.due_date,
+                      amount_php: r.remaining,
                     }))}
                     methods={a.accepted_payment_methods as PaymentMethod[]}
                   />
