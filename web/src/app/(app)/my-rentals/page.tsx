@@ -120,6 +120,27 @@ export default async function MyRentalsPage() {
     }
   }
 
+  // Reminder texts we've already sent, per month, so the tenant sees them too.
+  const textSentByPeriod = new Map<string, string | null>();
+  if (ids.length) {
+    const admin = createAdminClient();
+    const { data: smsData } = await admin
+      .from("notifications")
+      .select("period_id, sent_at")
+      .in("agreement_id", ids)
+      .eq("channel", "sms")
+      .eq("status", "sent")
+      .order("sent_at", { ascending: false });
+    for (const n of (smsData ?? []) as {
+      period_id: string | null;
+      sent_at: string | null;
+    }[]) {
+      if (n.period_id && !textSentByPeriod.has(n.period_id)) {
+        textSentByPeriod.set(n.period_id, n.sent_at);
+      }
+    }
+  }
+
   const today = new Date(new Date().getTime() + 8 * 60 * 60 * 1000)
     .toISOString()
     .slice(0, 10);
@@ -254,6 +275,14 @@ export default async function MyRentalsPage() {
                           </span>
                         )}
                       </div>
+                      {textSentByPeriod.has(r.period.id) && (
+                        <p className="mt-1 text-[11px] font-medium text-sky-700">
+                          📩 Reminder texted to you
+                          {textSentByPeriod.get(r.period.id)
+                            ? ` · ${formatDate(textSentByPeriod.get(r.period.id)!.slice(0, 10))}`
+                            : ""}
+                        </p>
+                      )}
                     </li>
                   ))}
                 </ul>

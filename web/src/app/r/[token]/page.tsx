@@ -35,22 +35,41 @@ export default async function RenterPortalPage({
     asset: Pick<AssetRow, "label" | "type"> | null;
   };
 
-  const [{ data: periodsData }, { data: paymentsData }] = await Promise.all([
-    admin
-      .from("periods")
-      .select("*")
-      .eq("agreement_id", agreement.id)
-      .order("due_date", { ascending: true }),
-    admin
-      .from("payments")
-      .select("period_id, amount_php")
-      .eq("agreement_id", agreement.id),
-  ]);
+  const [{ data: periodsData }, { data: paymentsData }, { data: smsData }] =
+    await Promise.all([
+      admin
+        .from("periods")
+        .select("*")
+        .eq("agreement_id", agreement.id)
+        .order("due_date", { ascending: true }),
+      admin
+        .from("payments")
+        .select("period_id, amount_php")
+        .eq("agreement_id", agreement.id),
+      admin
+        .from("notifications")
+        .select("period_id, sent_at")
+        .eq("agreement_id", agreement.id)
+        .eq("channel", "sms")
+        .eq("status", "sent")
+        .order("sent_at", { ascending: false }),
+    ]);
   const periods = (periodsData ?? []) as PeriodRow[];
   const payments = (paymentsData ?? []) as {
     period_id: string | null;
     amount_php: number;
   }[];
+
+  // Months we've already texted a reminder for (so the tenant sees it too).
+  const textSentByPeriod = new Map<string, string | null>();
+  for (const n of (smsData ?? []) as {
+    period_id: string | null;
+    sent_at: string | null;
+  }[]) {
+    if (n.period_id && !textSentByPeriod.has(n.period_id)) {
+      textSentByPeriod.set(n.period_id, n.sent_at);
+    }
+  }
 
   const today = new Date(new Date().getTime() + 8 * 60 * 60 * 1000)
     .toISOString()
@@ -160,6 +179,14 @@ export default async function RenterPortalPage({
                   </span>
                 )}
               </div>
+              {textSentByPeriod.has(r.period.id) && (
+                <p className="mt-1 text-[11px] font-medium text-sky-700">
+                  📩 Reminder texted to you
+                  {textSentByPeriod.get(r.period.id)
+                    ? ` · ${formatDate(textSentByPeriod.get(r.period.id)!.slice(0, 10))}`
+                    : ""}
+                </p>
+              )}
             </li>
           ))}
         </ul>
