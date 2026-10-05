@@ -6,8 +6,7 @@ import {
   describeSchedule,
   PAYMENT_METHOD_LABELS,
 } from "@/lib/format";
-import { buildLedger } from "@/lib/ledger";
-import { LedgerPill } from "@/components/ledger-pill";
+import { PeriodStatusBadge } from "@/components/period-status-badge";
 import { RenterProofForm } from "@/components/renter-proof-form";
 import { RenterPushToggle } from "@/components/renter-push-toggle";
 import { ReminderBadge, type ReminderRecord } from "@/components/reminder-badge";
@@ -37,30 +36,12 @@ export default async function RenterPortalPage({
     asset: Pick<AssetRow, "label" | "type"> | null;
   };
 
-  const [{ data: periodsData }, { data: paymentsData }, { data: smsData }] =
-    await Promise.all([
-      admin
-        .from("periods")
-        .select("*")
-        .eq("agreement_id", agreement.id)
-        .order("due_date", { ascending: true }),
-      admin
-        .from("payments")
-        .select("period_id, amount_php")
-        .eq("agreement_id", agreement.id),
-      admin
-        .from("notifications")
-        .select("period_id, sent_at")
-        .eq("agreement_id", agreement.id)
-        .eq("channel", "sms")
-        .eq("status", "sent")
-        .order("sent_at", { ascending: false }),
-    ]);
+  const { data: periodsData } = await admin
+    .from("periods")
+    .select("*")
+    .eq("agreement_id", agreement.id)
+    .order("due_date", { ascending: true });
   const periods = (periodsData ?? []) as PeriodRow[];
-  const payments = (paymentsData ?? []) as {
-    period_id: string | null;
-    amount_php: number;
-  }[];
 
   // Reminder texts sent per month, so the tenant sees the same record the
   // lessor does (most recent first).
@@ -94,7 +75,7 @@ export default async function RenterPortalPage({
   const unpaid = periods.filter((p) =>
     ["upcoming", "due", "overdue"].includes(p.status),
   );
-  const nextDue = unpaidRows[0];
+  const nextDue = unpaid[0];
 
   return (
     <main className="mx-auto w-full max-w-lg flex-1 px-4 py-8">
@@ -109,20 +90,12 @@ export default async function RenterPortalPage({
 
       {nextDue && (
         <div className="mt-5 rounded-xl border border-slate-200 bg-white p-5">
-          <p className="text-sm text-slate-500">
-            {nextDue.allocated > 0 ? "Balance on this month" : "Next payment"}
-          </p>
+          <p className="text-sm text-slate-500">Next payment</p>
           <p className="mt-1 text-3xl font-semibold text-slate-900">
-            {formatPeso(nextDue.remaining)}
+            {formatPeso(nextDue.amount_php)}
           </p>
           <p className="mt-1 text-sm text-slate-500">
-            Due {formatDate(nextDue.period.due_date)}
-            {nextDue.allocated > 0 && (
-              <span className="text-emerald-600">
-                {" "}
-                · {formatPeso(nextDue.allocated)} already received
-              </span>
-            )}
+            Due {formatDate(nextDue.due_date)}
           </p>
         </div>
       )}
@@ -150,13 +123,13 @@ export default async function RenterPortalPage({
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
           Submit a payment
         </h2>
-        {unpaidRows.length > 0 ? (
+        {unpaid.length > 0 ? (
           <RenterProofForm
             token={token}
-            periods={unpaidRows.map((r) => ({
-              id: r.period.id,
-              due_date: r.period.due_date,
-              amount_php: r.remaining,
+            periods={unpaid.map((p) => ({
+              id: p.id,
+              due_date: p.due_date,
+              amount_php: p.amount_php,
             }))}
             methods={agreement.accepted_payment_methods}
           />
@@ -169,7 +142,7 @@ export default async function RenterPortalPage({
 
       <section className="mt-8">
         <h2 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
-          Your payment record
+          History
         </h2>
         <ul className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200 bg-white">
           {periods.map((p) => {
@@ -196,14 +169,6 @@ export default async function RenterPortalPage({
             );
           })}
         </ul>
-        <div className="mt-3 flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-          <span className="text-sm font-medium text-slate-700">
-            Balance up to date
-          </span>
-          <span className="text-lg font-bold text-amber-700">
-            {formatPeso(ledger.outstanding)}
-          </span>
-        </div>
       </section>
     </main>
   );
