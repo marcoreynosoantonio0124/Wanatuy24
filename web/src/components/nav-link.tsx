@@ -24,8 +24,8 @@ export function NavLink({
       aria-current={active ? "page" : undefined}
       className={`rounded-md px-2.5 py-1.5 text-sm font-medium transition active:scale-95 ${
         active
-          ? "bg-emerald-100 text-emerald-800 shadow-sm"
-          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900 active:bg-slate-200"
+          ? "bg-emerald-500/15 text-emerald-300 shadow-sm ring-1 ring-emerald-400/20"
+          : "text-slate-300 hover:bg-white/10 hover:text-white active:bg-white/15"
       }`}
     >
       {children}
