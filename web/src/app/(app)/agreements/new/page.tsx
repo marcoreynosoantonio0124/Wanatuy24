@@ -6,12 +6,18 @@ import type { AssetRow } from "@/lib/database.types";
 export const dynamic = "force-dynamic";
 
 export default async function NewAgreementPage() {
-  const { supabase } = await requireUser();
-  const { data } = await supabase
-    .from("assets")
-    .select("id, label")
-    .order("created_at", { ascending: false });
+  const { user, supabase } = await requireUser();
+  const [{ data }, profileRes] = await Promise.all([
+    supabase
+      .from("assets")
+      .select("id, label")
+      .order("created_at", { ascending: false }),
+    supabase.from("users").select("id_file_path").eq("id", user.id).single(),
+  ]);
   const assets = (data ?? []) as Pick<AssetRow, "id" | "label">[];
+  const hasId = Boolean(
+    (profileRes.data as { id_file_path?: string | null } | null)?.id_file_path,
+  );
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
@@ -33,7 +39,7 @@ export default async function NewAgreementPage() {
           </Link>
         </div>
       ) : (
-        <AgreementForm assets={assets} />
+        <AgreementForm assets={assets} hasId={hasId} />
       )}
     </div>
   );

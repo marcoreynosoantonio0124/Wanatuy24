@@ -9,6 +9,7 @@ import { pesosToCentavos } from "@/lib/format";
 import { ALL_PAYMENT_METHODS } from "@/lib/format";
 
 const CONTRACT_BUCKET = "contracts";
+const ID_BUCKET = "ids";
 const CONTRACT_MAX_BYTES = 20 * 1024 * 1024;
 const CONTRACT_TYPES = [
   "application/pdf",
@@ -16,6 +17,16 @@ const CONTRACT_TYPES = [
   "image/jpeg",
   "image/webp",
 ];
+
+/** True when the value is a usable uploaded file of an allowed type/size. */
+function isValidUpload(file: FormDataEntryValue | null): file is File {
+  return (
+    file instanceof File &&
+    file.size > 0 &&
+    file.size <= CONTRACT_MAX_BYTES &&
+    CONTRACT_TYPES.includes(file.type)
+  );
+}
 
 const schema = z
   .object({
@@ -81,6 +92,24 @@ export async function createAgreement(
     return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
   }
 
+  // ID verification: require a government ID on file. We keep it once on the
+  // lessor's profile, so it's only asked for until there's one on file.
+  const { data: profile } = await supabase
+    .from("users")
+    .select("id_file_path")
+    .eq("id", user.id)
+    .single();
+  const hasIdOnFile = Boolean(
+    (profile as { id_file_path?: string | null } | null)?.id_file_path,
+  );
+  const idFile = formData.get("lessor_id");
+  if (!hasIdOnFile && !isValidUpload(idFile)) {
+    return {
+      error:
+        "Please upload a photo of your valid ID (JPG, PNG, or PDF) for verification.",
+    };
+  }
+
   const v = parsed.data;
   const { data: inserted, error } = await supabase
     .from("agreements")
@@ -119,15 +148,11 @@ export async function createAgreement(
     return { error: `Agreement saved, but scheduling failed: ${rpcError.message}` };
   }
 
+  const admin = createAdminClient();
+
   // If a signed contract was uploaded, keep it in the vault too.
   const file = formData.get("contract");
-  if (
-    file instanceof File &&
-    file.size > 0 &&
-    file.size <= CONTRACT_MAX_BYTES &&
-    CONTRACT_TYPES.includes(file.type)
-  ) {
-    const admin = createAdminClient();
+  if (isValidUpload(file)) {
     const ext = file.name.includes(".") ? file.name.split(".").pop() : "bin";
     const path = `${inserted.id}/contract-${Date.now()}.${ext}`;
     const bytes = new Uint8Array(await file.arrayBuffer());
@@ -139,6 +164,22 @@ export async function createAgreement(
         .from("agreements")
         .update({ contract_file_path: path })
         .eq("id", inserted.id);
+    }
+  }
+
+  // Store / replace the lessor's ID on their profile (used for verification).
+  if (isValidUpload(idFile)) {
+    const ext = idFile.name.includes(".") ? idFile.name.split(".").pop() : "bin";
+    const path = `${user.id}/id-${Date.now()}.${ext}`;
+    const bytes = new Uint8Array(await idFile.arrayBuffer());
+    const { error: upErr } = await admin.storage
+      .from(ID_BUCKET)
+      .upload(path, bytes, { contentType: idFile.type, upsert: false });
+    if (!upErr) {
+      await admin
+        .from("users")
+        .update({ id_file_path: path })
+        .eq("id", user.id);
     }
   }
 

@@ -19,7 +19,13 @@ const label = "mb-1 block text-sm font-medium text-slate-700";
 const input =
   "w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200";
 
-export function AgreementForm({ assets }: { assets: AssetOption[] }) {
+export function AgreementForm({
+  assets,
+  hasId = false,
+}: {
+  assets: AssetOption[];
+  hasId?: boolean;
+}) {
   const [state, action, pending] = useActionState<AgreementFormState, FormData>(
     createAgreement,
     {},
@@ -134,6 +140,31 @@ export function AgreementForm({ assets }: { assets: AssetOption[] }) {
         {ai.error && <p className="text-sm text-red-600">{ai.error}</p>}
         {ai.msg && <p className="text-sm text-emerald-700">{ai.msg}</p>}
       </fieldset>
+
+      <fieldset className="space-y-3 rounded-xl border border-indigo-200 bg-indigo-50/60 p-4">
+        <legend className="px-1 text-sm font-semibold text-indigo-800">
+          🪪 Your ID (for verification)
+        </legend>
+        {hasId ? (
+          <p className="text-xs text-indigo-900/70">
+            ✓ Your ID is on file. You can upload a new photo below to replace it
+            (optional).
+          </p>
+        ) : (
+          <p className="text-xs text-indigo-900/70">
+            Upload a clear photo of a valid government ID (e.g. UMID, driver&apos;s
+            license, passport). Kept private — only you can view it. Required for
+            your first agreement.
+          </p>
+        )}
+        <input
+          type="file"
+          name="lessor_id"
+          accept="application/pdf,image/png,image/jpeg,image/webp"
+          className="text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-indigo-600 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-indigo-700"
+        />
+      </fieldset>
+
       <fieldset className="space-y-4 rounded-xl border border-slate-200 bg-white p-4">
         <legend className="px-1 text-sm font-semibold text-slate-700">
           Unit & renter
