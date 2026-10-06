@@ -2,23 +2,52 @@
  * Friendly role mascots drawn inline as SVG (crisp at any size, instant load):
  * a waving landlord with keys for the lessor, a traveler with luggage for the
  * renter. They float, wave, and sparkle via the .char-* classes in globals.css
- * (which respect prefers-reduced-motion).
+ * (which respect prefers-reduced-motion), and react to the data with a mood:
+ *   happy   → big smile + 🎉 (everyone paid)
+ *   worried → small frown + 💧 (something overdue)
+ *   neutral → a calm smile (default)
  */
+export type Mood = "happy" | "neutral" | "worried";
+
 export function RoleCharacter({
   role,
+  mood = "neutral",
   className = "h-24 w-auto",
 }: {
   role: "lessor" | "renter";
+  mood?: Mood;
   className?: string;
 }) {
+  const headX = role === "lessor" ? 73 : 61;
+  const mouthX = headX - 5;
+  const mouth =
+    mood === "happy"
+      ? `M${mouthX} 80 q5 7 10 0`
+      : mood === "worried"
+        ? `M${mouthX} 83 q5 -4 10 0`
+        : `M${mouthX} 80 q5 4 10 0`;
+  const cheek = mood === "happy" ? 0.7 : 0.5;
+
+  const accessory =
+    mood === "happy" ? (
+      <text
+        className="char-bob"
+        x={headX + 20}
+        y={42}
+        fontSize="20"
+        style={{ transformOrigin: "center" }}
+      >
+        🎉
+      </text>
+    ) : mood === "worried" ? (
+      <text className="char-twinkle" x={headX + 14} y={64} fontSize="13">
+        💧
+      </text>
+    ) : null;
+
   if (role === "lessor") {
     return (
-      <svg
-        className={`char-float ${className}`}
-        viewBox="0 0 150 168"
-        role="img"
-        aria-label="Landlord mascot"
-      >
+      <svg className={`char-float ${className}`} viewBox="0 0 150 168" role="img" aria-label="Landlord mascot">
         <g opacity="0.95">
           <rect x="96" y="60" width="44" height="40" rx="4" fill="#0f3b2e" stroke="#34d399" strokeWidth="2" />
           <path d="M92 62 L118 42 L144 62 Z" fill="#34d399" />
@@ -44,27 +73,20 @@ export function RoleCharacter({
           <path d="M54 70 q0 -22 19 -22 q19 0 19 22 q-8 -9 -19 -9 q-11 0 -19 9 Z" fill="#2a2636" />
           <circle cx="67" cy="72" r="2" fill="#1f2937" />
           <circle cx="79" cy="72" r="2" fill="#1f2937" />
-          <path d="M68 80 q5 4 10 0" stroke="#1f2937" strokeWidth="2" fill="none" strokeLinecap="round" />
-          <circle cx="63" cy="78" r="2.5" fill="#fb7185" opacity="0.5" />
-          <circle cx="83" cy="78" r="2.5" fill="#fb7185" opacity="0.5" />
+          <path d={mouth} stroke="#1f2937" strokeWidth="2" fill="none" strokeLinecap="round" />
+          <circle cx="63" cy="78" r="2.5" fill="#fb7185" opacity={cheek} />
+          <circle cx="83" cy="78" r="2.5" fill="#fb7185" opacity={cheek} />
         </g>
-        <path
-          className="char-twinkle"
-          style={{ transformOrigin: "50% 50%" }}
-          d="M126 50 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 Z"
-          fill="#fde68a"
-        />
+        {mood !== "worried" && (
+          <path className="char-twinkle" style={{ transformOrigin: "50% 50%" }} d="M126 50 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 Z" fill="#fde68a" />
+        )}
+        {accessory}
       </svg>
     );
   }
 
   return (
-    <svg
-      className={`char-float ${className}`}
-      viewBox="0 0 150 168"
-      role="img"
-      aria-label="Renter mascot"
-    >
+    <svg className={`char-float ${className}`} viewBox="0 0 150 168" role="img" aria-label="Renter mascot">
       <g className="char-bob">
         <rect x="46" y="126" width="12" height="30" rx="6" fill="#1e293b" />
         <rect x="64" y="126" width="12" height="30" rx="6" fill="#1e293b" />
@@ -80,9 +102,9 @@ export function RoleCharacter({
         <circle cx="61" cy="46" r="6" fill="#3a2b22" />
         <circle cx="55" cy="72" r="2" fill="#1f2937" />
         <circle cx="67" cy="72" r="2" fill="#1f2937" />
-        <path d="M56 80 q5 4 10 0" stroke="#1f2937" strokeWidth="2" fill="none" strokeLinecap="round" />
-        <circle cx="51" cy="78" r="2.5" fill="#fb7185" opacity="0.5" />
-        <circle cx="71" cy="78" r="2.5" fill="#fb7185" opacity="0.5" />
+        <path d={mouth} stroke="#1f2937" strokeWidth="2" fill="none" strokeLinecap="round" />
+        <circle cx="51" cy="78" r="2.5" fill="#fb7185" opacity={cheek} />
+        <circle cx="71" cy="78" r="2.5" fill="#fb7185" opacity={cheek} />
       </g>
       <g className="char-bob" style={{ animationDelay: "0.2s" }}>
         <rect x="96" y="92" width="34" height="50" rx="7" fill="#f59e0b" />
@@ -94,12 +116,10 @@ export function RoleCharacter({
         <circle cx="103" cy="146" r="4" fill="#1e293b" />
         <circle cx="123" cy="146" r="4" fill="#1e293b" />
       </g>
-      <path
-        className="char-twinkle"
-        style={{ transformOrigin: "50% 50%" }}
-        d="M128 58 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 Z"
-        fill="#bae6fd"
-      />
+      {mood !== "worried" && (
+        <path className="char-twinkle" style={{ transformOrigin: "50% 50%" }} d="M128 58 l2 5 5 2 -5 2 -2 5 -2 -5 -5 -2 5 -2 Z" fill="#bae6fd" />
+      )}
+      {accessory}
     </svg>
   );
 }
