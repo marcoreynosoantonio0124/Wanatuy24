@@ -1,9 +1,11 @@
 /**
- * Friendly flat-cartoon illustrations for the role-picker cards.
+ * Friendly flat-cartoon illustrations for the role-picker cards — the same two
+ * characters as the dashboard mascots: DUE (lessor, with a house key) and MEET
+ * (renter, with luggage), each with their name on their shirt.
  * Pure SVG (no image assets), so they stay crisp and load instantly.
  */
 
-/** A lessor / landlord happily holding a rental agreement, house behind them. */
+/** DUE — the lessor, holding a rental agreement and a house key, house behind. */
 export function LessorScene({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 200 160" className={className} role="img" aria-label="Landlord holding a rental agreement">
@@ -24,8 +26,9 @@ export function LessorScene({ className }: { className?: string }) {
         {/* legs */}
         <rect x="112" y="118" width="12" height="26" rx="5" fill="#1e293b" />
         <rect x="132" y="118" width="12" height="26" rx="5" fill="#1e293b" />
-        {/* body */}
+        {/* body + name on the shirt */}
         <rect x="104" y="80" width="48" height="46" rx="16" fill="#0f766e" />
+        <text x="128" y="108" textAnchor="middle" fontSize="12" fontWeight="800" letterSpacing="0.5" fill="#ecfdf5" style={{ fontFamily: "inherit" }}>DUE</text>
         {/* arm holding paper */}
         <rect x="96" y="92" width="22" height="11" rx="5" fill="#0f766e" />
         {/* head */}
@@ -43,6 +46,15 @@ export function LessorScene({ className }: { className?: string }) {
           <path d="M84 113 l4 4 l8 -9" stroke="#059669" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
         </g>
       </g>
+
+      {/* a big friendly house key — the lessor's accessory */}
+      <g>
+        <circle cx="172" cy="82" r="9" fill="none" stroke="#fbbf24" strokeWidth="4" />
+        <circle cx="172" cy="82" r="2.5" fill="#fef3c7" />
+        <rect x="170" y="89" width="4" height="28" rx="1" fill="#fbbf24" />
+        <rect x="174" y="104" width="9" height="4" rx="1" fill="#fbbf24" />
+        <rect x="174" y="112" width="6" height="4" rx="1" fill="#fbbf24" />
+      </g>
     </svg>
   );
 }
@@ -58,8 +70,9 @@ export function TenantScene({ className }: { className?: string }) {
         {/* legs */}
         <rect x="66" y="116" width="12" height="28" rx="5" fill="#1e293b" />
         <rect x="86" y="116" width="12" height="28" rx="5" fill="#1e293b" />
-        {/* body */}
+        {/* body + name on the shirt */}
         <rect x="58" y="76" width="48" height="46" rx="16" fill="#b45309" />
+        <text x="82" y="104" textAnchor="middle" fontSize="10" fontWeight="800" letterSpacing="0.3" fill="#fff7ed" style={{ fontFamily: "inherit" }}>MEET</text>
         {/* arm reaching to luggage handle */}
         <rect x="98" y="86" width="26" height="11" rx="5" fill="#b45309" />
         {/* head */}

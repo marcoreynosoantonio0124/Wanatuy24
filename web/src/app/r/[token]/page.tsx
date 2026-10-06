@@ -4,6 +4,7 @@ import { describeSchedule } from "@/lib/format";
 import { buildRenterView } from "@/lib/renter-view";
 import { RenterDashboard } from "@/components/renter-dashboard";
 import { AmbientBackground } from "@/components/ambient-background";
+import { currentPhaseManila } from "@/lib/time-theme";
 import type { AgreementRow, AssetRow, PeriodRow } from "@/lib/database.types";
 
 export const dynamic = "force-dynamic";
@@ -84,7 +85,7 @@ export default async function RenterPortalPage({
 
   return (
     <div className="app-dark relative isolate min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
-    <AmbientBackground />
+    <AmbientBackground initialPhase={currentPhaseManila()} />
     <div className="relative z-10">
     <RenterDashboard
       token={token}

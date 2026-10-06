@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { NavLink } from "@/components/nav-link";
 import { AmbientBackground } from "@/components/ambient-background";
+import { currentPhaseManila } from "@/lib/time-theme";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const { user, supabase } = await requireUser();
@@ -35,7 +36,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
 
   return (
     <div className="app-dark relative isolate flex min-h-full flex-1 flex-col bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
-      <AmbientBackground />
+      <AmbientBackground initialPhase={currentPhaseManila()} />
       <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
           <nav className="flex items-center gap-1 sm:gap-4">

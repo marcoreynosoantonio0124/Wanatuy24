@@ -1,7 +1,8 @@
 /**
  * Friendly role mascots drawn inline as SVG (crisp at any size, instant load):
- * a waving landlord with keys for the lessor, a traveler with luggage for the
- * renter. They float, wave, and sparkle via the .char-* classes in globals.css
+ *   DUE  — the lessor, a waving landlord with keys, name on his shirt.
+ *   MEET — the renter, a traveler with luggage, name on her shirt.
+ * They float, wave, and sparkle via the .char-* classes in globals.css
  * (which respect prefers-reduced-motion), and react to the data with a mood:
  *   happy   → big smile + 🎉 (everyone paid)
  *   worried → small frown + 💧 (something overdue)
@@ -58,6 +59,7 @@ export function RoleCharacter({
           <rect x="58" y="126" width="12" height="30" rx="6" fill="#1e293b" />
           <rect x="76" y="126" width="12" height="30" rx="6" fill="#1e293b" />
           <path d="M50 94 q23 -13 46 0 l-5 42 q-18 7 -36 0 Z" fill="#10b981" />
+          <text x="72" y="118" textAnchor="middle" fontSize="12" fontWeight="800" letterSpacing="0.5" fill="#ecfdf5" style={{ fontFamily: "inherit" }}>DUE</text>
           <rect x="86" y="96" width="11" height="28" rx="5.5" fill="#10b981" />
           <circle cx="98" cy="122" r="6" fill="#f3c9a3" />
           <g>
@@ -91,6 +93,7 @@ export function RoleCharacter({
         <rect x="46" y="126" width="12" height="30" rx="6" fill="#1e293b" />
         <rect x="64" y="126" width="12" height="30" rx="6" fill="#1e293b" />
         <path d="M38 94 q23 -13 46 0 l-5 42 q-18 7 -36 0 Z" fill="#0ea5e9" />
+        <text x="60" y="118" textAnchor="middle" fontSize="10" fontWeight="800" letterSpacing="0.3" fill="#f0f9ff" style={{ fontFamily: "inherit" }}>MEET</text>
         <rect x="74" y="96" width="11" height="26" rx="5.5" fill="#0ea5e9" />
         <circle cx="85" cy="120" r="6" fill="#f3c9a3" />
         <g className="char-wave" style={{ transformOrigin: "50% 100%" }}>

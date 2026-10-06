@@ -4,9 +4,13 @@
 export function DuskScene({
   className,
   preserveAspectRatio = "xMidYMid slice",
+  silhouetteOnly = false,
 }: {
   className?: string;
   preserveAspectRatio?: string;
+  /** Draw only the land + houses (no sky / sun), so it can sit over the
+   *  animated ambient sky as a foreground neighborhood. */
+  silhouetteOnly?: boolean;
 }) {
   // A few lit windows, generated so they look scattered but stable.
   const windows = [
@@ -44,18 +48,19 @@ export function DuskScene({
         </linearGradient>
       </defs>
 
-      {/* sky */}
-      <rect width="1200" height="760" fill="url(#dk-sky)" />
-
-      {/* sun + glow, low center-right */}
-      <circle cx="820" cy="470" r="420" fill="url(#dk-sun)" />
-      <circle cx="820" cy="452" r="72" fill="#fff2d6" />
-
-      {/* soft horizon haze */}
-      <g fill="#ffe8bf" opacity="0.16">
-        <rect x="0" y="436" width="1200" height="8" />
-        <rect x="0" y="452" width="1200" height="4" />
-      </g>
+      {/* sky + sun + haze — skipped in silhouette mode so the ambient sky
+          behind shows through */}
+      {!silhouetteOnly && (
+        <>
+          <rect width="1200" height="760" fill="url(#dk-sky)" />
+          <circle cx="820" cy="470" r="420" fill="url(#dk-sun)" />
+          <circle cx="820" cy="452" r="72" fill="#fff2d6" />
+          <g fill="#ffe8bf" opacity="0.16">
+            <rect x="0" y="436" width="1200" height="8" />
+            <rect x="0" y="452" width="1200" height="4" />
+          </g>
+        </>
+      )}
 
       {/* distant skyline silhouettes */}
       <g fill="#1a2140">
