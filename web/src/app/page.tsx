@@ -57,8 +57,8 @@ export default async function LandingPage() {
           <span className="text-emerald-400">the hassle.</span>
         </h1>
 
-        {/* Renter-side slogan */}
-        <p className="mt-4 max-w-3xl text-3xl font-bold leading-tight text-white/90 drop-shadow sm:text-4xl">
+        {/* Renter-side slogan — same size as the landlord headline */}
+        <p className="mt-4 max-w-3xl text-5xl font-extrabold leading-[1.05] tracking-tight text-white drop-shadow sm:text-6xl">
           Pay rent without <span className="text-emerald-400">forgetting it.</span>
         </p>
 
