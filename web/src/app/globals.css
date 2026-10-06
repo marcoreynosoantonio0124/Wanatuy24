@@ -128,3 +128,16 @@ summary,
 .app-dark .hover\:bg-slate-50:hover,
 .app-dark .hover\:bg-slate-100:hover { background-color: rgba(255, 255, 255, 0.08) !important; }
 .app-dark .hover\:bg-emerald-50:hover { background-color: rgba(16, 185, 129, 0.15) !important; }
+
+/* ---- Role mascots ------------------------------------------------------
+   Gentle life for the landlord / traveler characters in the headers. */
+@media (prefers-reduced-motion: no-preference) {
+  .char-float { animation: char-float 4s ease-in-out infinite; }
+  .char-bob { animation: char-bob 3s ease-in-out infinite; }
+  .char-wave { animation: char-wave 2.2s ease-in-out infinite; transform-box: fill-box; }
+  .char-twinkle { animation: char-twinkle 1.8s ease-in-out infinite; transform-box: fill-box; }
+}
+@keyframes char-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+@keyframes char-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes char-wave { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(16deg); } 60% { transform: rotate(-6deg); } }
+@keyframes char-twinkle { 0%, 100% { opacity: 0.35; transform: scale(0.7); } 50% { opacity: 1; transform: scale(1.1); } }
