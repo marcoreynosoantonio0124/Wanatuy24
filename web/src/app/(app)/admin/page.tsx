@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
@@ -102,6 +103,33 @@ export default async function AdminPage() {
       .gte("sent_at", startMonthIso),
   ]);
 
+  // Lists for the dashboard-preview section: real landlords to view-as, and
+  // real renters whose portal we can open.
+  const [lessorsListRes, rentersListRes] = await Promise.all([
+    admin
+      .from("users")
+      .select("id, email")
+      .eq("role", "lessor")
+      .order("created_at", { ascending: false })
+      .limit(15),
+    admin
+      .from("agreements")
+      .select("id, renter_name, renter_access_token, asset:assets(label)")
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(15),
+  ]);
+  const lessorList = (lessorsListRes.data ?? []) as {
+    id: string;
+    email: string;
+  }[];
+  const renterList = (rentersListRes.data ?? []) as unknown as {
+    id: string;
+    renter_name: string;
+    renter_access_token: string;
+    asset: { label: string } | null;
+  }[];
+
   const paid = (paidRes.data ?? []) as { amount_php: number }[];
   const due = (dueRes.data ?? []) as { amount_php: number; status: string }[];
   const collected = paid.reduce((s, r) => s + (r.amount_php || 0), 0);
@@ -129,6 +157,91 @@ export default async function AdminPage() {
           A private overview of everyone using the app. Only you can see this.
         </p>
       </div>
+
+      {/* Preview dashboards — the founder's view into both sides of the app */}
+      <section>
+        <h2 className="mb-1 text-sm font-semibold uppercase tracking-wide text-slate-500">
+          Preview dashboards
+        </h2>
+        <p className="mb-3 text-sm text-slate-500">
+          See the app exactly the way your users see it — jump into a sample, or
+          open any real landlord or renter to check on them.
+        </p>
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <PreviewCard
+            href="/admin/sample/lessor"
+            icon="🧑‍💼"
+            title="Sample lessor view"
+            sub="Example landlord dashboard (DUE)"
+          />
+          <PreviewCard
+            href="/admin/sample/tenant"
+            icon="🧳"
+            title="Sample renter view"
+            sub="Example tenant dashboard (MEET)"
+          />
+        </div>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-2">
+          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <p className="mb-1 text-sm font-semibold text-slate-700">
+              🏠 Open a real landlord
+            </p>
+            {lessorList.length === 0 ? (
+              <p className="py-3 text-sm text-slate-400">No landlords yet.</p>
+            ) : (
+              <ul className="divide-y divide-slate-100">
+                {lessorList.map((l) => (
+                  <li key={l.id}>
+                    <Link
+                      href={`/admin/as/lessor/${l.id}`}
+                      className="flex items-center justify-between gap-2 py-2.5 text-sm transition hover:text-emerald-700"
+                    >
+                      <span className="truncate text-slate-800">{l.email}</span>
+                      <span className="shrink-0 font-semibold text-emerald-700">
+                        Open ›
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="rounded-2xl border border-slate-200 bg-white p-4">
+            <p className="mb-1 text-sm font-semibold text-slate-700">
+              🧾 Open a real renter
+            </p>
+            {renterList.length === 0 ? (
+              <p className="py-3 text-sm text-slate-400">No renters yet.</p>
+            ) : (
+              <ul className="divide-y divide-slate-100">
+                {renterList.map((r) => (
+                  <li key={r.id}>
+                    <a
+                      href={`/r/${r.renter_access_token}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center justify-between gap-2 py-2.5 text-sm transition hover:text-emerald-700"
+                    >
+                      <span className="min-w-0 truncate text-slate-800">
+                        {r.renter_name}
+                        {r.asset?.label ? (
+                          <span className="text-slate-400"> · {r.asset.label}</span>
+                        ) : null}
+                      </span>
+                      <span className="shrink-0 font-semibold text-emerald-700">
+                        Open ↗
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </section>
 
       {/* People */}
       <section>
@@ -255,6 +368,34 @@ export default async function AdminPage() {
         )}
       </section>
     </div>
+  );
+}
+
+function PreviewCard({
+  href,
+  icon,
+  title,
+  sub,
+}: {
+  href: string;
+  icon: string;
+  title: string;
+  sub: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-emerald-300 hover:shadow-md active:scale-[0.99]"
+    >
+      <span className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-slate-100 text-2xl">
+        {icon}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block font-semibold text-slate-900">{title}</span>
+        <span className="block text-sm text-slate-500">{sub}</span>
+      </span>
+      <span className="shrink-0 font-semibold text-emerald-700">Open ›</span>
+    </Link>
   );
 }
 

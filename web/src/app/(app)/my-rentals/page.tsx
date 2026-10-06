@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { describeSchedule } from "@/lib/format";
@@ -28,6 +29,14 @@ const CONTRACT_BUCKET = "contracts";
 
 export default async function MyRentalsPage() {
   const { user, supabase } = await requireUser();
+
+  // Founder / admin accounts are monitoring-only — send them to the Command Center.
+  const { data: me } = await supabase
+    .from("users")
+    .select("is_admin")
+    .eq("id", user.id)
+    .single();
+  if ((me as { is_admin?: boolean } | null)?.is_admin) redirect("/admin");
 
   const { data: agData } = await supabase
     .from("agreements")
