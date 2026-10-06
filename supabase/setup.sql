@@ -792,3 +792,10 @@ values (
   array['application/pdf', 'image/png', 'image/jpeg', 'image/webp']
 )
 on conflict (id) do nothing;
+
+-- ---------------------------------------------------------------------------
+-- 0015_renter_id: renter ID on the agreement (renter may have no account),
+-- stored privately in the 'ids' bucket.
+-- ---------------------------------------------------------------------------
+alter table public.agreements
+  add column if not exists renter_id_file_path text;

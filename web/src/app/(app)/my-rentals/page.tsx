@@ -1,17 +1,13 @@
 import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
-import {
-  formatPeso,
-  formatDate,
-  describeSchedule,
-  PAYMENT_METHOD_LABELS,
-} from "@/lib/format";
-import { PeriodStatusBadge } from "@/components/period-status-badge";
-import { RenterProofForm } from "@/components/renter-proof-form";
-import { DuskScene } from "@/components/dusk-scene";
-import { ReminderBadge, type ReminderRecord } from "@/components/reminder-badge";
-import { reminderKindLabel } from "@/lib/sms";
-import type { AgreementRow, PaymentMethod, PeriodRow } from "@/lib/database.types";
+import { describeSchedule } from "@/lib/format";
+import { buildRenterView } from "@/lib/renter-view";
+import { RenterDashboard } from "@/components/renter-dashboard";
+import type {
+  AgreementRow,
+  PaymentMethod,
+  PeriodRow,
+} from "@/lib/database.types";
 
 export const dynamic = "force-dynamic";
 
@@ -19,16 +15,16 @@ type Agreement = Pick<
   AgreementRow,
   | "id"
   | "renter_name"
-  | "amount_php"
   | "frequency"
   | "due_day"
-  | "status"
   | "payment_instructions"
   | "accepted_payment_methods"
   | "renter_access_token"
   | "asset_id"
   | "contract_file_path"
->;
+> & { renter_id_file_path: string | null };
+
+const CONTRACT_BUCKET = "contracts";
 
 export default async function MyRentalsPage() {
   const { user, supabase } = await requireUser();
@@ -36,261 +32,151 @@ export default async function MyRentalsPage() {
   const { data: agData } = await supabase
     .from("agreements")
     .select(
-      "id, renter_name, amount_php, frequency, due_day, status, payment_instructions, accepted_payment_methods, renter_access_token, asset_id, contract_file_path",
+      "id, renter_name, frequency, due_day, payment_instructions, accepted_payment_methods, renter_access_token, asset_id, contract_file_path, renter_id_file_path",
     )
     .eq("renter_user_id", user.id)
     .order("created_at", { ascending: false });
   const agreements = (agData ?? []) as unknown as Agreement[];
 
-  // Renters can't read the assets table via RLS, so fetch labels server-side
-  // (already scoped to this renter's own agreements above).
-  const labelById = new Map<string, string>();
-  const assetIds = [...new Set(agreements.map((a) => a.asset_id))];
-  if (assetIds.length) {
-    const admin = createAdminClient();
-    const { data: assetRows } = await admin
-      .from("assets")
-      .select("id, label")
-      .in("id", assetIds);
-    for (const row of (assetRows ?? []) as { id: string; label: string }[]) {
-      labelById.set(row.id, row.label);
-    }
-  }
-
-  // Signed links to each rental's contract (renter sees only their own).
-  const contractLinks = new Map<string, { view: string | null; download: string | null }>();
-  const withContract = agreements.filter((a) => a.contract_file_path);
-  if (withContract.length) {
-    const admin = createAdminClient();
-    await Promise.all(
-      withContract.map(async (a) => {
-        const [{ data: v }, { data: d }] = await Promise.all([
-          admin.storage
-            .from("contracts")
-            .createSignedUrl(a.contract_file_path as string, 60 * 60),
-          admin.storage
-            .from("contracts")
-            .createSignedUrl(a.contract_file_path as string, 60 * 60, {
-              download: true,
-            }),
-        ]);
-        contractLinks.set(a.id, {
-          view: v?.signedUrl ?? null,
-          download: d?.signedUrl ?? null,
-        });
-      }),
+  if (agreements.length === 0) {
+    return (
+      <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
+        <p className="text-slate-600">Wala pang naka-link na rental.</p>
+        <p className="mt-1 text-sm text-slate-400">
+          Ask your landlord to add your email ({user.email}) to your agreement,
+          then sign in again — it will show up here automatically.
+        </p>
+      </div>
     );
   }
 
   const ids = agreements.map((a) => a.id);
-  const { data: perData } = ids.length
-    ? await supabase
-        .from("periods")
-        .select("*")
-        .in("agreement_id", ids)
-        .order("due_date", { ascending: true })
-    : { data: [] };
-  const periods = (perData ?? []) as PeriodRow[];
-  const byAgreement = new Map<string, PeriodRow[]>();
-  for (const p of periods) {
-    const arr = byAgreement.get(p.agreement_id) ?? [];
-    arr.push(p);
-    byAgreement.set(p.agreement_id, arr);
-  }
+  const assetIds = [...new Set(agreements.map((a) => a.asset_id))];
+  const admin = createAdminClient();
 
-  // Reminder texts sent per month (via admin — scoped to this renter's own
-  // agreements), so the tenant sees the same record the lessor does.
-  const remindersByPeriod = new Map<string, ReminderRecord[]>();
-  if (ids.length) {
-    const admin = createAdminClient();
-    const { data: smsData } = await admin
-      .from("notifications")
-      .select("period_id, sent_at, template_key, body")
-      .in("agreement_id", ids)
-      .eq("channel", "sms")
-      .eq("status", "sent")
-      .order("sent_at", { ascending: false });
-    for (const n of (smsData ?? []) as {
+  const [{ data: assetRows }, { data: perData }, { data: payData }, { data: smsData }] =
+    await Promise.all([
+      admin.from("assets").select("id, label, address_text").in("id", assetIds),
+      admin.from("periods").select("*").in("agreement_id", ids),
+      admin
+        .from("payments")
+        .select("agreement_id, period_id, amount_php")
+        .in("agreement_id", ids),
+      admin
+        .from("notifications")
+        .select("agreement_id, period_id, sent_at, template_key, body")
+        .in("agreement_id", ids)
+        .eq("channel", "sms")
+        .eq("status", "sent")
+        .order("sent_at", { ascending: false }),
+    ]);
+
+  const assetById = new Map(
+    (
+      (assetRows ?? []) as {
+        id: string;
+        label: string;
+        address_text: string | null;
+      }[]
+    ).map((a) => [a.id, a]),
+  );
+
+  const periodsByAg = new Map<string, PeriodRow[]>();
+  for (const p of (perData ?? []) as (PeriodRow & { agreement_id: string })[]) {
+    const arr = periodsByAg.get(p.agreement_id) ?? [];
+    arr.push(p);
+    periodsByAg.set(p.agreement_id, arr);
+  }
+  const payByAg = new Map<string, { period_id: string | null; amount_php: number }[]>();
+  for (const p of (payData ?? []) as {
+    agreement_id: string;
+    period_id: string | null;
+    amount_php: number;
+  }[]) {
+    const arr = payByAg.get(p.agreement_id) ?? [];
+    arr.push({ period_id: p.period_id, amount_php: p.amount_php });
+    payByAg.set(p.agreement_id, arr);
+  }
+  const smsByAg = new Map<
+    string,
+    {
       period_id: string | null;
       sent_at: string | null;
       template_key: string | null;
       body: string | null;
-    }[]) {
-      if (!n.period_id || !n.sent_at) continue;
-      const list = remindersByPeriod.get(n.period_id) ?? [];
-      list.push({
-        sentAt: n.sent_at,
-        label: reminderKindLabel(n.template_key ?? ""),
-        body: n.body ?? "",
-      });
-      remindersByPeriod.set(n.period_id, list);
-    }
+    }[]
+  >();
+  for (const n of (smsData ?? []) as {
+    agreement_id: string;
+    period_id: string | null;
+    sent_at: string | null;
+    template_key: string | null;
+    body: string | null;
+  }[]) {
+    const arr = smsByAg.get(n.agreement_id) ?? [];
+    arr.push(n);
+    smsByAg.set(n.agreement_id, arr);
   }
 
+  // Signed contract links per agreement.
+  const contractByAg = new Map<
+    string,
+    { view: string | null; download: string | null }
+  >();
+  await Promise.all(
+    agreements
+      .filter((a) => a.contract_file_path)
+      .map(async (a) => {
+        const [{ data: cv }, { data: cd }] = await Promise.all([
+          admin.storage
+            .from(CONTRACT_BUCKET)
+            .createSignedUrl(a.contract_file_path as string, 60 * 60),
+          admin.storage
+            .from(CONTRACT_BUCKET)
+            .createSignedUrl(a.contract_file_path as string, 60 * 60, {
+              download: true,
+            }),
+        ]);
+        contractByAg.set(a.id, {
+          view: cv?.signedUrl ?? null,
+          download: cd?.signedUrl ?? null,
+        });
+      }),
+  );
+
+  const today = new Date(new Date().getTime() + 8 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
   return (
-    <div className="space-y-8">
-      {/* banner */}
-      <section className="relative min-h-[160px] overflow-hidden rounded-2xl ring-1 ring-slate-900/10">
-        <DuskScene
-          preserveAspectRatio="xMidYMid slice"
-          className="absolute inset-0 h-full w-full"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/55 to-slate-950/25" />
-        <div className="relative p-6 sm:p-8">
-          <p className="text-sm font-medium text-emerald-300">My rentals</p>
-          <h1 className="mt-1 text-2xl font-bold text-white drop-shadow sm:text-3xl">
-            Your payment records
-          </h1>
-          <p className="mt-1 max-w-md text-sm text-white/75">
-            Read-only view — see every due date, send your proof of payment, and
-            keep a record of what you&apos;ve paid.
-          </p>
-        </div>
-      </section>
-
-      {agreements.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
-          <p className="text-slate-600">Wala pang naka-link na rental.</p>
-          <p className="mt-1 text-sm text-slate-400">
-            Ask your landlord to add your email ({user.email}) to your agreement,
-            then sign in again — it will show up here automatically.
-          </p>
-        </div>
-      ) : (
-        agreements.map((a) => {
-          const ps = byAgreement.get(a.id) ?? [];
-          const unpaid = ps.filter((p) =>
-            ["upcoming", "due", "overdue"].includes(p.status),
-          );
-          const paid = ps
-            .filter((p) => p.status === "paid")
-            .reduce((s, p) => s + p.amount_php, 0);
-          return (
-            <section
-              key={a.id}
-              className="space-y-4 rounded-2xl border border-slate-200 bg-white p-5"
-            >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h2 className="text-lg font-semibold text-slate-900">
-                    {labelById.get(a.asset_id) ?? "Rental"}
-                  </h2>
-                  <p className="text-sm text-slate-500">
-                    {formatPeso(a.amount_php)} ·{" "}
-                    {describeSchedule(a.frequency, a.due_day)}
-                  </p>
-                </div>
-                <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-medium text-emerald-700">
-                  Total paid: {formatPeso(paid)}
-                </span>
-              </div>
-
-              {a.payment_instructions && (
-                <div className="rounded-xl bg-emerald-50 p-4 text-sm text-emerald-900">
-                  <p className="font-medium">How to pay</p>
-                  <p className="mt-1 whitespace-pre-wrap">
-                    {a.payment_instructions}
-                  </p>
-                  <p className="mt-2 text-emerald-700">
-                    Accepts:{" "}
-                    {(a.accepted_payment_methods as PaymentMethod[])
-                      .map((m) => PAYMENT_METHOD_LABELS[m])
-                      .join(", ")}
-                  </p>
-                </div>
-              )}
-
-              {a.contract_file_path && contractLinks.get(a.id) && (
-                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
-                  <span className="flex items-center gap-2 text-sm text-slate-700">
-                    📄 Your signed contract
-                  </span>
-                  <span className="flex gap-2">
-                    {contractLinks.get(a.id)?.view && (
-                      <a
-                        href={contractLinks.get(a.id)!.view!}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-white active:scale-95"
-                      >
-                        View
-                      </a>
-                    )}
-                    {contractLinks.get(a.id)?.download && (
-                      <a
-                        href={contractLinks.get(a.id)!.download!}
-                        className="rounded-md border border-emerald-300 px-3 py-1.5 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50 active:scale-95"
-                      >
-                        ⬇️ Download
-                      </a>
-                    )}
-                  </span>
-                </div>
-              )}
-
-              {/* payment records */}
-              <div>
-                <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
-                  Payment records
-                </h3>
-                <ul className="divide-y divide-slate-100 overflow-hidden rounded-xl border border-slate-200">
-                  {ps.map((p) => {
-                    const reminders = remindersByPeriod.get(p.id) ?? [];
-                    return (
-                      <li
-                        key={p.id}
-                        className="flex flex-col gap-2 px-4 py-2.5 text-sm"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-slate-700">
-                            {formatDate(p.due_date)}
-                            {p.paid_at && (
-                              <span className="ml-2 text-xs text-emerald-600">
-                                paid {formatDate(p.paid_at.slice(0, 10))}
-                              </span>
-                            )}
-                          </span>
-                          <span className="flex items-center gap-3">
-                            <span className="font-medium text-slate-900">
-                              {formatPeso(p.amount_php)}
-                            </span>
-                            <PeriodStatusBadge status={p.status} />
-                          </span>
-                        </div>
-                        {reminders.length > 0 && (
-                          <ReminderBadge
-                            records={reminders}
-                            monthLabel={formatDate(p.due_date)}
-                            audience="tenant"
-                          />
-                        )}
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-
-              {/* submit proof */}
-              {unpaid.length > 0 && (
-                <div>
-                  <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-500">
-                    Send proof of payment
-                  </h3>
-                  <RenterProofForm
-                    token={a.renter_access_token}
-                    periods={unpaid.map((p) => ({
-                      id: p.id,
-                      due_date: p.due_date,
-                      amount_php: p.amount_php,
-                    }))}
-                    methods={a.accepted_payment_methods as PaymentMethod[]}
-                  />
-                </div>
-              )}
-            </section>
-          );
-        })
-      )}
+    <div className="-mx-4 -my-8 space-y-8">
+      {agreements.map((a) => {
+        const asset = assetById.get(a.asset_id);
+        const view = buildRenterView({
+          periods: periodsByAg.get(a.id) ?? [],
+          payments: payByAg.get(a.id) ?? [],
+          sms: smsByAg.get(a.id) ?? [],
+          today,
+        });
+        return (
+          <RenterDashboard
+            key={a.id}
+            token={a.renter_access_token}
+            firstName={a.renter_name.split(" ")[0] || "there"}
+            unitLabel={asset?.label ?? "Your rental"}
+            address={asset?.address_text ?? null}
+            scheduleLabel={describeSchedule(a.frequency, a.due_day)}
+            outstanding={view.outstanding}
+            dueNow={view.dueNow}
+            months={view.months}
+            unpaidForProof={view.unpaidForProof}
+            methods={a.accepted_payment_methods as PaymentMethod[]}
+            paymentInstructions={a.payment_instructions}
+            contract={contractByAg.get(a.id) ?? null}
+            hasRenterId={Boolean(a.renter_id_file_path)}
+          />
+        );
+      })}
     </div>
   );
 }
