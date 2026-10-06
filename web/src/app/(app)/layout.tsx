@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { NavLink } from "@/components/nav-link";
+import { AmbientBackground } from "@/components/ambient-background";
+import { currentPhaseManila } from "@/lib/time-theme";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
   const { user, supabase } = await requireUser();
@@ -25,20 +27,24 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     | null;
   const role = profile?.role ?? null;
   const isAdmin = profile?.is_admin === true;
-  if (!profileRes.error && !role) {
+  if (!profileRes.error && !role && !isAdmin) {
     redirect("/welcome");
   }
 
-  const isRenter = role === "tenant" || (rentalCount ?? 0) > 0;
-  const isLessor = role === "lessor" || (assetCount ?? 0) > 0 || !isRenter;
+  // The founder/admin account is monitoring-only: it has no lessor or renter
+  // dashboard of its own, just the Command Center (with its preview tools).
+  const isRenter = !isAdmin && (role === "tenant" || (rentalCount ?? 0) > 0);
+  const isLessor =
+    !isAdmin && (role === "lessor" || (assetCount ?? 0) > 0 || !isRenter);
 
   return (
-    <div className="app-dark flex min-h-full flex-1 flex-col bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
-      <header className="sticky top-0 z-10 border-b border-white/10 bg-slate-950/80 backdrop-blur">
+    <div className="app-dark relative isolate flex min-h-full flex-1 flex-col bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
+      <AmbientBackground initialPhase={currentPhaseManila()} />
+      <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
           <nav className="flex items-center gap-1 sm:gap-4">
             <Link
-              href={isLessor ? "/dashboard" : "/my-rentals"}
+              href={isAdmin ? "/admin" : isLessor ? "/dashboard" : "/my-rentals"}
               className="mr-2 rounded-md px-1 py-0.5 font-bold text-emerald-400 transition hover:text-emerald-300 active:scale-95"
             >
               Due<span className="text-slate-500">Meet</span>
@@ -69,7 +75,9 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
           </div>
         </div>
       </header>
-      <div className="mx-auto w-full max-w-5xl flex-1 px-4 py-8">{children}</div>
+      <div className="relative z-10 mx-auto w-full max-w-5xl flex-1 px-4 py-8">
+        {children}
+      </div>
     </div>
   );
 }
