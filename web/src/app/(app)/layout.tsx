@@ -33,15 +33,15 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   const isLessor = role === "lessor" || (assetCount ?? 0) > 0 || !isRenter;
 
   return (
-    <div className="flex min-h-full flex-1 flex-col bg-gradient-to-b from-emerald-50/70 via-slate-50 to-slate-50">
-      <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/90 backdrop-blur">
+    <div className="app-dark flex min-h-full flex-1 flex-col bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
+      <header className="sticky top-0 z-10 border-b border-white/10 bg-slate-950/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
           <nav className="flex items-center gap-1 sm:gap-4">
             <Link
               href={isLessor ? "/dashboard" : "/my-rentals"}
-              className="mr-2 rounded-md px-1 py-0.5 font-bold text-emerald-700 transition hover:text-emerald-800 active:scale-95"
+              className="mr-2 rounded-md px-1 py-0.5 font-bold text-emerald-400 transition hover:text-emerald-300 active:scale-95"
             >
-              Due<span className="text-slate-400">Meet</span>
+              Due<span className="text-slate-500">Meet</span>
             </Link>
             {isLessor && (
               <>
@@ -55,13 +55,13 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             {isAdmin && <NavLink href="/admin">🎛️ Command Center</NavLink>}
           </nav>
           <div className="flex items-center gap-3">
-            <span className="hidden text-sm text-slate-500 sm:inline">
+            <span className="hidden text-sm text-slate-400 sm:inline">
               {user.email}
             </span>
             <form action="/auth/signout" method="post">
               <button
                 type="submit"
-                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-600 transition hover:bg-slate-100 active:scale-95"
+                className="rounded-md border border-white/15 px-3 py-1.5 text-sm text-slate-300 transition hover:bg-white/10 active:scale-95"
               >
                 Sign out
               </button>

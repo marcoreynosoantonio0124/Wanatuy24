@@ -60,3 +60,71 @@ summary,
   outline-offset: 2px;
   border-radius: 6px;
 }
+
+/* ---- Dark theme ---------------------------------------------------------
+   One layer that turns the whole signed-in app dark, so pages keep their
+   light-friendly utility classes and this remaps them. Scoped to .app-dark
+   so the public landing / login pages are untouched. */
+.app-dark {
+  color: #e5edf7;
+}
+
+/* surfaces */
+.app-dark .bg-white { background-color: rgba(255, 255, 255, 0.04) !important; }
+.app-dark .bg-slate-50 { background-color: rgba(255, 255, 255, 0.03) !important; }
+.app-dark .bg-slate-100 { background-color: rgba(255, 255, 255, 0.08) !important; }
+
+/* soft status tints */
+.app-dark .bg-emerald-50 { background-color: rgba(16, 185, 129, 0.12) !important; }
+.app-dark .bg-amber-50 { background-color: rgba(245, 158, 11, 0.12) !important; }
+.app-dark .bg-red-50 { background-color: rgba(239, 68, 68, 0.12) !important; }
+.app-dark .bg-sky-50,
+.app-dark .bg-blue-50 { background-color: rgba(14, 165, 233, 0.12) !important; }
+
+/* borders */
+.app-dark .border-slate-100 { border-color: rgba(255, 255, 255, 0.07) !important; }
+.app-dark .border-slate-200 { border-color: rgba(255, 255, 255, 0.1) !important; }
+.app-dark .border-slate-300 { border-color: rgba(255, 255, 255, 0.15) !important; }
+
+/* list dividers */
+.app-dark .divide-slate-50 > :not([hidden]) ~ :not([hidden]),
+.app-dark .divide-slate-100 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* text */
+.app-dark .text-slate-900 { color: #f1f5f9 !important; }
+.app-dark .text-slate-800 { color: #e2e8f0 !important; }
+.app-dark .text-slate-700 { color: #cbd5e1 !important; }
+.app-dark .text-slate-600 { color: #aab6c6 !important; }
+.app-dark .text-slate-500 { color: #94a3b8 !important; }
+.app-dark .text-slate-400 { color: #7c8aa0 !important; }
+
+/* accent text, lightened to read on dark */
+.app-dark .text-emerald-700,
+.app-dark .text-emerald-800 { color: #6ee7b7 !important; }
+.app-dark .text-emerald-600 { color: #34d399 !important; }
+.app-dark .text-amber-700 { color: #fcd34d !important; }
+.app-dark .text-amber-600 { color: #fbbf24 !important; }
+.app-dark .text-red-700,
+.app-dark .text-red-600 { color: #fca5a5 !important; }
+.app-dark .text-sky-700,
+.app-dark .text-sky-600,
+.app-dark .text-blue-700,
+.app-dark .text-blue-600 { color: #7dd3fc !important; }
+
+/* form controls */
+.app-dark input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+.app-dark select,
+.app-dark textarea {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #f1f5f9;
+  border-color: rgba(255, 255, 255, 0.15);
+}
+.app-dark input::placeholder,
+.app-dark textarea::placeholder { color: #64748b; }
+
+/* hover states that assumed a light surface */
+.app-dark .hover\:bg-slate-50:hover,
+.app-dark .hover\:bg-slate-100:hover { background-color: rgba(255, 255, 255, 0.08) !important; }
+.app-dark .hover\:bg-emerald-50:hover { background-color: rgba(16, 185, 129, 0.15) !important; }
