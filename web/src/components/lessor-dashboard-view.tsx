@@ -1,56 +1,31 @@
 import Link from "next/link";
-import { formatPeso, formatDate } from "@/lib/format";
-import { DuskScene } from "@/components/dusk-scene";
-import { RoleCharacter } from "@/components/role-character";
+import { formatPeso } from "@/lib/format";
 import { PushToggle } from "@/components/push-toggle";
+import { LessorHero } from "@/components/lessor-hero";
 import type { LessorDashboard, Property } from "@/lib/lessor-dashboard";
 
 /**
  * The lessor "Your Properties" dashboard, as a pure view. The signed-in lessor
  * page and the admin preview/monitor pages all render this from the same data.
  *
- * `preview` hides owner-only actions (make an agreement, push toggle, deep
- * links into agreement pages) so an admin can look without touching anything.
+ * `preview` hides owner-only actions (make an agreement, push toggle) and turns
+ * the property rows into plain cards (no deep links), so an admin can look
+ * without touching anything.
  */
 export function LessorDashboardView({
   data,
   preview = false,
+  greetingName = "there",
 }: {
   data: LessorDashboard;
   preview?: boolean;
+  greetingName?: string;
 }) {
   const { properties, outstanding, proofsToReview } = data;
-  const anyOverdue = properties.some((p) => p.overdueCount > 0);
-  const lessorMood =
-    properties.length > 0 && outstanding === 0
-      ? "happy"
-      : anyOverdue
-        ? "worried"
-        : "neutral";
 
   return (
     <div className="space-y-6">
-      {/* Brand strip with the DUE mascot */}
-      <section className="relative overflow-hidden rounded-2xl ring-1 ring-white/10">
-        <DuskScene
-          preserveAspectRatio="xMidYMid slice"
-          className="absolute inset-0 h-full w-full"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/55 to-slate-950/30" />
-        <div className="relative flex items-center justify-between gap-3 px-5 py-4">
-          <div>
-            <p className="text-xs font-medium text-emerald-300">Welcome back 👋</p>
-            <p className="mt-0.5 text-sm font-semibold text-white">
-              DueMeet · Dashboard
-            </p>
-          </div>
-          <RoleCharacter
-            role="lessor"
-            mood={lessorMood}
-            className="h-24 w-auto drop-shadow-lg"
-          />
-        </div>
-      </section>
+      <LessorHero greetingName={greetingName} />
 
       {/* Page heading */}
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -72,13 +47,12 @@ export function LessorDashboardView({
         )}
       </div>
 
-      {/* Property folders */}
       {properties.length === 0 ? (
         <EmptyState preview={preview} />
       ) : (
-        <div className="space-y-3.5">
+        <div className="space-y-3">
           {properties.map((p) => (
-            <PropertyFolder key={p.id} p={p} preview={preview} />
+            <PropertyRow key={p.id} p={p} preview={preview} />
           ))}
         </div>
       )}
@@ -89,7 +63,7 @@ export function LessorDashboardView({
         </div>
       )}
 
-      {/* Portfolio summary at the bottom */}
+      {/* Portfolio summary */}
       <section>
         <h2 className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
           Portfolio summary
@@ -113,105 +87,46 @@ export function LessorDashboardView({
   );
 }
 
-function PropertyFolder({ p, preview }: { p: Property; preview: boolean }) {
+function PropertyRow({ p, preview }: { p: Property; preview: boolean }) {
   const icon = p.allPaid ? "🏠" : p.overdueCount > 0 ? "🏚️" : "🏡";
-  return (
-    <details className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm open:border-indigo-200">
-      <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-4 [&::-webkit-details-marker]:hidden">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-200 bg-slate-50 text-xl">
-          {icon}
+  const inner = (
+    <>
+      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-200 bg-slate-50 text-xl">
+        {icon}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block truncate text-base font-bold text-slate-900">
+          {p.name}
         </span>
-        <span className="min-w-0 flex-1">
-          <span className="block truncate text-base font-bold text-slate-900">
-            {p.name}
-          </span>
-          <span className="block truncate text-sm text-slate-500">
-            {p.tenant} · {formatPeso(p.monthly)}/mo
-          </span>
+        <span className="block truncate text-sm text-slate-500">
+          {p.tenant} · {formatPeso(p.monthly)}/mo
         </span>
-        <span className="flex shrink-0 items-center gap-2.5">
-          {p.owed > 0 && (
-            <span className="hidden font-bold tabular-nums text-amber-700 sm:inline">
-              {formatPeso(p.owed)} owed
-            </span>
-          )}
-          <FolderPill p={p} />
-          <span className="text-slate-400 transition group-open:rotate-90">›</span>
-        </span>
-      </summary>
-
-      <div className="border-t border-slate-100 bg-slate-50/70 px-4 pb-4 pt-1">
+      </span>
+      <span className="flex shrink-0 items-center gap-2.5">
         {p.owed > 0 && (
-          <span className="mt-2 block font-bold tabular-nums text-amber-700 sm:hidden">
+          <span className="hidden font-bold tabular-nums text-amber-700 sm:inline">
             {formatPeso(p.owed)} owed
           </span>
         )}
-        {p.attention.length > 0 ? (
-          <ul>
-            {p.attention.map((a) => (
-              <li
-                key={a.periodId}
-                className="flex items-center justify-between gap-3 border-b border-slate-100 py-3 last:border-b-0"
-              >
-                <span className="min-w-0 text-sm">
-                  <span className="block font-semibold text-slate-800">
-                    {formatDate(a.dueDate)}
-                  </span>
-                  <span className="mt-0.5 block text-xs text-slate-500">
-                    {a.proof
-                      ? "Tenant sent proof — needs review"
-                      : a.tone === "partial"
-                        ? "Partly paid"
-                        : a.tone === "overdue"
-                          ? "Overdue"
-                          : "Due now"}
-                  </span>
-                </span>
-                <span className="flex flex-wrap items-center justify-end gap-2">
-                  <span className="text-sm font-bold tabular-nums text-slate-900">
-                    {formatPeso(a.remaining)}
-                  </span>
-                  {a.proof && <Pill tone="proof">Proof sent</Pill>}
-                  <Pill
-                    tone={
-                      a.tone === "overdue" ? "bad" : a.tone === "partial" ? "due" : "due"
-                    }
-                  >
-                    {a.tone === "overdue"
-                      ? "Overdue"
-                      : a.tone === "partial"
-                        ? "Partial"
-                        : "Due"}
-                  </Pill>
-                  {a.reminderCount > 0 && (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-gradient-to-r from-sky-500 to-indigo-500 px-2 py-0.5 text-[11px] font-bold text-white">
-                      📩{" "}
-                      {a.reminderLast
-                        ? `Last ${formatDate(a.reminderLast.slice(0, 10))} · `
-                        : ""}
-                      {a.reminderCount}×
-                    </span>
-                  )}
-                </span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="py-3 text-sm text-slate-500">
-            All settled 🎉
-            {p.nextDue ? ` · next due ${formatDate(p.nextDue)}` : ""}
-          </p>
-        )}
-        {!preview && (
-          <Link
-            href={`/agreements/${p.id}`}
-            className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-emerald-700 transition hover:text-emerald-800 active:scale-95"
-          >
-            See full details ›
-          </Link>
-        )}
-      </div>
-    </details>
+        <FolderPill p={p} />
+        {!preview && <span className="text-slate-400">›</span>}
+      </span>
+    </>
+  );
+
+  const cls =
+    "flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm";
+
+  if (preview) {
+    return <div className={cls}>{inner}</div>;
+  }
+  return (
+    <Link
+      href={`/dashboard/unit/${p.id}`}
+      className={`${cls} transition hover:border-emerald-300 hover:shadow-md active:scale-[0.99]`}
+    >
+      {inner}
+    </Link>
   );
 }
 
