@@ -92,24 +92,6 @@ export async function createAgreement(
     return { error: parsed.error.issues[0]?.message ?? "Invalid input." };
   }
 
-  // ID verification: require a government ID on file. We keep it once on the
-  // lessor's profile, so it's only asked for until there's one on file.
-  const { data: profile } = await supabase
-    .from("users")
-    .select("id_file_path")
-    .eq("id", user.id)
-    .single();
-  const hasIdOnFile = Boolean(
-    (profile as { id_file_path?: string | null } | null)?.id_file_path,
-  );
-  const idFile = formData.get("lessor_id");
-  if (!hasIdOnFile && !isValidUpload(idFile)) {
-    return {
-      error:
-        "Please upload a photo of your valid ID (JPG, PNG, or PDF) for verification.",
-    };
-  }
-
   const v = parsed.data;
   const { data: inserted, error } = await supabase
     .from("agreements")
@@ -167,7 +149,9 @@ export async function createAgreement(
     }
   }
 
-  // Store / replace the lessor's ID on their profile (used for verification).
+  // If the lessor uploaded a photo of their ID, keep it privately on their
+  // profile (optional).
+  const idFile = formData.get("lessor_id");
   if (isValidUpload(idFile)) {
     const ext = idFile.name.includes(".") ? idFile.name.split(".").pop() : "bin";
     const path = `${user.id}/id-${Date.now()}.${ext}`;
