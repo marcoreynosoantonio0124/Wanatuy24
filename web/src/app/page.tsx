@@ -54,15 +54,17 @@ export default async function LandingPage() {
         <h1 className="mt-6 max-w-3xl text-5xl font-extrabold leading-[1.05] tracking-tight text-white drop-shadow sm:text-6xl">
           Collect rent without
           <br />
-          <span className="text-emerald-400">the follow-up.</span>
+          <span className="text-emerald-400">the hassle.</span>
         </h1>
+
+        {/* Renter-side slogan */}
+        <p className="mt-4 max-w-3xl text-3xl font-bold leading-tight text-white/90 drop-shadow sm:text-4xl">
+          Pay rent without <span className="text-emerald-400">the worry.</span>
+        </p>
 
         {/* Taglish punchline */}
         <p className="mt-5 text-2xl font-bold text-emerald-300 drop-shadow sm:text-3xl">
-          Wala nang habulan sa upa. 🇵🇭
-        </p>
-        <p className="mt-2 text-lg font-medium text-white/85">
-          Hindi mo na kailangan mag-remind — para bawas stress.
+          Para bawas-stress sa upa. 🇵🇭
         </p>
 
         <p className="mt-5 max-w-xl leading-relaxed text-white/75">
