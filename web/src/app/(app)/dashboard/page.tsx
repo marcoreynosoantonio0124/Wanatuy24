@@ -192,10 +192,10 @@ export default async function DashboardPage() {
       {/* Page heading — this is the units page */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold text-white sm:text-3xl">
+          <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
             Your Properties
           </h1>
-          <p className="mt-0.5 text-sm text-slate-400">
+          <p className="mt-0.5 text-sm text-slate-500">
             Ang Iyong Mga Paupahan · tap a house to open it
           </p>
         </div>
@@ -218,26 +218,26 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      <div className="rounded-xl border border-white/10 bg-white/5 px-4 py-3">
+      <div className="rounded-xl border border-slate-200 bg-white px-4 py-3">
         <PushToggle />
       </div>
 
       {/* Portfolio summary at the bottom */}
       <section>
-        <h2 className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500">
+        <h2 className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
           Portfolio summary
         </h2>
-        <div className="grid grid-cols-1 overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-sm sm:grid-cols-3">
+        <div className="grid grid-cols-1 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm sm:grid-cols-3">
           <SummaryCell label="Properties" value={String(properties.length)} />
           <SummaryCell
             label="Outstanding"
             value={formatPeso(outstanding)}
-            valueClass={outstanding ? "text-red-400" : "text-white"}
+            valueClass={outstanding ? "text-red-600" : "text-slate-900"}
           />
           <SummaryCell
             label="Proofs to review"
             value={String(proofsToReview)}
-            valueClass={proofsToReview ? "text-sky-400" : "text-white"}
+            valueClass={proofsToReview ? "text-blue-600" : "text-slate-900"}
             last
           />
         </div>
@@ -249,33 +249,33 @@ export default async function DashboardPage() {
 function PropertyFolder({ p }: { p: Property }) {
   const icon = p.allPaid ? "🏠" : p.overdueCount > 0 ? "🏚️" : "🏡";
   return (
-    <details className="group overflow-hidden rounded-2xl border border-white/10 bg-white/5 shadow-sm open:border-indigo-400/40">
+    <details className="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm open:border-indigo-200">
       <summary className="flex cursor-pointer list-none items-center gap-3 px-4 py-4 [&::-webkit-details-marker]:hidden">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5 text-xl">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-200 bg-slate-50 text-xl">
           {icon}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block truncate text-base font-bold text-white">
+          <span className="block truncate text-base font-bold text-slate-900">
             {p.name}
           </span>
-          <span className="block truncate text-sm text-slate-400">
+          <span className="block truncate text-sm text-slate-500">
             {p.tenant} · {formatPeso(p.monthly)}/mo
           </span>
         </span>
         <span className="flex shrink-0 items-center gap-2.5">
           {p.owed > 0 && (
-            <span className="hidden font-bold tabular-nums text-amber-300 sm:inline">
+            <span className="hidden font-bold tabular-nums text-amber-700 sm:inline">
               {formatPeso(p.owed)} owed
             </span>
           )}
           <FolderPill p={p} />
-          <span className="text-slate-500 transition group-open:rotate-90">›</span>
+          <span className="text-slate-400 transition group-open:rotate-90">›</span>
         </span>
       </summary>
 
-      <div className="border-t border-white/10 bg-black/20 px-4 pb-4 pt-1">
+      <div className="border-t border-slate-100 bg-slate-50/70 px-4 pb-4 pt-1">
         {p.owed > 0 && (
-          <span className="mt-2 block font-bold tabular-nums text-amber-300 sm:hidden">
+          <span className="mt-2 block font-bold tabular-nums text-amber-700 sm:hidden">
             {formatPeso(p.owed)} owed
           </span>
         )}
@@ -284,13 +284,13 @@ function PropertyFolder({ p }: { p: Property }) {
             {p.attention.map((a) => (
               <li
                 key={a.periodId}
-                className="flex items-center justify-between gap-3 border-b border-white/10 py-3 last:border-b-0"
+                className="flex items-center justify-between gap-3 border-b border-slate-100 py-3 last:border-b-0"
               >
                 <span className="min-w-0 text-sm">
-                  <span className="block font-semibold text-slate-100">
+                  <span className="block font-semibold text-slate-800">
                     {formatDate(a.dueDate)}
                   </span>
-                  <span className="mt-0.5 block text-xs text-slate-400">
+                  <span className="mt-0.5 block text-xs text-slate-500">
                     {a.proof
                       ? "Tenant sent proof — needs review"
                       : a.tone === "partial"
@@ -301,7 +301,7 @@ function PropertyFolder({ p }: { p: Property }) {
                   </span>
                 </span>
                 <span className="flex flex-wrap items-center justify-end gap-2">
-                  <span className="text-sm font-bold tabular-nums text-white">
+                  <span className="text-sm font-bold tabular-nums text-slate-900">
                     {formatPeso(a.remaining)}
                   </span>
                   {a.proof && <Pill tone="proof">Proof sent</Pill>}
@@ -319,14 +319,14 @@ function PropertyFolder({ p }: { p: Property }) {
             ))}
           </ul>
         ) : (
-          <p className="py-3 text-sm text-slate-400">
+          <p className="py-3 text-sm text-slate-500">
             All settled 🎉
             {p.nextDue ? ` · next due ${formatDate(p.nextDue)}` : ""}
           </p>
         )}
         <Link
           href={`/agreements/${p.id}`}
-          className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-emerald-400 transition hover:text-emerald-300 active:scale-95"
+          className="mt-3 inline-flex items-center gap-1 text-sm font-bold text-emerald-700 transition hover:text-emerald-800 active:scale-95"
         >
           See full details ›
         </Link>
@@ -355,10 +355,10 @@ function Pill({
   tone: "ok" | "bad" | "due" | "proof";
 }) {
   const tones: Record<string, string> = {
-    ok: "bg-emerald-500/15 text-emerald-300 ring-emerald-400/30",
-    bad: "bg-red-500/15 text-red-300 ring-red-400/30",
-    due: "bg-amber-500/15 text-amber-300 ring-amber-400/30",
-    proof: "bg-sky-500/15 text-sky-300 ring-sky-400/30",
+    ok: "bg-emerald-50 text-emerald-700 ring-emerald-200",
+    bad: "bg-red-50 text-red-700 ring-red-200",
+    due: "bg-amber-50 text-amber-700 ring-amber-200",
+    proof: "bg-sky-50 text-sky-700 ring-sky-200",
   };
   return (
     <span
@@ -372,7 +372,7 @@ function Pill({
 function SummaryCell({
   label,
   value,
-  valueClass = "text-white",
+  valueClass = "text-slate-900",
   last = false,
 }: {
   label: string;
@@ -382,9 +382,9 @@ function SummaryCell({
 }) {
   return (
     <div
-      className={`px-5 py-4 ${last ? "" : "border-b border-white/10 sm:border-b-0 sm:border-r"}`}
+      className={`px-5 py-4 ${last ? "" : "border-b border-slate-100 sm:border-b-0 sm:border-r"}`}
     >
-      <p className="text-xs text-slate-400">{label}</p>
+      <p className="text-xs text-slate-500">{label}</p>
       <p className={`mt-0.5 text-xl font-bold tabular-nums ${valueClass}`}>{value}</p>
     </div>
   );
@@ -392,8 +392,8 @@ function SummaryCell({
 
 function EmptyState() {
   return (
-    <div className="rounded-2xl border border-dashed border-white/15 bg-white/5 p-8 text-center">
-      <p className="text-slate-200">Wala pang naka-set up na paupahan. 🏠</p>
+    <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
+      <p className="text-slate-600">Wala pang naka-set up na paupahan. 🏠</p>
       <p className="mt-1 text-sm text-slate-400">
         Tap “Make an agreement” to add your first property and start tracking rent.
       </p>

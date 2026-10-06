@@ -82,6 +82,7 @@ export default async function RenterPortalPage({
   }
 
   return (
+    <div className="app-dark min-h-screen bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
     <RenterDashboard
       token={token}
       firstName={agreement.renter_name.split(" ")[0] || "there"}
@@ -97,5 +98,6 @@ export default async function RenterPortalPage({
       contract={contract}
       hasRenterId={Boolean(agreement.renter_id_file_path)}
     />
+    </div>
   );
 }

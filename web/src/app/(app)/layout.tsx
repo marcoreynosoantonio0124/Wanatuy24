@@ -33,7 +33,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
   const isLessor = role === "lessor" || (assetCount ?? 0) > 0 || !isRenter;
 
   return (
-    <div className="flex min-h-full flex-1 flex-col bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
+    <div className="app-dark flex min-h-full flex-1 flex-col bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
       <header className="sticky top-0 z-10 border-b border-white/10 bg-slate-950/80 backdrop-blur">
         <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
           <nav className="flex items-center gap-1 sm:gap-4">
