@@ -9,6 +9,7 @@ import { pesosToCentavos } from "@/lib/format";
 import { ALL_PAYMENT_METHODS } from "@/lib/format";
 
 const CONTRACT_BUCKET = "contracts";
+const ID_BUCKET = "ids";
 const CONTRACT_MAX_BYTES = 20 * 1024 * 1024;
 const CONTRACT_TYPES = [
   "application/pdf",
@@ -16,6 +17,16 @@ const CONTRACT_TYPES = [
   "image/jpeg",
   "image/webp",
 ];
+
+/** True when the value is a usable uploaded file of an allowed type/size. */
+function isValidUpload(file: FormDataEntryValue | null): file is File {
+  return (
+    file instanceof File &&
+    file.size > 0 &&
+    file.size <= CONTRACT_MAX_BYTES &&
+    CONTRACT_TYPES.includes(file.type)
+  );
+}
 
 const schema = z
   .object({
@@ -119,15 +130,11 @@ export async function createAgreement(
     return { error: `Agreement saved, but scheduling failed: ${rpcError.message}` };
   }
 
+  const admin = createAdminClient();
+
   // If a signed contract was uploaded, keep it in the vault too.
   const file = formData.get("contract");
-  if (
-    file instanceof File &&
-    file.size > 0 &&
-    file.size <= CONTRACT_MAX_BYTES &&
-    CONTRACT_TYPES.includes(file.type)
-  ) {
-    const admin = createAdminClient();
+  if (isValidUpload(file)) {
     const ext = file.name.includes(".") ? file.name.split(".").pop() : "bin";
     const path = `${inserted.id}/contract-${Date.now()}.${ext}`;
     const bytes = new Uint8Array(await file.arrayBuffer());
@@ -139,6 +146,24 @@ export async function createAgreement(
         .from("agreements")
         .update({ contract_file_path: path })
         .eq("id", inserted.id);
+    }
+  }
+
+  // If the lessor uploaded a photo of their ID, keep it privately on their
+  // profile (optional).
+  const idFile = formData.get("lessor_id");
+  if (isValidUpload(idFile)) {
+    const ext = idFile.name.includes(".") ? idFile.name.split(".").pop() : "bin";
+    const path = `${user.id}/id-${Date.now()}.${ext}`;
+    const bytes = new Uint8Array(await idFile.arrayBuffer());
+    const { error: upErr } = await admin.storage
+      .from(ID_BUCKET)
+      .upload(path, bytes, { contentType: idFile.type, upsert: false });
+    if (!upErr) {
+      await admin
+        .from("users")
+        .update({ id_file_path: path })
+        .eq("id", user.id);
     }
   }
 

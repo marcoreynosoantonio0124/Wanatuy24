@@ -778,3 +778,17 @@ create index if not exists payments_period_idx on public.payments(period_id);
 -- ---------------------------------------------------------------------------
 alter table public.notifications
   add column if not exists body text;
+
+-- ---------------------------------------------------------------------------
+-- 0014_lessor_id: ID verification. A user keeps a private photo of their ID
+-- on file (lessor now, renter later), stored in the private 'ids' bucket.
+-- ---------------------------------------------------------------------------
+alter table public.users
+  add column if not exists id_file_path text;
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'ids', 'ids', false, 20971520,
+  array['application/pdf', 'image/png', 'image/jpeg', 'image/webp']
+)
+on conflict (id) do nothing;
