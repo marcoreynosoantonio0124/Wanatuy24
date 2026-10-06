@@ -26,6 +26,12 @@ export function RenterDashboard(p: RenterDashboardProps) {
   const paidMonths = p.months.filter((m) => m.status === "paid").length;
   const collected = p.months.reduce((s, m) => s + m.paid, 0);
   const yearTotal = p.months.reduce((s, m) => s + m.due, 0);
+  const renterMood =
+    p.outstanding === 0
+      ? "happy"
+      : p.months.some((m) => m.status === "overdue")
+        ? "worried"
+        : "neutral";
 
   return (
     <div className="mx-auto w-full max-w-xl space-y-5 pb-10">
@@ -51,6 +57,7 @@ export function RenterDashboard(p: RenterDashboardProps) {
           <p className="mt-1 text-xs text-white/70">{p.scheduleLabel}</p>
           <RoleCharacter
             role="renter"
+            mood={renterMood}
             className="pointer-events-none absolute bottom-0 right-3 h-28 w-auto drop-shadow-lg"
           />
         </div>

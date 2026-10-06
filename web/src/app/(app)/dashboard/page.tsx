@@ -177,6 +177,13 @@ export default async function DashboardPage() {
 
   const outstanding = properties.reduce((s, p) => s + p.owed, 0);
   const proofsToReview = properties.reduce((s, p) => s + p.proofCount, 0);
+  const anyOverdue = properties.some((p) => p.overdueCount > 0);
+  const lessorMood =
+    properties.length > 0 && outstanding === 0
+      ? "happy"
+      : anyOverdue
+        ? "worried"
+        : "neutral";
 
   return (
     <div className="space-y-6">
@@ -189,7 +196,7 @@ export default async function DashboardPage() {
             <p className="text-xs font-medium text-emerald-300">Welcome back 👋</p>
             <p className="mt-0.5 text-sm font-semibold text-white">DueMeet · Dashboard</p>
           </div>
-          <RoleCharacter role="lessor" className="h-24 w-auto drop-shadow-lg" />
+          <RoleCharacter role="lessor" mood={lessorMood} className="h-24 w-auto drop-shadow-lg" />
         </div>
       </section>
 
