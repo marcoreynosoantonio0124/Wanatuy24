@@ -34,6 +34,8 @@ export function UnitTimetable({
   collected,
   outstanding,
   remindersSent,
+  backHref = "/dashboard",
+  showManage = true,
 }: {
   agreementId: string;
   unitLabel: string;
@@ -43,11 +45,13 @@ export function UnitTimetable({
   collected: number;
   outstanding: number;
   remindersSent: number;
+  backHref?: string;
+  showManage?: boolean;
 }) {
   return (
     <div className="space-y-5">
       <Link
-        href="/dashboard"
+        href={backHref}
         className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-700 transition hover:text-emerald-800 active:scale-95"
       >
         ← Your Properties
@@ -140,12 +144,14 @@ export function UnitTimetable({
         </div>
       </section>
 
-      <Link
-        href={`/agreements/${agreementId}`}
-        className="flex items-center justify-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 active:scale-95"
-      >
-        ⚙️ Record payments &amp; manage this unit →
-      </Link>
+      {showManage && (
+        <Link
+          href={`/agreements/${agreementId}`}
+          className="flex items-center justify-center gap-2 rounded-xl border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100 active:scale-95"
+        >
+          ⚙️ Record payments &amp; manage this unit →
+        </Link>
+      )}
     </div>
   );
 }
