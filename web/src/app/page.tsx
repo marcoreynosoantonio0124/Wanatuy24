@@ -59,7 +59,7 @@ export default async function LandingPage() {
 
         {/* Renter-side slogan */}
         <p className="mt-4 max-w-3xl text-3xl font-bold leading-tight text-white/90 drop-shadow sm:text-4xl">
-          Pay rent without <span className="text-emerald-400">the worry.</span>
+          Pay rent without <span className="text-emerald-400">forgetting it.</span>
         </p>
 
         {/* Taglish punchline */}
