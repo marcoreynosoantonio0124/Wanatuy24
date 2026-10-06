@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { DuskScene } from "@/components/dusk-scene";
+import Image from "next/image";
 
 export default async function LandingPage() {
   let user = null;
@@ -17,12 +17,16 @@ export default async function LandingPage() {
     <main className="relative flex min-h-screen flex-1 flex-col text-white">
       {/* ---------- Full-page wallpaper background ---------- */}
       <div className="fixed inset-0 -z-10">
-        <DuskScene
-          preserveAspectRatio="xMidYMid slice"
-          className="h-full w-full"
+        <Image
+          src="/skyline.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-slate-950/75 to-slate-950/90" />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/70 to-slate-950/20" />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/50 via-slate-950/60 to-slate-950/92" />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-950/40 to-slate-950/10" />
       </div>
 
       {/* ---------- Nav ---------- */}
