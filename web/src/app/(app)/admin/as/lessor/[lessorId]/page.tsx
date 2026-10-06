@@ -22,10 +22,13 @@ export default async function ViewAsLessorPage({
 
   const data = await loadLessorDashboard(admin, { lessorId });
 
+  const first = email.split("@")[0].split(/[._+]/)[0];
+  const greetingName = first.charAt(0).toUpperCase() + first.slice(1);
+
   return (
     <div>
       <PreviewBanner title="Viewing a lessor's live dashboard" subtitle={email} />
-      <LessorDashboardView data={data} preview />
+      <LessorDashboardView data={data} preview greetingName={greetingName} />
     </div>
   );
 }

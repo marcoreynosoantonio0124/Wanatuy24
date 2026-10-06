@@ -17,6 +17,9 @@ export default async function DashboardPage() {
     .single();
   if ((me as { is_admin?: boolean } | null)?.is_admin) redirect("/admin");
 
+  const first = (user.email ?? "there").split("@")[0].split(/[._+]/)[0];
+  const greetingName = first.charAt(0).toUpperCase() + first.slice(1);
+
   const data = await loadLessorDashboard(supabase);
-  return <LessorDashboardView data={data} />;
+  return <LessorDashboardView data={data} greetingName={greetingName} />;
 }
