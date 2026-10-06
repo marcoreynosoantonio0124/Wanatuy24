@@ -1,0 +1,183 @@
+import { formatPeso, formatDate, PAYMENT_METHOD_LABELS } from "@/lib/format";
+import type { PaymentMethod } from "@/lib/database.types";
+import { DuskScene } from "@/components/dusk-scene";
+import { RenterProofForm } from "@/components/renter-proof-form";
+import { RenterIdUpload } from "@/components/renter-id-upload";
+import { YearForecast, type ForecastMonth } from "@/components/year-forecast";
+
+export type RenterDashboardProps = {
+  token: string;
+  firstName: string;
+  unitLabel: string;
+  address: string | null;
+  scheduleLabel: string;
+  outstanding: number;
+  dueNow: { remaining: number; dueDate: string; paid: number; due: number } | null;
+  months: ForecastMonth[];
+  unpaidForProof: { id: string; due_date: string; amount_php: number }[];
+  methods: PaymentMethod[];
+  paymentInstructions: string | null;
+  contract: { view: string | null; download: string | null } | null;
+  hasRenterId: boolean;
+};
+
+export function RenterDashboard(p: RenterDashboardProps) {
+  const paidMonths = p.months.filter((m) => m.status === "paid").length;
+  const collected = p.months.reduce((s, m) => s + m.paid, 0);
+  const yearTotal = p.months.reduce((s, m) => s + m.due, 0);
+
+  return (
+    <div className="mx-auto w-full max-w-xl space-y-5 pb-10">
+      {/* Big warm welcome header */}
+      <section className="relative overflow-hidden rounded-b-2xl sm:rounded-2xl">
+        <DuskScene
+          preserveAspectRatio="xMidYMid slice"
+          className="absolute inset-0 h-full w-full"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/50 to-slate-950/25" />
+        <div className="relative px-5 py-7">
+          <div className="flex items-center gap-3">
+            <span className="grid h-12 w-12 flex-none place-items-center rounded-full border-2 border-white/35 bg-white/15 text-2xl">
+              🙋
+            </span>
+            <div className="min-w-0">
+              <p className="text-sm font-medium text-emerald-300">
+                Welcome back 👋
+              </p>
+              <h1 className="text-2xl font-bold text-white drop-shadow">
+                Hi, {p.firstName}!
+              </h1>
+            </div>
+          </div>
+          <div className="mt-3 flex items-start gap-2 text-sm text-white/90">
+            <span>📍</span>
+            <span>
+              <span className="font-semibold text-white">{p.unitLabel}</span>
+              {p.address ? ` · ${p.address}` : ""}
+            </span>
+          </div>
+          <p className="mt-1 text-xs text-white/70">{p.scheduleLabel}</p>
+        </div>
+      </section>
+
+      <div className="space-y-5 px-4 sm:px-0">
+        {/* Amount due */}
+        {p.dueNow ? (
+          <div className="rounded-2xl bg-gradient-to-br from-amber-600 to-red-600 p-5 text-white shadow-lg shadow-red-600/20">
+            <p className="text-sm font-medium text-white/90">
+              You still owe this month ({formatDate(p.dueNow.dueDate)})
+            </p>
+            <p className="mt-1 text-4xl font-extrabold tracking-tight">
+              {formatPeso(p.dueNow.remaining)}
+            </p>
+            {p.dueNow.paid > 0 && (
+              <p className="mt-1 text-sm text-white/90">
+                of {formatPeso(p.dueNow.due)} · {formatPeso(p.dueNow.paid)}{" "}
+                already received
+              </p>
+            )}
+          </div>
+        ) : (
+          <div className="rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-500 p-5 text-white shadow-lg shadow-emerald-600/20">
+            <p className="text-sm font-medium text-white/90">Your rent</p>
+            <p className="mt-1 text-3xl font-extrabold">You&apos;re all paid up 🎉</p>
+            <p className="mt-1 text-sm text-white/90">Salamat po!</p>
+          </div>
+        )}
+
+        {/* Send a payment */}
+        {p.unpaidForProof.length > 0 && (
+          <section>
+            <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
+              Send a payment
+            </h2>
+            <RenterProofForm
+              token={p.token}
+              periods={p.unpaidForProof}
+              methods={p.methods}
+            />
+          </section>
+        )}
+
+        {/* Whole-year forecast */}
+        <section>
+          <h2 className="text-xs font-bold uppercase tracking-wide text-slate-400">
+            This year&apos;s rent · tap a month
+          </h2>
+          <p className="mb-2.5 mt-0.5 text-xs text-slate-500">
+            {paidMonths} of {p.months.length} months fully paid ·{" "}
+            {formatPeso(collected)} of {formatPeso(yearTotal)}
+          </p>
+          <YearForecast months={p.months} />
+        </section>
+
+        {/* Balance */}
+        <div className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+          <span className="text-sm font-medium text-slate-700">
+            Balance up to date
+          </span>
+          <span className="text-lg font-bold tabular-nums text-amber-700">
+            {formatPeso(p.outstanding)}
+          </span>
+        </div>
+
+        {/* How to pay */}
+        {(p.paymentInstructions || p.methods.length > 0) && (
+          <section>
+            <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
+              How to pay
+            </h2>
+            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+              {p.paymentInstructions && (
+                <p className="whitespace-pre-wrap">{p.paymentInstructions}</p>
+              )}
+              {p.methods.length > 0 && (
+                <p className="mt-2 text-emerald-700">
+                  Accepts:{" "}
+                  {p.methods.map((m) => PAYMENT_METHOD_LABELS[m]).join(", ")}
+                </p>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* Documents */}
+        <section>
+          <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
+            Documents
+          </h2>
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+            {p.contract && (p.contract.view || p.contract.download) && (
+              <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4">
+                <span className="flex items-center gap-2 text-sm font-medium text-slate-700">
+                  📄 Your signed contract
+                </span>
+                <span className="flex gap-2">
+                  {p.contract.view && (
+                    <a
+                      href={p.contract.view}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 active:scale-95"
+                    >
+                      View
+                    </a>
+                  )}
+                  {p.contract.download && (
+                    <a
+                      href={p.contract.download}
+                      className="rounded-md border border-emerald-300 px-3 py-1.5 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50 active:scale-95"
+                    >
+                      ⬇️ Download
+                    </a>
+                  )}
+                </span>
+              </div>
+            )}
+            <RenterIdUpload token={p.token} hasId={p.hasRenterId} />
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}

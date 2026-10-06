@@ -165,3 +165,50 @@ export async function submitProof(
   revalidatePath(`/r/${v.token}`);
   return { ok: true };
 }
+
+const ID_BUCKET = "ids";
+
+export type RenterIdState = { error?: string; ok?: boolean };
+
+/** Renter uploads a photo of their ID (verification). Kept private, keyed by
+ * the agreement so it works for renters who have no account. */
+export async function uploadRenterId(
+  _prev: RenterIdState,
+  formData: FormData,
+): Promise<RenterIdState> {
+  const token = String(formData.get("token") ?? "");
+  const file = formData.get("file");
+  if (token.length < 10) return { error: "This link is no longer valid." };
+  if (!(file instanceof File) || file.size === 0) {
+    return { error: "Please choose a photo of your ID." };
+  }
+  if (file.size > MAX_FILE_BYTES || !ALLOWED_TYPES.includes(file.type)) {
+    return { error: "Use a photo or PDF up to 10 MB." };
+  }
+
+  const admin = createAdminClient();
+  const { data: ag } = await admin
+    .from("agreements")
+    .select("id")
+    .eq("renter_access_token", token)
+    .single();
+  if (!ag) return { error: "This link is no longer valid." };
+  const agreementId = (ag as { id: string }).id;
+
+  const ext = file.name.includes(".") ? file.name.split(".").pop() : "bin";
+  const path = `${agreementId}/renter-id-${Date.now()}.${ext}`;
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const { error: upErr } = await admin.storage
+    .from(ID_BUCKET)
+    .upload(path, bytes, { contentType: file.type, upsert: false });
+  if (upErr) return { error: "Upload failed. Please try again." };
+
+  await admin
+    .from("agreements")
+    .update({ renter_id_file_path: path })
+    .eq("id", agreementId);
+
+  revalidatePath(`/r/${token}`);
+  revalidatePath("/my-rentals");
+  return { ok: true };
+}
