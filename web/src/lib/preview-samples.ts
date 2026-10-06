@@ -134,3 +134,84 @@ export const SAMPLE_TENANT: RenterDashboardProps = {
   contract: null,
   hasRenterId: true,
 };
+
+/** Sample per-unit timetable (the "Apartment B" overdue case from SAMPLE_LESSOR). */
+function sampleUnitMonths(): ForecastMonth[] {
+  const rent = 1_200_000;
+  const MON = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+    "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+  ];
+  const months: ForecastMonth[] = [];
+  for (let m = 0; m < 12; m++) {
+    const dueDate = `2026-${String(m + 1).padStart(2, "0")}-05`;
+    const prev = MON[(m + 11) % 12];
+    const preDue = {
+      sentAt: `2026-${String(((m + 11) % 12) + 1).padStart(2, "0")}-29T09:00:00+08:00`,
+      label: "3 days before",
+      body: `Kumusta po! Paalala lang, due na ang upa (₱12,000) sa ${MON[m]} 5. Salamat po! 🙏`,
+    };
+    if (m <= 7) {
+      months.push({
+        periodId: `s-${m}`,
+        dueDate,
+        due: rent,
+        paid: rent,
+        remaining: 0,
+        status: "paid",
+        isNow: false,
+        reminders: [{ ...preDue, label: `before ${prev}` }],
+      });
+    } else if (m === 8) {
+      months.push({
+        periodId: `s-${m}`,
+        dueDate,
+        due: rent,
+        paid: 0,
+        remaining: rent,
+        status: "overdue",
+        isNow: false,
+        reminders: [
+          { sentAt: "2026-09-11T09:00:00+08:00", label: "weekly follow-up", body: "Kumusta po! Overdue na po ang upa ninyo. Pwede po ba natin ayusin? Salamat! 🙏" },
+          { sentAt: "2026-09-08T09:00:00+08:00", label: "3 days after", body: "Hi po, lampas na po sa due ang upa. Paalala lang po. Salamat!" },
+          { sentAt: "2026-09-05T09:00:00+08:00", label: "on due date", body: "Due na po ngayon ang upa (₱12,000). Salamat po!" },
+          { sentAt: "2026-09-02T09:00:00+08:00", label: "3 days before", body: "Paalala po, due na ang upa sa Sep 5. Salamat!" },
+        ],
+      });
+    } else if (m === 9) {
+      months.push({
+        periodId: `s-${m}`,
+        dueDate,
+        due: rent,
+        paid: 600_000,
+        remaining: 600_000,
+        status: "partial",
+        isNow: true,
+        reminders: [preDue],
+      });
+    } else {
+      months.push({
+        periodId: `s-${m}`,
+        dueDate,
+        due: rent,
+        paid: 0,
+        remaining: rent,
+        status: "upcoming",
+        isNow: false,
+        reminders: [],
+      });
+    }
+  }
+  return months;
+}
+
+export const SAMPLE_UNIT = {
+  agreementId: "sample-2",
+  unitLabel: "Apartment B",
+  renterName: "Maria Santos",
+  scheduleLabel: "Monthly · due on the 5th",
+  months: sampleUnitMonths(),
+  collected: 10_200_000,
+  outstanding: 1_800_000,
+  remindersSent: 13,
+};

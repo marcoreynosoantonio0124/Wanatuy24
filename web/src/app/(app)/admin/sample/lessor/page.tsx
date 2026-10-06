@@ -13,7 +13,12 @@ export default async function SampleLessorPage() {
         title="Sample lessor dashboard"
         subtitle="Example data — this is exactly what a landlord sees."
       />
-      <LessorDashboardView data={SAMPLE_LESSOR} preview greetingName="Marco" />
+      <LessorDashboardView
+        data={SAMPLE_LESSOR}
+        preview
+        greetingName="Marco"
+        previewHref="/admin/sample/unit"
+      />
     </div>
   );
 }

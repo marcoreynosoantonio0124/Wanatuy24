@@ -16,10 +16,13 @@ export function LessorDashboardView({
   data,
   preview = false,
   greetingName = "there",
+  previewHref,
 }: {
   data: LessorDashboard;
   preview?: boolean;
   greetingName?: string;
+  /** In preview mode, send every unit row to this one sample page. */
+  previewHref?: string;
 }) {
   const { properties, outstanding, proofsToReview } = data;
 
@@ -52,7 +55,12 @@ export function LessorDashboardView({
       ) : (
         <div className="space-y-3">
           {properties.map((p) => (
-            <PropertyRow key={p.id} p={p} preview={preview} />
+            <PropertyRow
+              key={p.id}
+              p={p}
+              preview={preview}
+              previewHref={previewHref}
+            />
           ))}
         </div>
       )}
@@ -87,8 +95,17 @@ export function LessorDashboardView({
   );
 }
 
-function PropertyRow({ p, preview }: { p: Property; preview: boolean }) {
+function PropertyRow({
+  p,
+  preview,
+  previewHref,
+}: {
+  p: Property;
+  preview: boolean;
+  previewHref?: string;
+}) {
   const icon = p.allPaid ? "🏠" : p.overdueCount > 0 ? "🏚️" : "🏡";
+  const href = preview ? previewHref : `/dashboard/unit/${p.id}`;
   const inner = (
     <>
       <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-200 bg-slate-50 text-xl">
@@ -109,7 +126,7 @@ function PropertyRow({ p, preview }: { p: Property; preview: boolean }) {
           </span>
         )}
         <FolderPill p={p} />
-        {!preview && <span className="text-slate-400">›</span>}
+        {href && <span className="text-slate-400">›</span>}
       </span>
     </>
   );
@@ -117,12 +134,12 @@ function PropertyRow({ p, preview }: { p: Property; preview: boolean }) {
   const cls =
     "flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm";
 
-  if (preview) {
+  if (!href) {
     return <div className={cls}>{inner}</div>;
   }
   return (
     <Link
-      href={`/dashboard/unit/${p.id}`}
+      href={href}
       className={`${cls} transition hover:border-emerald-300 hover:shadow-md active:scale-[0.99]`}
     >
       {inner}
