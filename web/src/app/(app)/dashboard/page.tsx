@@ -4,6 +4,7 @@ import { formatPeso, formatDate } from "@/lib/format";
 import { buildLedger } from "@/lib/ledger";
 import { PushToggle } from "@/components/push-toggle";
 import { DuskScene } from "@/components/dusk-scene";
+import { RoleCharacter } from "@/components/role-character";
 import type { PeriodRow } from "@/lib/database.types";
 
 export const dynamic = "force-dynamic";
@@ -179,13 +180,16 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Slim brand strip — context, not an action */}
-      <section className="relative overflow-hidden rounded-2xl ring-1 ring-slate-900/10">
+      {/* Brand strip with the landlord mascot */}
+      <section className="relative overflow-hidden rounded-2xl ring-1 ring-white/10">
         <DuskScene preserveAspectRatio="xMidYMid slice" className="absolute inset-0 h-full w-full" />
-        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/55 to-slate-950/25" />
-        <div className="relative px-5 py-3.5">
-          <p className="text-xs font-medium text-emerald-300">Welcome back 👋</p>
-          <p className="mt-0.5 text-sm font-semibold text-white">DueMeet · Dashboard</p>
+        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/90 via-slate-950/55 to-slate-950/30" />
+        <div className="relative flex items-center justify-between gap-3 px-5 py-4">
+          <div>
+            <p className="text-xs font-medium text-emerald-300">Welcome back 👋</p>
+            <p className="mt-0.5 text-sm font-semibold text-white">DueMeet · Dashboard</p>
+          </div>
+          <RoleCharacter role="lessor" className="h-24 w-auto drop-shadow-lg" />
         </div>
       </section>
 

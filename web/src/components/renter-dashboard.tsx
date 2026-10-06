@@ -4,6 +4,7 @@ import { DuskScene } from "@/components/dusk-scene";
 import { RenterProofForm } from "@/components/renter-proof-form";
 import { RenterIdUpload } from "@/components/renter-id-upload";
 import { YearForecast, type ForecastMonth } from "@/components/year-forecast";
+import { RoleCharacter } from "@/components/role-character";
 
 export type RenterDashboardProps = {
   token: string;
@@ -35,20 +36,11 @@ export function RenterDashboard(p: RenterDashboardProps) {
           className="absolute inset-0 h-full w-full"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/50 to-slate-950/25" />
-        <div className="relative px-5 py-7">
-          <div className="flex items-center gap-3">
-            <span className="grid h-12 w-12 flex-none place-items-center rounded-full border-2 border-white/35 bg-white/15 text-2xl">
-              🙋
-            </span>
-            <div className="min-w-0">
-              <p className="text-sm font-medium text-emerald-300">
-                Welcome back 👋
-              </p>
-              <h1 className="text-2xl font-bold text-white drop-shadow">
-                Hi, {p.firstName}!
-              </h1>
-            </div>
-          </div>
+        <div className="relative px-5 py-7 pr-28">
+          <p className="text-sm font-medium text-emerald-300">Welcome back 👋</p>
+          <h1 className="text-2xl font-bold text-white drop-shadow">
+            Hi, {p.firstName}!
+          </h1>
           <div className="mt-3 flex items-start gap-2 text-sm text-white/90">
             <span>📍</span>
             <span>
@@ -57,6 +49,10 @@ export function RenterDashboard(p: RenterDashboardProps) {
             </span>
           </div>
           <p className="mt-1 text-xs text-white/70">{p.scheduleLabel}</p>
+          <RoleCharacter
+            role="renter"
+            className="pointer-events-none absolute bottom-0 right-3 h-28 w-auto drop-shadow-lg"
+          />
         </div>
       </section>
 
