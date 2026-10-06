@@ -200,7 +200,7 @@ export function AgreementForm({ assets }: { assets: AssetOption[] }) {
         </div>
         <div>
           <label htmlFor="lessor_id" className={label}>
-            Upload your ID <span className="text-slate-400">(optional)</span>
+            Upload your ID
           </label>
           <input
             id="lessor_id"
