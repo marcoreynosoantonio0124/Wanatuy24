@@ -3,6 +3,7 @@
 import { Suspense, useActionState, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import {
   signIn,
   signUp,
@@ -25,8 +26,22 @@ function LoginForm() {
   const [mode, setMode] = useState<LoginMode>("signin");
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col justify-center px-4 py-16">
-      <Link href="/" className="mb-8 text-lg font-bold text-emerald-700">
+    <main className="app-dark relative flex min-h-screen w-full flex-col items-center justify-center px-4 py-12 text-slate-100">
+      {/* Skyline backdrop */}
+      <div className="fixed inset-0 -z-10">
+        <Image
+          src="/login-bg.jpg"
+          alt=""
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/55 via-slate-950/65 to-slate-950/88" />
+      </div>
+
+      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-950/65 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+      <Link href="/" className="mb-8 block text-lg font-bold text-emerald-700">
         Due<span className="text-slate-400">Meet</span>
       </Link>
 
@@ -35,7 +50,7 @@ function LoginForm() {
       ) : (
         <>
           {/* Sign in / Create account tabs */}
-          <div className="mb-6 grid grid-cols-2 gap-1 rounded-xl bg-slate-100 p-1">
+          <div className="mb-6 grid grid-cols-2 gap-1 rounded-xl bg-white/5 p-1">
             <TabButton
               active={mode === "signin"}
               onClick={() => setMode("signin")}
@@ -77,6 +92,7 @@ function LoginForm() {
         Renters: sign up with the same email your landlord used, para makita ang
         payment records mo. 🇵🇭
       </p>
+      </div>
     </main>
   );
 }
@@ -96,8 +112,8 @@ function TabButton({
       onClick={onClick}
       className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
         active
-          ? "bg-white text-slate-900 shadow-sm"
-          : "text-slate-500 hover:text-slate-700"
+          ? "bg-white/15 text-white shadow-sm"
+          : "text-slate-300 hover:text-white"
       }`}
     >
       {children}
