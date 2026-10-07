@@ -4,6 +4,7 @@ import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { formatPeso, formatDate } from "@/lib/format";
 import { ActAsButton } from "@/components/act-as-button";
+import { CreateTestAccountsButton } from "@/components/create-test-accounts-button";
 
 export const dynamic = "force-dynamic";
 
@@ -106,11 +107,17 @@ export default async function AdminPage() {
 
   // Lists for the dashboard-preview section: real landlords to view-as, and
   // real renters whose portal we can open.
-  const [lessorsListRes, rentersListRes] = await Promise.all([
+  const [lessorsListRes, tenantsListRes, rentersListRes] = await Promise.all([
     admin
       .from("users")
       .select("id, email")
       .eq("role", "lessor")
+      .order("created_at", { ascending: false })
+      .limit(15),
+    admin
+      .from("users")
+      .select("id, email")
+      .eq("role", "tenant")
       .order("created_at", { ascending: false })
       .limit(15),
     admin
@@ -119,10 +126,15 @@ export default async function AdminPage() {
         "id, renter_name, renter_access_token, renter_user_id, asset:assets(label)",
       )
       .eq("status", "active")
+      .is("renter_user_id", null)
       .order("created_at", { ascending: false })
       .limit(15),
   ]);
   const lessorList = (lessorsListRes.data ?? []) as {
+    id: string;
+    email: string;
+  }[];
+  const tenantList = (tenantsListRes.data ?? []) as {
     id: string;
     email: string;
   }[];
@@ -173,6 +185,19 @@ export default async function AdminPage() {
           do a full end-to-end run-through as them (send messages, add a
           contract, record payments). A yellow bar brings you back here.
         </p>
+
+        {lessorList.length === 0 && tenantList.length === 0 && (
+          <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4">
+            <p className="text-sm font-semibold text-emerald-900">
+              👋 No landlords or renters yet
+            </p>
+            <p className="mb-3 mt-0.5 text-sm text-emerald-800/80">
+              Make a test landlord and a test renter to try the whole flow.
+              They&apos;ll appear below with an <strong>Act as</strong> button.
+            </p>
+            <CreateTestAccountsButton />
+          </div>
+        )}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <PreviewCard
@@ -225,10 +250,21 @@ export default async function AdminPage() {
             <p className="mb-1 text-sm font-semibold text-slate-700">
               🧾 Open a real renter
             </p>
-            {renterList.length === 0 ? (
+            {tenantList.length === 0 && renterList.length === 0 ? (
               <p className="py-3 text-sm text-slate-400">No renters yet.</p>
             ) : (
               <ul className="divide-y divide-slate-100">
+                {tenantList.map((t) => (
+                  <li
+                    key={t.id}
+                    className="flex items-center justify-between gap-2 py-2.5 text-sm"
+                  >
+                    <span className="min-w-0 truncate text-slate-800">
+                      {t.email}
+                    </span>
+                    <ActAsButton userId={t.id} />
+                  </li>
+                ))}
                 {renterList.map((r) => (
                   <li
                     key={r.id}
@@ -239,20 +275,16 @@ export default async function AdminPage() {
                       {r.asset?.label ? (
                         <span className="text-slate-400"> · {r.asset.label}</span>
                       ) : null}
+                      <span className="ml-1 text-xs text-slate-400">(no account)</span>
                     </span>
-                    <span className="flex shrink-0 items-center gap-2">
-                      <a
-                        href={`/r/${r.renter_access_token}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="font-semibold text-emerald-700 transition hover:text-emerald-800"
-                      >
-                        Portal ↗
-                      </a>
-                      {r.renter_user_id && (
-                        <ActAsButton userId={r.renter_user_id} />
-                      )}
-                    </span>
+                    <a
+                      href={`/r/${r.renter_access_token}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="shrink-0 font-semibold text-emerald-700 transition hover:text-emerald-800"
+                    >
+                      Portal ↗
+                    </a>
                   </li>
                 ))}
               </ul>
