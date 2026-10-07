@@ -101,7 +101,7 @@ export function AgreementForm({ assets }: { assets: AssetOption[] }) {
     <form ref={formRef} action={action} className="space-y-5">
       <fieldset className="space-y-3 rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
         <legend className="px-1 text-sm font-semibold text-emerald-800">
-          ✨ Auto-fill from contract (optional)
+          ✨ Auto-fill from contract
         </legend>
         <p className="text-xs text-emerald-900/70">
           Upload the signed contract (PDF or photo). Tap ✨ Auto-fill to have AI
@@ -161,7 +161,7 @@ export function AgreementForm({ assets }: { assets: AssetOption[] }) {
           </div>
           <div>
             <label htmlFor="renter_phone" className={label}>
-              Renter phone <span className="text-slate-400">(optional)</span>
+              Renter phone
             </label>
             <input
               id="renter_phone"
@@ -173,7 +173,7 @@ export function AgreementForm({ assets }: { assets: AssetOption[] }) {
         </div>
         <div>
           <label htmlFor="renter_email" className={label}>
-            Renter email <span className="text-slate-400">(optional)</span>
+            Renter email
           </label>
           <input
             id="renter_email"
@@ -295,7 +295,7 @@ export function AgreementForm({ assets }: { assets: AssetOption[] }) {
           </div>
           <div>
             <label htmlFor="end_date" className={label}>
-              End date <span className="text-slate-400">(optional)</span>
+              End date
             </label>
             <input id="end_date" name="end_date" type="date" className={input} />
           </div>
@@ -340,7 +340,6 @@ export function AgreementForm({ assets }: { assets: AssetOption[] }) {
         <div>
           <label htmlFor="payment_instructions" className={label}>
             Payment instructions{" "}
-            <span className="text-slate-400">(optional)</span>
           </label>
           <textarea
             id="payment_instructions"

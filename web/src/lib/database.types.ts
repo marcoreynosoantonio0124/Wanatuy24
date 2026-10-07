@@ -21,6 +21,12 @@ export interface UserRow {
   role: UserRole | null;
   is_admin: boolean;
   created_at: string;
+  suffix: string | null;
+  address: string | null;
+  birthdate: string | null;
+  marital_status: string | null;
+  valid_id_file_path: string | null;
+  profile_completed: boolean;
 }
 
 export interface AssetRow {

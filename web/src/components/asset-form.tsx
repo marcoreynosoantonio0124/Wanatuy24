@@ -57,7 +57,7 @@ export function AssetForm() {
       </div>
       <label className="block text-sm">
         <span className="mb-1 block font-medium text-slate-700">
-          Address <span className="text-slate-400">(optional)</span>
+          Address
         </span>
         <input
           name="address_text"

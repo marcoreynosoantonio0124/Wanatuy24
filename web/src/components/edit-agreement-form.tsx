@@ -49,7 +49,7 @@ export function EditAgreementForm({ agreement }: { agreement: AgreementRow }) {
           </div>
           <div>
             <label htmlFor="renter_phone" className={label}>
-              Renter phone <span className="text-slate-400">(optional)</span>
+              Renter phone
             </label>
             <input
               id="renter_phone"
@@ -62,7 +62,7 @@ export function EditAgreementForm({ agreement }: { agreement: AgreementRow }) {
         </div>
         <div>
           <label htmlFor="renter_email" className={label}>
-            Renter email <span className="text-slate-400">(optional)</span>
+            Renter email
           </label>
           <input
             id="renter_email"
@@ -115,7 +115,6 @@ export function EditAgreementForm({ agreement }: { agreement: AgreementRow }) {
         <div>
           <label htmlFor="payment_instructions" className={label}>
             Payment instructions{" "}
-            <span className="text-slate-400">(optional)</span>
           </label>
           <textarea
             id="payment_instructions"
