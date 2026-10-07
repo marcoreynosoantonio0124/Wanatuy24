@@ -51,10 +51,16 @@ export function LessorDashboardView({
       {/* Page heading */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
-          <h1 className="text-2xl font-bold text-slate-900 sm:text-3xl">
+          <h1
+            className="text-2xl font-bold text-white sm:text-3xl [text-shadow:0_2px_8px_rgba(0,0,0,0.85)]"
+            style={{
+              WebkitTextStroke: "0.8px rgba(2,6,23,0.65)",
+              paintOrder: "stroke",
+            }}
+          >
             Your Properties
           </h1>
-          <p className="mt-0.5 text-sm text-slate-500">
+          <p className="mt-0.5 text-sm font-medium text-white/90 [text-shadow:0_1px_5px_rgba(0,0,0,0.9)]">
             Ang Iyong Mga Paupahan · tap a house to open it
           </p>
         </div>
@@ -149,16 +155,24 @@ function PropertyRow({
     </>
   );
 
+  // A dark slate fill at 50% opacity (with a soft blur) so the cards stay
+  // readable over the photo wallpaper while the building still shows through.
   const cls =
-    "flex items-center gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm";
+    "flex items-center gap-3 rounded-2xl border border-white/12 p-4 shadow-sm backdrop-blur-md";
+  const fillStyle = { backgroundColor: "rgba(15,23,42,0.5)" } as const;
 
   if (!href) {
-    return <div className={cls}>{inner}</div>;
+    return (
+      <div className={cls} style={fillStyle}>
+        {inner}
+      </div>
+    );
   }
   return (
     <Link
       href={href}
-      className={`${cls} transition hover:border-emerald-300 hover:shadow-md active:scale-[0.99]`}
+      style={fillStyle}
+      className={`${cls} transition hover:border-emerald-300/60 hover:shadow-md active:scale-[0.99]`}
     >
       {inner}
     </Link>
