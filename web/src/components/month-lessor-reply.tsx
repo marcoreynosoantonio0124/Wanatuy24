@@ -41,7 +41,7 @@ export function MonthLessorReply({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-2 inline-flex items-center gap-1.5 rounded-lg border border-pink-400/40 bg-pink-500/10 px-3 py-1.5 text-sm font-semibold text-pink-200 transition hover:bg-pink-500/20 active:scale-95"
+        className="mt-2 flex w-full items-center justify-center gap-1.5 rounded-lg border border-pink-400/40 bg-pink-500/10 px-3 py-2.5 text-sm font-semibold text-pink-200 transition hover:bg-pink-500/20 active:scale-95"
       >
         💬 {hasThread ? "Reply to renter" : "Message renter"}
       </button>
