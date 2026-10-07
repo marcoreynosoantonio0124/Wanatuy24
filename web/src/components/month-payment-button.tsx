@@ -49,7 +49,7 @@ export function MonthPaymentButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-1.5 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/20 active:scale-95"
+        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-2.5 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/20 active:scale-95"
       >
         ✓ Payment received
       </button>
