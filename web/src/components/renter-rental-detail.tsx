@@ -60,6 +60,19 @@ export function RenterRentalDetail({
             {data.address ? data.address : "Your rental"} · {data.scheduleLabel}
           </span>
         </div>
+        {data.transactionNo && (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1 rounded-md bg-white/15 px-2 py-1 font-mono text-xs font-semibold text-white ring-1 ring-white/25">
+              🔖 {data.transactionNo}
+            </span>
+            {data.isActive && (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-100">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                Active
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Amount due */}
@@ -237,9 +250,40 @@ export function RenterRentalDetail({
               </span>
             </div>
           )}
+          {data.lessorIdUrl && (
+            <IdDocRow label="🪪 Landlord's valid ID" href={data.lessorIdUrl} />
+          )}
+          {data.renterIdUrl && (
+            <IdDocRow label="🪪 Your valid ID" href={data.renterIdUrl} />
+          )}
           {!preview && <RenterIdUpload token={data.token} hasId={data.hasRenterId} />}
         </div>
+        {data.isActive && (
+          <p className="mt-2 px-1 text-xs text-slate-500">
+            Para sa transparency — makikita ng inyong landlord ang parehong mga
+            dokumento. Lalabas lang habang aktibo ang kasunduan.
+          </p>
+        )}
       </section>
+    </div>
+  );
+}
+
+/** One ID document row in the Documents card: a label + a "View" link. */
+function IdDocRow({ label, href }: { label: string; href: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4 last:border-b-0">
+      <span className="flex items-center gap-2 text-sm font-medium text-slate-700">
+        {label}
+      </span>
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 active:scale-95"
+      >
+        View
+      </a>
     </div>
   );
 }

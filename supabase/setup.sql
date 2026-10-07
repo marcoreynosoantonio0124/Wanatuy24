@@ -799,3 +799,48 @@ on conflict (id) do nothing;
 -- ---------------------------------------------------------------------------
 alter table public.agreements
   add column if not exists renter_id_file_path text;
+
+-- ---------------------------------------------------------------------------
+-- 0016_messages: per-month messages ("Message the owner") between the renter
+-- and the lessor. Server-only access (service role) — RLS on, no public policy.
+-- ---------------------------------------------------------------------------
+create table if not exists public.messages (
+  id           uuid primary key default gen_random_uuid(),
+  agreement_id uuid not null references public.agreements(id) on delete cascade,
+  period_id    uuid references public.periods(id) on delete set null,
+  sender       text not null check (sender in ('renter','lessor')),
+  body         text not null,
+  created_at   timestamptz not null default now(),
+  read_at      timestamptz
+);
+create index if not exists messages_agreement_idx on public.messages(agreement_id);
+create index if not exists messages_period_idx    on public.messages(period_id);
+alter table public.messages enable row level security;
+
+-- ---------------------------------------------------------------------------
+-- 0017_user_profile_fields: full profile kept on record for every user,
+-- captured at sign-up (Phase 1).
+-- ---------------------------------------------------------------------------
+alter table public.users
+  add column if not exists suffix             text,
+  add column if not exists address            text,
+  add column if not exists birthdate          date,
+  add column if not exists marital_status     text,
+  add column if not exists valid_id_file_path text,
+  add column if not exists profile_completed  boolean not null default false;
+
+-- ---------------------------------------------------------------------------
+-- 0018_property_location: map location (lat/lng) on each property (Phase 2).
+-- ---------------------------------------------------------------------------
+alter table public.assets
+  add column if not exists latitude  double precision,
+  add column if not exists longitude double precision;
+
+-- ---------------------------------------------------------------------------
+-- 0019_agreement_transaction: short transaction number on each agreement,
+-- shown on both unit boxes and used by a renter to join a unit (Phase 3).
+-- ---------------------------------------------------------------------------
+alter table public.agreements
+  add column if not exists transaction_no text;
+create unique index if not exists agreements_transaction_no_key
+  on public.agreements(transaction_no);

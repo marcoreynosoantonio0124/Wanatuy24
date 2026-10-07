@@ -25,6 +25,7 @@ export type Property = {
   attention: AttentionRow[];
   nextDue: string | null;
   lastPaid: string | null;
+  transactionNo: string | null;
 };
 
 export type LessorDashboard = {
@@ -38,6 +39,7 @@ type AgreementLite = {
   id: string;
   renter_name: string;
   amount_php: number;
+  transaction_no: string | null;
   asset: { label: string } | null;
 };
 
@@ -55,7 +57,7 @@ export async function loadLessorDashboard(
 ): Promise<LessorDashboard> {
   let agQuery = client
     .from("agreements")
-    .select("id, renter_name, amount_php, asset:assets(label)")
+    .select("id, renter_name, amount_php, transaction_no, asset:assets(label)")
     .eq("status", "active");
   if (opts.lessorId) agQuery = agQuery.eq("lessor_id", opts.lessorId);
 
@@ -182,6 +184,7 @@ export async function loadLessorDashboard(
       attention,
       nextDue,
       lastPaid,
+      transactionNo: a.transaction_no ?? null,
     };
   });
 

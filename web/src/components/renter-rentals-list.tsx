@@ -117,6 +117,17 @@ function RentalRow({
           {r.address ? `${r.address} · ` : ""}
           {formatPeso(r.monthly)}/mo
         </span>
+        {r.transactionNo && (
+          <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
+            <span className="inline-flex items-center gap-1 rounded-md bg-white/10 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-slate-200">
+              🔖 {r.transactionNo}
+            </span>
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-300">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              Active
+            </span>
+          </span>
+        )}
       </span>
       <span className="flex shrink-0 items-center gap-2.5">
         {r.outstanding > 0 && (

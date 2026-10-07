@@ -27,6 +27,21 @@ export function AgreementForm({ assets }: { assets: AssetOption[] }) {
   const [frequency, setFrequency] = useState<AgreementFrequency>("monthly");
   const isWeekly = frequency === "weekly" || frequency === "biweekly";
 
+  // Lease term: pick a length (in months) and the end date + schedule fill in
+  // automatically. "custom" lets the lessor type an end date by hand.
+  const [term, setTerm] = useState<string>("12");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const autoEnd = term !== "custom";
+
+  useEffect(() => {
+    if (term === "custom" || !startDate) return;
+    const d = new Date(`${startDate}T00:00:00`);
+    d.setMonth(d.getMonth() + Number(term));
+    d.setDate(d.getDate() - 1); // ends the day before the anniversary
+    setEndDate(d.toISOString().slice(0, 10));
+  }, [term, startDate]);
+
   const formRef = useRef<HTMLFormElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const [prefill, setPrefill] = useState<Record<string, unknown> | null>(null);
@@ -51,7 +66,7 @@ export function AgreementForm({ assets }: { assets: AssetOption[] }) {
     setVal("renter_phone", prefill.renter_phone);
     setVal("renter_email", prefill.renter_email);
     setVal("amount", prefill.amount_php);
-    setVal("start_date", prefill.start_date);
+    if (prefill.start_date) setStartDate(String(prefill.start_date));
     setVal("payment_instructions", prefill.payment_instructions);
     setVal("due_day", prefill.due_day);
     setPrefill(null);
@@ -210,7 +225,24 @@ export function AgreementForm({ assets }: { assets: AssetOption[] }) {
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-800 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-slate-900"
           />
           <p className="mt-1 text-xs text-slate-400">
-            A photo of a valid ID (kept private — only you can view it).
+            A photo of a valid ID — your renter will see it inside the unit, and
+            you&apos;ll see theirs, for a fair, transparent agreement.
+          </p>
+        </div>
+        <div>
+          <label htmlFor="renter_id" className={label}>
+            Upload the renter&apos;s ID
+          </label>
+          <input
+            id="renter_id"
+            name="renter_id"
+            type="file"
+            accept="application/pdf,image/png,image/jpeg,image/webp"
+            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-600 file:mr-3 file:rounded-md file:border-0 file:bg-slate-800 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white hover:file:bg-slate-900"
+          />
+          <p className="mt-1 text-xs text-slate-400">
+            A photo of your renter&apos;s valid ID (kept private — shown only to
+            the two of you inside this unit).
           </p>
         </div>
       </fieldset>
@@ -280,6 +312,27 @@ export function AgreementForm({ assets }: { assets: AssetOption[] }) {
             )}
           </div>
         </div>
+        <div>
+          <label htmlFor="term" className={label}>
+            Lease term
+          </label>
+          <select
+            id="term"
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            className={input}
+          >
+            <option value="3">3 months</option>
+            <option value="6">6 months</option>
+            <option value="12">1 year (12 months)</option>
+            <option value="24">2 years</option>
+            <option value="custom">Custom end date</option>
+          </select>
+          <p className="mt-1 text-xs text-slate-400">
+            Pick a length and the end date + whole payment schedule fill in
+            automatically.
+          </p>
+        </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <label htmlFor="start_date" className={label}>
@@ -290,14 +343,24 @@ export function AgreementForm({ assets }: { assets: AssetOption[] }) {
               name="start_date"
               type="date"
               required
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
               className={input}
             />
           </div>
           <div>
             <label htmlFor="end_date" className={label}>
-              End date
+              End date {autoEnd && <span className="text-slate-400">(auto)</span>}
             </label>
-            <input id="end_date" name="end_date" type="date" className={input} />
+            <input
+              id="end_date"
+              name="end_date"
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              readOnly={autoEnd}
+              className={`${input} ${autoEnd ? "bg-slate-100 text-slate-500" : ""}`}
+            />
           </div>
           <div>
             <label htmlFor="grace_days" className={label}>

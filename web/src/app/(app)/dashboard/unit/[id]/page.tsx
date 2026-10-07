@@ -3,7 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { describeSchedule } from "@/lib/format";
 import { buildRenterView } from "@/lib/renter-view";
-import { loadMessagesByPeriod } from "@/lib/renter-rentals";
+import { loadMessagesByPeriod, loadUnitDocuments } from "@/lib/renter-rentals";
 import { UnitTimetable, type MonthProof } from "@/components/unit-timetable";
 import type { AgreementRow, AssetRow, PeriodRow } from "@/lib/database.types";
 
@@ -108,6 +108,17 @@ export default async function UnitTimetablePage({
 
   const messagesByPeriod = await loadMessagesByPeriod(admin, id);
 
+  const isActive = agreement.status === "active";
+  // Contract + both parties' valid IDs, shown inside the unit only while active.
+  const documents = isActive
+    ? await loadUnitDocuments(admin, {
+        lessor_id: agreement.lessor_id,
+        renter_user_id: agreement.renter_user_id,
+        contract_file_path: agreement.contract_file_path,
+        renter_id_file_path: agreement.renter_id_file_path,
+      })
+    : null;
+
   return (
     <UnitTimetable
       agreementId={id}
@@ -121,6 +132,9 @@ export default async function UnitTimetablePage({
       interactive
       proofByPeriod={proofByPeriod}
       messagesByPeriod={messagesByPeriod}
+      transactionNo={agreement.transaction_no ?? null}
+      isActive={isActive}
+      documents={documents}
     />
   );
 }

@@ -5,7 +5,7 @@ import { MonthPaymentButton } from "@/components/month-payment-button";
 import { MonthLessorReply } from "@/components/month-lessor-reply";
 import type { ForecastMonth, ForecastStatus } from "@/components/year-forecast";
 import type { PaymentMethod } from "@/lib/database.types";
-import type { MonthMessage } from "@/lib/renter-rentals";
+import type { MonthMessage, UnitDocuments } from "@/lib/renter-rentals";
 
 function fmtMsgDate(iso: string): string {
   return new Date(iso).toLocaleDateString("en-PH", {
@@ -60,6 +60,9 @@ export function UnitTimetable({
   demo = false,
   proofByPeriod = {},
   messagesByPeriod = {},
+  transactionNo = null,
+  isActive = false,
+  documents = null,
 }: {
   agreementId: string;
   unitLabel: string;
@@ -79,6 +82,12 @@ export function UnitTimetable({
   proofByPeriod?: Record<string, MonthProof>;
   /** Tenant messages keyed by period id, shown on the matching month. */
   messagesByPeriod?: Record<string, MonthMessage[]>;
+  /** The unit's transaction number (shown in the header). */
+  transactionNo?: string | null;
+  /** Whether the agreement is active — transparency docs show only when it is. */
+  isActive?: boolean;
+  /** Signed links to the contract + both parties' valid IDs (shown while active). */
+  documents?: UnitDocuments | null;
 }) {
   return (
     <div className="space-y-5">
@@ -94,6 +103,19 @@ export function UnitTimetable({
         <p className="mt-1 text-sm text-white/85">
           {renterName} · {scheduleLabel}
         </p>
+        {transactionNo && (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1 rounded-md bg-white/15 px-2 py-1 font-mono text-xs font-semibold text-white ring-1 ring-white/25">
+              🔖 {transactionNo}
+            </span>
+            {isActive && (
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-100">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" />
+                Active
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       <section>
@@ -252,6 +274,36 @@ export function UnitTimetable({
         </div>
       </section>
 
+      {isActive && documents &&
+        (documents.contractUrl || documents.lessorIdUrl || documents.renterIdUrl) && (
+          <section>
+            <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
+              Documents · nasa loob ng unit
+            </h2>
+            <div
+              className="overflow-hidden rounded-2xl border border-white/15"
+              style={{ backgroundColor: "rgba(15,23,42,0.6)" }}
+            >
+              {documents.contractUrl && (
+                <UnitDocRow label="📄 Signed contract" href={documents.contractUrl} />
+              )}
+              {documents.lessorIdUrl && (
+                <UnitDocRow label="🪪 Your valid ID" href={documents.lessorIdUrl} />
+              )}
+              {documents.renterIdUrl && (
+                <UnitDocRow
+                  label={`🪪 ${renterName.split(" ")[0] || "Renter"}'s valid ID`}
+                  href={documents.renterIdUrl}
+                />
+              )}
+            </div>
+            <p className="mt-2 px-1 text-xs text-slate-500">
+              Nakikita rin ng umuupa ang parehong mga dokumento para sa
+              transparency. Lalabas lang habang aktibo ang kasunduan.
+            </p>
+          </section>
+        )}
+
       {showManage && (
         <Link
           href={`/agreements/${agreementId}`}
@@ -260,6 +312,25 @@ export function UnitTimetable({
           ⚙️ Record payments &amp; manage this unit →
         </Link>
       )}
+    </div>
+  );
+}
+
+/** One document row in the unit's Documents card: a label + a "View" link. */
+function UnitDocRow({ label, href }: { label: string; href: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4 last:border-b-0">
+      <span className="flex items-center gap-2 text-sm font-medium text-slate-700">
+        {label}
+      </span>
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 active:scale-95"
+      >
+        View
+      </a>
     </div>
   );
 }
