@@ -1,7 +1,6 @@
 import { requireAdmin } from "@/lib/auth";
 import { RenterRentalDetail } from "@/components/renter-rental-detail";
 import { PreviewBanner } from "@/components/preview-banner";
-import { PageWallpaper } from "@/components/page-wallpaper";
 import { SAMPLE_TENANT_DETAIL } from "@/lib/preview-samples";
 
 export const dynamic = "force-dynamic";
@@ -10,7 +9,6 @@ export default async function SampleTenantUnitPage() {
   await requireAdmin();
   return (
     <div>
-      <PageWallpaper src="/renter-hero.jpg" />
       <PreviewBanner
         title="Sample rental record"
         subtitle="Example data — this is exactly what a renter sees for one rental."

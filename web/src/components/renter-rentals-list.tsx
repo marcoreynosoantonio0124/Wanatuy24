@@ -24,10 +24,10 @@ export function RenterRentalsList({
   const fillStyle = { backgroundColor: "rgba(15,23,42,0.5)" } as const;
 
   return (
-    <div className="mx-auto w-full max-w-xl space-y-6 pb-10">
-      <RenterHero greetingName={greetingName} />
+    <div className="space-y-6">
+      <RenterHero greetingName={greetingName} flushTop={!preview} />
 
-      <div className="space-y-6 px-4 sm:px-0">
+      <div className="space-y-6">
         <div>
           <h2
             className="text-4xl font-bold leading-none text-white sm:text-5xl [text-shadow:0_2px_8px_rgba(0,0,0,0.85)]"

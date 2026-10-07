@@ -7,12 +7,12 @@ import type { ForecastStatus } from "@/components/year-forecast";
 import type { RenterRentalDetailData } from "@/lib/renter-rentals";
 
 const PILL: Record<ForecastStatus, { label: string; cls: string }> = {
-  paid: { label: "Full paid", cls: "text-emerald-300 bg-emerald-500/15 ring-emerald-400/30" },
-  partial: { label: "Partial", cls: "text-amber-300 bg-amber-500/15 ring-amber-400/30" },
-  due: { label: "Due", cls: "text-amber-300 bg-amber-500/15 ring-amber-400/30" },
-  overdue: { label: "Overdue", cls: "text-red-300 bg-red-500/15 ring-red-400/30" },
-  upcoming: { label: "Upcoming", cls: "text-slate-300 bg-white/5 ring-white/15" },
-  waived: { label: "Waived", cls: "text-slate-300 bg-white/5 ring-white/15" },
+  paid: { label: "Full paid", cls: "text-emerald-700 bg-emerald-50 ring-emerald-200" },
+  partial: { label: "Partial", cls: "text-amber-700 bg-amber-50 ring-amber-200" },
+  due: { label: "Due", cls: "text-amber-700 bg-amber-50 ring-amber-200" },
+  overdue: { label: "Overdue", cls: "text-red-700 bg-red-50 ring-red-200" },
+  upcoming: { label: "Upcoming", cls: "text-slate-500 bg-slate-50 ring-slate-200" },
+  waived: { label: "Waived", cls: "text-slate-500 bg-slate-50 ring-slate-200" },
 };
 
 function monthYear(iso: string): string {
@@ -22,12 +22,11 @@ function monthYear(iso: string): string {
   });
 }
 
-const FILL = { backgroundColor: "rgba(15,23,42,0.5)" } as const;
-
 /**
  * One rental's full record for the renter: the whole-year payment timetable
  * (same horizontal month-card layout as the lessor's unit view), the amount
- * due now, how to pay, send-a-proof, and documents.
+ * due now, how to pay, send-a-proof, and documents. Sits on the plain dark
+ * dashboard theme — no photo background — like the lessor unit view.
  */
 export function RenterRentalDetail({
   data,
@@ -43,16 +42,16 @@ export function RenterRentalDetail({
   const yearTotal = data.months.reduce((s, m) => s + m.due, 0);
 
   return (
-    <div className="mx-auto w-full max-w-xl space-y-5 pb-10">
+    <div className="space-y-5">
       <Link
         href={backHref}
-        className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-300 transition hover:text-emerald-200 active:scale-95 [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]"
+        className="inline-flex items-center gap-1.5 text-sm font-bold text-emerald-700 transition hover:text-emerald-800 active:scale-95"
       >
         ← Your Rentals
       </Link>
 
       {/* Apartment header */}
-      <div className="rounded-2xl bg-gradient-to-br from-emerald-700 to-teal-600 p-5 text-white shadow-lg shadow-emerald-900/30">
+      <div className="rounded-2xl bg-gradient-to-br from-emerald-700 to-teal-600 p-5 text-white shadow-lg shadow-emerald-900/20">
         <h1 className="text-2xl font-bold">{data.unitLabel}</h1>
         <div className="mt-1.5 flex items-start gap-2 text-sm text-white/90">
           <span>📍</span>
@@ -89,7 +88,7 @@ export function RenterRentalDetail({
       {/* Send a payment */}
       {!preview && data.unpaidForProof.length > 0 && (
         <section>
-          <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-white/80 [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]">
+          <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
             Send a payment
           </h2>
           <RenterProofForm
@@ -102,10 +101,10 @@ export function RenterRentalDetail({
 
       {/* Whole-year timetable — horizontal month cards, like the lessor view */}
       <section>
-        <h2 className="text-xs font-bold uppercase tracking-wide text-white/80 [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]">
+        <h2 className="text-xs font-bold uppercase tracking-wide text-slate-400">
           This year&apos;s rent
         </h2>
-        <p className="mb-2.5 mt-0.5 text-xs text-white/70 [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]">
+        <p className="mb-2.5 mt-0.5 text-xs text-slate-500">
           {paidMonths} of {data.months.length} months fully paid ·{" "}
           {formatPeso(collected)} of {formatPeso(yearTotal)}
         </p>
@@ -115,20 +114,19 @@ export function RenterRentalDetail({
             return (
               <div
                 key={m.periodId}
-                className="rounded-2xl border border-white/12 p-4 backdrop-blur-md"
-                style={FILL}
+                className="rounded-2xl border border-slate-200 bg-white p-4"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="text-base font-bold text-slate-100">
+                    <p className="text-base font-bold text-slate-900">
                       {formatDate(m.dueDate)}
                     </p>
-                    <p className="mt-0.5 text-sm text-slate-400">
+                    <p className="mt-0.5 text-sm text-slate-500">
                       Due {formatPeso(m.due)}
                       {m.paid > 0 && (
                         <>
                           {" · "}
-                          <span className="font-medium text-emerald-300">
+                          <span className="font-medium text-emerald-700">
                             Paid {formatPeso(m.paid)}
                           </span>
                         </>
@@ -136,7 +134,7 @@ export function RenterRentalDetail({
                       {m.remaining > 0 && m.status !== "upcoming" && (
                         <>
                           {" · "}
-                          <span className="font-semibold text-amber-300">
+                          <span className="font-semibold text-amber-700">
                             {formatPeso(m.remaining)} left
                           </span>
                         </>
@@ -166,14 +164,11 @@ export function RenterRentalDetail({
       </section>
 
       {/* Balance */}
-      <div
-        className="flex items-center justify-between rounded-xl border border-amber-200 px-4 py-3 backdrop-blur-md"
-        style={FILL}
-      >
-        <span className="text-sm font-medium text-slate-200">
+      <div className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+        <span className="text-sm font-medium text-slate-700">
           Balance up to date
         </span>
-        <span className="text-lg font-bold tabular-nums text-amber-300">
+        <span className="text-lg font-bold tabular-nums text-amber-700">
           {formatPeso(data.outstanding)}
         </span>
       </div>
@@ -181,18 +176,15 @@ export function RenterRentalDetail({
       {/* How to pay */}
       {(data.paymentInstructions || data.methods.length > 0) && (
         <section>
-          <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-white/80 [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]">
+          <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
             How to pay
           </h2>
-          <div
-            className="rounded-2xl border border-emerald-200 p-4 text-sm text-emerald-100 backdrop-blur-md"
-            style={FILL}
-          >
+          <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
             {data.paymentInstructions && (
               <p className="whitespace-pre-wrap">{data.paymentInstructions}</p>
             )}
             {data.methods.length > 0 && (
-              <p className="mt-2 text-emerald-300">
+              <p className="mt-2 text-emerald-700">
                 Accepts:{" "}
                 {data.methods.map((m) => PAYMENT_METHOD_LABELS[m]).join(", ")}
               </p>
@@ -203,16 +195,13 @@ export function RenterRentalDetail({
 
       {/* Documents */}
       <section>
-        <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-white/80 [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]">
+        <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
           Documents
         </h2>
-        <div
-          className="overflow-hidden rounded-2xl border border-white/12 backdrop-blur-md"
-          style={FILL}
-        >
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
           {data.contract && (data.contract.view || data.contract.download) && (
-            <div className="flex items-center justify-between gap-3 border-b border-white/10 p-4">
-              <span className="flex items-center gap-2 text-sm font-medium text-slate-200">
+            <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4">
+              <span className="flex items-center gap-2 text-sm font-medium text-slate-700">
                 📄 Your signed contract
               </span>
               <span className="flex gap-2">
@@ -221,7 +210,7 @@ export function RenterRentalDetail({
                     href={data.contract.view}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="rounded-md border border-white/15 px-3 py-1.5 text-sm font-medium text-slate-200 transition hover:bg-white/10 active:scale-95"
+                    className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 active:scale-95"
                   >
                     View
                   </a>
@@ -229,7 +218,7 @@ export function RenterRentalDetail({
                 {data.contract.download && (
                   <a
                     href={data.contract.download}
-                    className="rounded-md border border-emerald-400/40 px-3 py-1.5 text-sm font-medium text-emerald-300 transition hover:bg-emerald-500/10 active:scale-95"
+                    className="rounded-md border border-emerald-300 px-3 py-1.5 text-sm font-medium text-emerald-700 transition hover:bg-emerald-50 active:scale-95"
                   >
                     ⬇️ Download
                   </a>

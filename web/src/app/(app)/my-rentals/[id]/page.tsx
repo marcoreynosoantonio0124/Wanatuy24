@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { loadRenterRentalDetail } from "@/lib/renter-rentals";
 import { RenterRentalDetail } from "@/components/renter-rental-detail";
-import { PageWallpaper } from "@/components/page-wallpaper";
 
 export const dynamic = "force-dynamic";
 
@@ -22,10 +21,5 @@ export default async function MyRentalDetailPage({
   const detail = await loadRenterRentalDetail(supabase, user.id, id);
   if (!detail) notFound();
 
-  return (
-    <>
-      <PageWallpaper src="/renter-hero.jpg" />
-      <RenterRentalDetail data={detail} backHref="/my-rentals" />
-    </>
-  );
+  return <RenterRentalDetail data={detail} backHref="/my-rentals" />;
 }
