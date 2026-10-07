@@ -1,6 +1,10 @@
 import type { LessorDashboard } from "@/lib/lessor-dashboard";
 import type { RenterDashboardProps } from "@/components/renter-dashboard";
 import type { ForecastMonth } from "@/components/year-forecast";
+import type {
+  RenterRentalsData,
+  RenterRentalDetailData,
+} from "@/lib/renter-rentals";
 
 /**
  * Hand-made sample data for the admin "preview a dashboard" pages, so the
@@ -214,4 +218,49 @@ export const SAMPLE_UNIT = {
   collected: 10_200_000,
   outstanding: 1_800_000,
   remindersSent: 13,
+};
+
+// ---- Renter records list + detail (new list→detail renter dashboard) ----
+
+/** The renter's records list: a couple of apartments they rent. */
+export const SAMPLE_TENANT_RENTALS: RenterRentalsData = {
+  rentals: [
+    {
+      id: "sample-rental-1",
+      unitLabel: "Unit 2 · Ground floor",
+      address: "123 Mabini St, Brgy. Poblacion, Lipa City, Batangas",
+      monthly: 850_000,
+      outstanding: 850_000,
+      overdueCount: 0,
+      allPaid: false,
+    },
+    {
+      id: "sample-rental-2",
+      unitLabel: "Studio near school",
+      address: "45 Rizal Ave, Brgy. San Jose, Batangas City",
+      monthly: 650_000,
+      outstanding: 0,
+      overdueCount: 0,
+      allPaid: true,
+    },
+  ],
+  totalOutstanding: 850_000,
+  activeCount: 2,
+};
+
+/** The detail for one sample rental (the active Unit 2). */
+export const SAMPLE_TENANT_DETAIL: RenterRentalDetailData = {
+  id: "sample-rental-1",
+  token: "preview",
+  unitLabel: SAMPLE_TENANT.unitLabel,
+  address: SAMPLE_TENANT.address,
+  scheduleLabel: SAMPLE_TENANT.scheduleLabel,
+  outstanding: SAMPLE_TENANT.outstanding,
+  dueNow: SAMPLE_TENANT.dueNow,
+  months: SAMPLE_TENANT.months,
+  unpaidForProof: SAMPLE_TENANT.unpaidForProof,
+  methods: SAMPLE_TENANT.methods,
+  paymentInstructions: SAMPLE_TENANT.paymentInstructions,
+  contract: SAMPLE_TENANT.contract,
+  hasRenterId: SAMPLE_TENANT.hasRenterId,
 };
