@@ -103,7 +103,7 @@ export function LessorDashboardView({
         </h2>
         <div
           className="grid grid-cols-1 overflow-hidden rounded-2xl border border-white/12 shadow-sm backdrop-blur-md sm:grid-cols-3"
-          style={{ backgroundColor: "rgba(15,23,42,0.5)" }}
+          style={{ backgroundColor: "rgba(45,58,80,0.5)" }}
         >
           <SummaryCell label="Properties" value={String(properties.length)} />
           <SummaryCell
@@ -163,7 +163,7 @@ function PropertyRow({
   // readable over the photo wallpaper while the building still shows through.
   const cls =
     "flex items-center gap-3 rounded-2xl border border-white/12 p-4 shadow-sm backdrop-blur-md";
-  const fillStyle = { backgroundColor: "rgba(15,23,42,0.5)" } as const;
+  const fillStyle = { backgroundColor: "rgba(45,58,80,0.5)" } as const;
 
   if (!href) {
     return (
