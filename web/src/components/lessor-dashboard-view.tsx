@@ -28,7 +28,7 @@ export function LessorDashboardView({
 
   return (
     <div className="space-y-6">
-      <LessorHero greetingName={greetingName} />
+      <LessorHero greetingName={greetingName} flushTop={!preview} />
 
       {/* Page heading */}
       <div className="flex flex-wrap items-end justify-between gap-3">
