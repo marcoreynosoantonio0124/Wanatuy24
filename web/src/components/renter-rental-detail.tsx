@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { formatPeso, formatDate, PAYMENT_METHOD_LABELS } from "@/lib/format";
 import { ReminderBadge } from "@/components/reminder-badge";
-import { RenterProofForm } from "@/components/renter-proof-form";
+import { MonthProofButton } from "@/components/month-proof-button";
 import { RenterIdUpload } from "@/components/renter-id-upload";
 import type { ForecastStatus } from "@/components/year-forecast";
 import type { RenterRentalDetailData } from "@/lib/renter-rentals";
@@ -85,20 +85,6 @@ export function RenterRentalDetail({
         </div>
       )}
 
-      {/* Send a payment */}
-      {!preview && data.unpaidForProof.length > 0 && (
-        <section>
-          <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
-            Send a payment
-          </h2>
-          <RenterProofForm
-            token={data.token}
-            periods={data.unpaidForProof}
-            methods={data.methods}
-          />
-        </section>
-      )}
-
       {/* Whole-year timetable — horizontal month cards, like the lessor view */}
       <section>
         <h2 className="text-xs font-bold uppercase tracking-wide text-slate-400">
@@ -158,6 +144,19 @@ export function RenterRentalDetail({
                     />
                   </div>
                 )}
+
+                {m.status === "paid" ? (
+                  <p className="mt-3 text-sm font-semibold text-emerald-300">
+                    ✓ Payment received
+                  </p>
+                ) : m.status !== "waived" && !preview ? (
+                  <MonthProofButton
+                    token={data.token}
+                    periodId={m.periodId}
+                    defaultAmountCentavos={m.remaining || m.due}
+                    methods={data.methods}
+                  />
+                ) : null}
               </div>
             );
           })}

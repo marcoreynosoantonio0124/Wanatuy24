@@ -3,8 +3,10 @@ import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { describeSchedule } from "@/lib/format";
 import { buildRenterView } from "@/lib/renter-view";
-import { UnitTimetable } from "@/components/unit-timetable";
+import { UnitTimetable, type MonthProof } from "@/components/unit-timetable";
 import type { AgreementRow, AssetRow, PeriodRow } from "@/lib/database.types";
+
+const PROOF_BUCKET = "payment-proofs";
 
 export const dynamic = "force-dynamic";
 
@@ -68,6 +70,41 @@ export default async function UnitTimetablePage({
   const collected = view.months.reduce((s, m) => s + m.paid, 0);
   const remindersSent = view.months.reduce((s, m) => s + m.reminders.length, 0);
 
+  // Pending tenant proofs, shown on their month so the lessor can record them.
+  const periodIds = ((periodsData ?? []) as PeriodRow[]).map((p) => p.id);
+  const proofByPeriod: Record<string, MonthProof> = {};
+  if (periodIds.length > 0) {
+    const { data: proofRows } = await admin
+      .from("payment_proofs")
+      .select("period_id, amount_php, method, paid_on, file_path, status, created_at")
+      .in("period_id", periodIds)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false });
+
+    for (const r of (proofRows ?? []) as {
+      period_id: string;
+      amount_php: number;
+      method: string;
+      paid_on: string;
+      file_path: string | null;
+    }[]) {
+      if (proofByPeriod[r.period_id]) continue; // keep the most recent per month
+      let viewUrl: string | null = null;
+      if (r.file_path) {
+        const { data: signed } = await admin.storage
+          .from(PROOF_BUCKET)
+          .createSignedUrl(r.file_path, 60 * 60);
+        viewUrl = signed?.signedUrl ?? null;
+      }
+      proofByPeriod[r.period_id] = {
+        amountCentavos: r.amount_php,
+        method: r.method,
+        paidOn: r.paid_on,
+        viewUrl,
+      };
+    }
+  }
+
   return (
     <UnitTimetable
       agreementId={id}
@@ -78,6 +115,8 @@ export default async function UnitTimetablePage({
       collected={collected}
       outstanding={view.outstanding}
       remindersSent={remindersSent}
+      interactive
+      proofByPeriod={proofByPeriod}
     />
   );
 }
