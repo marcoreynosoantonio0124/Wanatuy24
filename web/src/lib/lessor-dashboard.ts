@@ -26,6 +26,10 @@ export type Property = {
   nextDue: string | null;
   lastPaid: string | null;
   transactionNo: string | null;
+  /** A property with no active agreement — "Open for leasing" (inactive). */
+  vacant: boolean;
+  /** The underlying asset id (used for vacant units + delete/retain). */
+  assetId: string;
 };
 
 export type LessorDashboard = {
@@ -40,6 +44,7 @@ type AgreementLite = {
   renter_name: string;
   amount_php: number;
   transaction_no: string | null;
+  asset_id: string;
   asset: { label: string } | null;
 };
 
@@ -57,7 +62,9 @@ export async function loadLessorDashboard(
 ): Promise<LessorDashboard> {
   let agQuery = client
     .from("agreements")
-    .select("id, renter_name, amount_php, transaction_no, asset:assets(label)")
+    .select(
+      "id, renter_name, amount_php, transaction_no, asset_id, asset:assets(label)",
+    )
     .eq("status", "active");
   if (opts.lessorId) agQuery = agQuery.eq("lessor_id", opts.lessorId);
 
@@ -185,6 +192,8 @@ export async function loadLessorDashboard(
       nextDue,
       lastPaid,
       transactionNo: a.transaction_no ?? null,
+      vacant: false,
+      assetId: a.asset_id,
     };
   });
 
@@ -192,6 +201,38 @@ export async function loadLessorDashboard(
   properties.sort(
     (x, y) => Number(x.allPaid) - Number(y.allPaid) || y.owed - x.owed,
   );
+
+  // Vacant units: the lessor's non-archived properties that have no active
+  // agreement right now — shown as "Open for leasing" (inactive), after the
+  // occupied ones.
+  let assetQuery = client
+    .from("assets")
+    .select("id, label")
+    .is("archived_at", null);
+  if (opts.lessorId) assetQuery = assetQuery.eq("lessor_id", opts.lessorId);
+  const { data: assetData } = await assetQuery.order("created_at", {
+    ascending: true,
+  });
+  const occupied = new Set(ags.map((a) => a.asset_id));
+  for (const asset of (assetData ?? []) as { id: string; label: string }[]) {
+    if (occupied.has(asset.id)) continue;
+    properties.push({
+      id: asset.id,
+      name: asset.label,
+      tenant: "",
+      monthly: 0,
+      owed: 0,
+      overdueCount: 0,
+      proofCount: 0,
+      allPaid: true,
+      attention: [],
+      nextDue: null,
+      lastPaid: null,
+      transactionNo: null,
+      vacant: true,
+      assetId: asset.id,
+    });
+  }
 
   const outstanding = properties.reduce((s, p) => s + p.owed, 0);
   const proofsToReview = properties.reduce((s, p) => s + p.proofCount, 0);

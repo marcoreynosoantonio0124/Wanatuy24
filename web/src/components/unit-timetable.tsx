@@ -3,6 +3,7 @@ import { formatPeso, formatDate, PAYMENT_METHOD_LABELS } from "@/lib/format";
 import { ReminderBadge } from "@/components/reminder-badge";
 import { MonthPaymentButton } from "@/components/month-payment-button";
 import { MonthLessorReply } from "@/components/month-lessor-reply";
+import { EndContractButton } from "@/components/end-contract-button";
 import type { ForecastMonth, ForecastStatus } from "@/components/year-forecast";
 import type { PaymentMethod } from "@/lib/database.types";
 import type { MonthMessage, UnitDocuments } from "@/lib/renter-rentals";
@@ -311,6 +312,10 @@ export function UnitTimetable({
         >
           ⚙️ Record payments &amp; manage this unit →
         </Link>
+      )}
+
+      {interactive && !demo && isActive && (
+        <EndContractButton agreementId={agreementId} />
       )}
     </div>
   );

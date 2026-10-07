@@ -40,6 +40,7 @@ export interface AssetRow {
   created_at: string;
   latitude: number | null;
   longitude: number | null;
+  archived_at: string | null;
 }
 
 export interface AgreementRow {

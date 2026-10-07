@@ -201,6 +201,25 @@ export async function createAgreement(
   redirect(`/agreements/${inserted.id}`);
 }
 
+/**
+ * Ends an active contract: the agreement becomes "ended" (it moves into
+ * History), and its unit goes back to "Open for leasing" on the dashboard.
+ * RLS scopes the update to the lessor who owns the agreement.
+ */
+export async function endAgreement(formData: FormData): Promise<void> {
+  const { supabase } = await requireUser();
+  const id = String(formData.get("agreement_id") ?? "");
+  if (!id) return;
+  await supabase
+    .from("agreements")
+    .update({ status: "ended" })
+    .eq("id", id)
+    .eq("status", "active");
+  revalidatePath("/dashboard");
+  revalidatePath(`/agreements/${id}`);
+  redirect("/dashboard");
+}
+
 const editSchema = z.object({
   id: z.string().uuid(),
   renter_name: z.string().trim().min(1, "Renter name is required.").max(120),
