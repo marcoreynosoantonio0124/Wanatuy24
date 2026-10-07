@@ -154,6 +154,17 @@ function PropertyRow({
         <span className="block truncate text-sm text-slate-500">
           {p.tenant} · {formatPeso(p.monthly)}/mo
         </span>
+        {p.transactionNo && (
+          <span className="mt-0.5 flex flex-wrap items-center gap-1.5">
+            <span className="inline-flex items-center gap-1 rounded-md bg-slate-100 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-slate-600">
+              🔖 {p.transactionNo}
+            </span>
+            <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-600">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+              Active
+            </span>
+          </span>
+        )}
       </span>
       <span className="flex shrink-0 items-center gap-2.5">
         {p.owed > 0 && (

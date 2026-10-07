@@ -26,6 +26,7 @@ export interface UserRow {
   birthdate: string | null;
   marital_status: string | null;
   valid_id_file_path: string | null;
+  id_file_path: string | null;
   profile_completed: boolean;
 }
 
@@ -61,6 +62,8 @@ export interface AgreementRow {
   accepted_payment_methods: PaymentMethod[];
   payment_instructions: string | null;
   contract_file_path: string | null;
+  renter_id_file_path: string | null;
+  transaction_no: string | null;
   status: AgreementStatus;
   renter_access_token: string;
   created_at: string;

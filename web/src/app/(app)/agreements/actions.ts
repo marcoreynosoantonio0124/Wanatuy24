@@ -67,6 +67,15 @@ const schema = z
 
 export type AgreementFormState = { error?: string };
 
+/** A short, human-friendly transaction number, e.g. "DM-7KQ3PX2M". */
+function makeTransactionNo(): string {
+  const alphabet = "ABCDEFGHJKMNPQRSTUVWXYZ23456789"; // no 0/O/1/I/L
+  const bytes = globalThis.crypto.getRandomValues(new Uint8Array(8));
+  let s = "";
+  for (const b of bytes) s += alphabet[b % alphabet.length];
+  return `DM-${s}`;
+}
+
 export async function createAgreement(
   _prev: AgreementFormState,
   formData: FormData,
@@ -111,6 +120,7 @@ export async function createAgreement(
       accepted_payment_methods: v.payment_methods,
       payment_instructions: v.payment_instructions || null,
       status: "active",
+      transaction_no: makeTransactionNo(),
     })
     .select("id")
     .single();
@@ -150,7 +160,7 @@ export async function createAgreement(
   }
 
   // If the lessor uploaded a photo of their ID, keep it privately on their
-  // profile (optional).
+  // profile.
   const idFile = formData.get("lessor_id");
   if (isValidUpload(idFile)) {
     const ext = idFile.name.includes(".") ? idFile.name.split(".").pop() : "bin";
@@ -164,6 +174,26 @@ export async function createAgreement(
         .from("users")
         .update({ id_file_path: path })
         .eq("id", user.id);
+    }
+  }
+
+  // If the lessor also uploaded the renter's ID, keep it on the agreement so
+  // both parties can see it inside the unit (transparency).
+  const renterIdFile = formData.get("renter_id");
+  if (isValidUpload(renterIdFile)) {
+    const ext = renterIdFile.name.includes(".")
+      ? renterIdFile.name.split(".").pop()
+      : "bin";
+    const path = `${inserted.id}/renter-id-${Date.now()}.${ext}`;
+    const bytes = new Uint8Array(await renterIdFile.arrayBuffer());
+    const { error: upErr } = await admin.storage
+      .from(ID_BUCKET)
+      .upload(path, bytes, { contentType: renterIdFile.type, upsert: false });
+    if (!upErr) {
+      await admin
+        .from("agreements")
+        .update({ renter_id_file_path: path })
+        .eq("id", inserted.id);
     }
   }
 

@@ -18,6 +18,7 @@ export type RenterRentalRow = {
   outstanding: number;
   overdueCount: number;
   allPaid: boolean;
+  transactionNo: string | null;
 };
 
 export type RenterRentalsData = {
@@ -53,10 +54,75 @@ export type RenterRentalDetailData = {
   paymentInstructions: string | null;
   contract: { view: string | null; download: string | null } | null;
   hasRenterId: boolean;
+  transactionNo: string | null;
+  /** Whether the agreement is active — transparency docs show only when it is. */
+  isActive: boolean;
+  /** Signed links to both parties' valid IDs (shown while active). */
+  lessorIdUrl: string | null;
+  renterIdUrl: string | null;
   messagesByPeriod: Record<string, MonthMessage[]>;
 };
 
 const CONTRACT_BUCKET = "contracts";
+const ID_BUCKET = "ids";
+
+/** The transparency documents shown inside a unit (both parties can view). */
+export type UnitDocuments = {
+  contractUrl: string | null;
+  lessorIdUrl: string | null;
+  renterIdUrl: string | null;
+};
+
+/**
+ * Builds signed, time-limited links to the contract and both parties' valid
+ * IDs for one agreement — contract from the lessor, each ID from that person's
+ * profile (falling back to an ID uploaded on the agreement). Shown only while
+ * the agreement is active.
+ */
+export async function loadUnitDocuments(
+  admin: SupabaseClient,
+  a: {
+    lessor_id: string;
+    renter_user_id: string | null;
+    contract_file_path: string | null;
+    renter_id_file_path: string | null;
+  },
+): Promise<UnitDocuments> {
+  const { data: lessorU } = await admin
+    .from("users")
+    .select("valid_id_file_path, id_file_path")
+    .eq("id", a.lessor_id)
+    .maybeSingle();
+  const lu = lessorU as
+    | { valid_id_file_path?: string | null; id_file_path?: string | null }
+    | null;
+  const lessorIdPath = lu?.valid_id_file_path ?? lu?.id_file_path ?? null;
+
+  let renterIdPath = a.renter_id_file_path ?? null;
+  if (a.renter_user_id) {
+    const { data: renterU } = await admin
+      .from("users")
+      .select("valid_id_file_path")
+      .eq("id", a.renter_user_id)
+      .maybeSingle();
+    const ru = renterU as { valid_id_file_path?: string | null } | null;
+    renterIdPath = ru?.valid_id_file_path ?? renterIdPath;
+  }
+
+  const sign = async (bucket: string, path: string | null) => {
+    if (!path) return null;
+    const { data } = await admin.storage
+      .from(bucket)
+      .createSignedUrl(path, 60 * 60);
+    return data?.signedUrl ?? null;
+  };
+
+  return {
+    contractUrl: await sign(CONTRACT_BUCKET, a.contract_file_path),
+    lessorIdUrl: await sign(ID_BUCKET, lessorIdPath),
+    renterIdUrl: await sign(ID_BUCKET, renterIdPath),
+  };
+}
 
 /**
  * Loads the per-month "Message the owner" threads for an agreement, grouped by
@@ -101,6 +167,10 @@ type AgreementLite = {
   asset_id: string;
   contract_file_path: string | null;
   renter_id_file_path: string | null;
+  transaction_no: string | null;
+  status: string;
+  lessor_id: string;
+  renter_user_id: string | null;
 };
 
 function manilaToday(): string {
@@ -119,7 +189,7 @@ export async function loadRenterRentals(
 ): Promise<RenterRentalsData> {
   const { data: agData } = await supabase
     .from("agreements")
-    .select("id, frequency, due_day, asset_id")
+    .select("id, frequency, due_day, asset_id, transaction_no")
     .eq("renter_user_id", userId)
     .order("created_at", { ascending: false });
 
@@ -128,6 +198,7 @@ export async function loadRenterRentals(
     frequency: string;
     due_day: number;
     asset_id: string;
+    transaction_no: string | null;
   }[];
   if (agreements.length === 0) {
     return { rentals: [], totalOutstanding: 0, activeCount: 0 };
@@ -191,6 +262,7 @@ export async function loadRenterRentals(
       outstanding: view.outstanding,
       overdueCount,
       allPaid: view.outstanding === 0,
+      transactionNo: a.transaction_no ?? null,
     };
   });
 
@@ -209,7 +281,7 @@ export async function loadRenterRentalDetail(
   const { data: agRow } = await supabase
     .from("agreements")
     .select(
-      "id, renter_name, frequency, due_day, payment_instructions, accepted_payment_methods, renter_access_token, asset_id, contract_file_path, renter_id_file_path",
+      "id, renter_name, frequency, due_day, payment_instructions, accepted_payment_methods, renter_access_token, asset_id, contract_file_path, renter_id_file_path, transaction_no, status, lessor_id, renter_user_id",
     )
     .eq("renter_user_id", userId)
     .eq("id", agreementId)
@@ -265,6 +337,17 @@ export async function loadRenterRentalDetail(
     contract = { view: cv?.signedUrl ?? null, download: cd?.signedUrl ?? null };
   }
 
+  const isActive = a.status === "active";
+  // Both parties' valid IDs — only surfaced while the agreement is active.
+  const docs = isActive
+    ? await loadUnitDocuments(admin, {
+        lessor_id: a.lessor_id,
+        renter_user_id: a.renter_user_id,
+        contract_file_path: null, // contract is loaded above with a download link
+        renter_id_file_path: a.renter_id_file_path,
+      })
+    : null;
+
   const messagesByPeriod = await loadMessagesByPeriod(admin, a.id);
 
   return {
@@ -281,6 +364,10 @@ export async function loadRenterRentalDetail(
     paymentInstructions: a.payment_instructions,
     contract,
     hasRenterId: Boolean(a.renter_id_file_path),
+    transactionNo: a.transaction_no ?? null,
+    isActive,
+    lessorIdUrl: docs?.lessorIdUrl ?? null,
+    renterIdUrl: docs?.renterIdUrl ?? null,
     messagesByPeriod,
   };
 }

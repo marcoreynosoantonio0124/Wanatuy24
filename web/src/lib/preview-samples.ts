@@ -26,6 +26,8 @@ export const SAMPLE_LESSOR: LessorDashboard = {
       overdueCount: 0,
       proofCount: 0,
       allPaid: true,
+
+      transactionNo: "DM-7KQ3PX2M",
       attention: [],
       nextDue: "2026-11-05",
       lastPaid: "2026-10-05",
@@ -39,6 +41,8 @@ export const SAMPLE_LESSOR: LessorDashboard = {
       overdueCount: 1,
       proofCount: 0,
       allPaid: false,
+
+      transactionNo: "DM-9ZT4MW6B",
       nextDue: null,
       lastPaid: "2026-08-05",
       attention: [
@@ -62,6 +66,8 @@ export const SAMPLE_LESSOR: LessorDashboard = {
       overdueCount: 0,
       proofCount: 1,
       allPaid: false,
+
+      transactionNo: "DM-2H8NRC5K",
       nextDue: null,
       lastPaid: "2026-09-05",
       attention: [
@@ -218,6 +224,13 @@ export const SAMPLE_UNIT = {
   collected: 10_200_000,
   outstanding: 1_800_000,
   remindersSent: 13,
+  transactionNo: "DM-9ZT4MW6B",
+  isActive: true,
+  documents: {
+    contractUrl: "#sample-contract",
+    lessorIdUrl: "#sample-lessor-id",
+    renterIdUrl: "#sample-renter-id",
+  },
 };
 
 // ---- Renter records list + detail (new list→detail renter dashboard) ----
@@ -233,6 +246,8 @@ export const SAMPLE_TENANT_RENTALS: RenterRentalsData = {
       outstanding: 850_000,
       overdueCount: 0,
       allPaid: false,
+
+      transactionNo: "DM-4XJ7QD3P",
     },
     {
       id: "sample-rental-2",
@@ -242,6 +257,8 @@ export const SAMPLE_TENANT_RENTALS: RenterRentalsData = {
       outstanding: 0,
       overdueCount: 0,
       allPaid: true,
+
+      transactionNo: "DM-6PLY8VA2",
     },
   ],
   totalOutstanding: 850_000,
@@ -263,5 +280,9 @@ export const SAMPLE_TENANT_DETAIL: RenterRentalDetailData = {
   paymentInstructions: SAMPLE_TENANT.paymentInstructions,
   contract: SAMPLE_TENANT.contract,
   hasRenterId: SAMPLE_TENANT.hasRenterId,
+  transactionNo: "DM-4XJ7QD3P",
+  isActive: true,
+  lessorIdUrl: "#sample-lessor-id",
+  renterIdUrl: "#sample-renter-id",
   messagesByPeriod: {},
 };
