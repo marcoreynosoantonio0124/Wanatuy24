@@ -28,7 +28,12 @@ export default async function ViewAsLessorPage({
   return (
     <div>
       <PreviewBanner title="Viewing a lessor's live dashboard" subtitle={email} />
-      <LessorDashboardView data={data} preview greetingName={greetingName} />
+      <LessorDashboardView
+        data={data}
+        preview
+        greetingName={greetingName}
+        pageBackground="/lessor-hero.jpg"
+      />
     </div>
   );
 }

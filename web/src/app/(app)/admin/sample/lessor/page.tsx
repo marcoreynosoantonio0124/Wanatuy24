@@ -18,6 +18,7 @@ export default async function SampleLessorPage() {
         preview
         greetingName="Marco"
         previewHref="/admin/sample/unit"
+        pageBackground="/lessor-hero.jpg"
       />
     </div>
   );
