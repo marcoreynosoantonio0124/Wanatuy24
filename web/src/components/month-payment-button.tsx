@@ -49,7 +49,7 @@ export function MonthPaymentButton({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="mt-3 flex w-full items-center justify-center gap-1.5 rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-2.5 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/20 active:scale-95"
+        className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-emerald-400/40 bg-emerald-500/10 px-3 py-2.5 text-sm font-semibold text-emerald-300 transition hover:bg-emerald-500/20 active:scale-95"
       >
         ✓ Payment received
       </button>
@@ -59,7 +59,7 @@ export function MonthPaymentButton({
   return (
     <form
       action={recordPayment}
-      className="mt-3 space-y-3 rounded-xl border border-white/15 p-3"
+      className="space-y-3 rounded-xl border border-white/15 p-3"
       style={{ backgroundColor: "rgba(2,6,23,0.45)" }}
     >
       <input type="hidden" name="agreement_id" value={agreementId} />

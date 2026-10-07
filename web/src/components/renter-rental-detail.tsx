@@ -146,26 +146,33 @@ export function RenterRentalDetail({
                   </div>
                 )}
 
-                {m.status === "paid" ? (
+                {m.status === "paid" && (
                   <p className="mt-3 text-sm font-semibold text-emerald-300">
                     ✓ Payment received
                   </p>
-                ) : m.status !== "waived" ? (
-                  <MonthProofButton
-                    token={data.token}
-                    periodId={m.periodId}
-                    defaultAmountCentavos={m.remaining || m.due}
-                    methods={data.methods}
-                    demo={preview}
-                  />
-                ) : null}
+                )}
 
-                <MonthMessageButton
-                  token={data.token}
-                  periodId={m.periodId}
-                  existing={data.messagesByPeriod[m.periodId] ?? []}
-                  demo={preview}
-                />
+                <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start">
+                  {m.status !== "paid" && m.status !== "waived" && (
+                    <div className="sm:flex-1">
+                      <MonthProofButton
+                        token={data.token}
+                        periodId={m.periodId}
+                        defaultAmountCentavos={m.remaining || m.due}
+                        methods={data.methods}
+                        demo={preview}
+                      />
+                    </div>
+                  )}
+                  <div className="sm:flex-1">
+                    <MonthMessageButton
+                      token={data.token}
+                      periodId={m.periodId}
+                      existing={data.messagesByPeriod[m.periodId] ?? []}
+                      demo={preview}
+                    />
+                  </div>
+                </div>
               </div>
             );
           })}

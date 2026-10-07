@@ -205,37 +205,33 @@ export function UnitTimetable({
                         </p>
                       </div>
                     ))}
-                    {(interactive || demo) && (
-                      <MonthLessorReply
-                        agreementId={agreementId}
-                        periodId={m.periodId}
-                        hasThread
-                        demo={demo}
-                      />
-                    )}
                   </div>
                 )}
 
-                {(interactive || demo) &&
-                  (messagesByPeriod[m.periodId]?.length ?? 0) === 0 && (
-                    <MonthLessorReply
-                      agreementId={agreementId}
-                      periodId={m.periodId}
-                      hasThread={false}
-                      demo={demo}
-                    />
-                  )}
-
-                {(interactive || demo) &&
-                  m.status !== "paid" &&
-                  m.status !== "waived" && (
-                    <MonthPaymentButton
-                      agreementId={agreementId}
-                      periodId={m.periodId}
-                      defaultAmountCentavos={m.remaining || m.due}
-                      demo={demo}
-                    />
-                  )}
+                {(interactive || demo) && (
+                  <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start">
+                    {m.status !== "paid" && m.status !== "waived" && (
+                      <div className="sm:flex-1">
+                        <MonthPaymentButton
+                          agreementId={agreementId}
+                          periodId={m.periodId}
+                          defaultAmountCentavos={m.remaining || m.due}
+                          demo={demo}
+                        />
+                      </div>
+                    )}
+                    <div className="sm:flex-1">
+                      <MonthLessorReply
+                        agreementId={agreementId}
+                        periodId={m.periodId}
+                        hasThread={
+                          (messagesByPeriod[m.periodId]?.length ?? 0) > 0
+                        }
+                        demo={demo}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
