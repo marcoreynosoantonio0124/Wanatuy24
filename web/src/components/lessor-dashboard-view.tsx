@@ -52,9 +52,10 @@ export function LessorDashboardView({
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="min-w-0">
           <h1
-            className="text-2xl font-bold text-white sm:text-3xl [text-shadow:0_2px_8px_rgba(0,0,0,0.85)]"
+            className="text-4xl font-bold leading-none text-white sm:text-5xl [text-shadow:0_3px_10px_rgba(0,0,0,0.9)]"
             style={{
-              WebkitTextStroke: "0.8px rgba(2,6,23,0.65)",
+              fontFamily: "'Caveat', ui-rounded, cursive",
+              WebkitTextStroke: "1.1px rgba(2,6,23,0.7)",
               paintOrder: "stroke",
             }}
           >
@@ -97,10 +98,13 @@ export function LessorDashboardView({
 
       {/* Portfolio summary */}
       <section>
-        <h2 className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-slate-400">
+        <h2 className="mb-2.5 text-xs font-semibold uppercase tracking-wide text-white/80 [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]">
           Portfolio summary
         </h2>
-        <div className="grid grid-cols-1 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm sm:grid-cols-3">
+        <div
+          className="grid grid-cols-1 overflow-hidden rounded-2xl border border-white/12 shadow-sm backdrop-blur-md sm:grid-cols-3"
+          style={{ backgroundColor: "rgba(15,23,42,0.5)" }}
+        >
           <SummaryCell label="Properties" value={String(properties.length)} />
           <SummaryCell
             label="Outstanding"
