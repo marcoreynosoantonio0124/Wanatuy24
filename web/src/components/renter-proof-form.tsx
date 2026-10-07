@@ -78,14 +78,14 @@ export function RenterProofForm({
         </label>
         <label className="block text-sm">
           <span className="mb-1 block font-medium text-slate-700">
-            Reference no. <span className="text-slate-400">(optional)</span>
+            Reference no.
           </span>
           <input name="reference_no" className={input} />
         </label>
       </div>
       <label className="block text-sm">
         <span className="mb-1 block font-medium text-slate-700">
-          Receipt / screenshot <span className="text-slate-400">(optional)</span>
+          Receipt / screenshot
         </span>
         <input
           name="file"
@@ -96,7 +96,7 @@ export function RenterProofForm({
       </label>
       <label className="block text-sm">
         <span className="mb-1 block font-medium text-slate-700">
-          Note <span className="text-slate-400">(optional)</span>
+          Note
         </span>
         <input name="note" placeholder="Sent via GCash" className={input} />
       </label>

@@ -1,8 +1,8 @@
 "use client";
 
+import Image from "next/image";
 import { useFormStatus } from "react-dom";
 import { chooseRole } from "@/app/welcome/actions";
-import { LessorScene, TenantScene } from "./role-illustrations";
 
 /** The two big role boxes shown on the welcome screen. */
 export function RoleChooser({ fontClass = "" }: { fontClass?: string }) {
@@ -10,7 +10,16 @@ export function RoleChooser({ fontClass = "" }: { fontClass?: string }) {
     <div className="grid w-full grid-cols-2 gap-3 sm:gap-5">
       <RoleCard
         role="lessor"
-        scene={<LessorScene className="h-20 w-full sm:h-28" />}
+        scene={
+          <Image
+            src="/due-mascot.png"
+            alt="DUE — the lessor mascot"
+            width={140}
+            height={230}
+            priority
+            className="mx-auto h-24 w-auto drop-shadow-xl sm:h-32"
+          />
+        }
         tagalog="NAGPAPAUPA"
         title="I'm a Lessor"
         subtitle="I own units and collect rent."
@@ -26,7 +35,16 @@ export function RoleChooser({ fontClass = "" }: { fontClass?: string }) {
       />
       <RoleCard
         role="tenant"
-        scene={<TenantScene className="h-20 w-full sm:h-28" />}
+        scene={
+          <Image
+            src="/meet-mascot.png"
+            alt="MEET — the renter mascot"
+            width={140}
+            height={230}
+            priority
+            className="mx-auto h-24 w-auto drop-shadow-xl sm:h-32"
+          />
+        }
         tagalog="UMUUPA"
         title="I'm a Tenant"
         subtitle="I rent a place and pay rent."

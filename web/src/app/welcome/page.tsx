@@ -17,11 +17,15 @@ export default async function WelcomePage() {
   // If they've already picked a role, don't show onboarding again.
   const { data, error } = await supabase
     .from("users")
-    .select("role, is_admin")
+    .select("role, is_admin, profile_completed")
     .eq("id", user.id)
     .single();
   const profile = data as
-    | { role?: string | null; is_admin?: boolean | null }
+    | {
+        role?: string | null;
+        is_admin?: boolean | null;
+        profile_completed?: boolean | null;
+      }
     | null;
   const role = profile?.role ?? null;
   // The founder/admin account skips role selection entirely.
@@ -30,6 +34,7 @@ export default async function WelcomePage() {
   }
   // Only redirect when we can actually read the column (post-migration).
   if (!error && role) {
+    if (!profile?.profile_completed) redirect("/welcome/profile");
     redirect(role === "tenant" ? "/my-rentals" : "/dashboard");
   }
 

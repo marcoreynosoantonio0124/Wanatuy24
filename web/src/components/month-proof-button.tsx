@@ -103,14 +103,14 @@ export function MonthProofButton({
         </label>
         <label className="block text-sm">
           <span className="mb-1 block font-medium text-slate-300">
-            Reference no. <span className="text-slate-500">(optional)</span>
+            Reference no.
           </span>
           <input name="reference_no" className={input} />
         </label>
       </div>
       <label className="block text-sm">
         <span className="mb-1 block font-medium text-slate-300">
-          Receipt / screenshot <span className="text-slate-500">(optional)</span>
+          Receipt / screenshot
         </span>
         <input
           name="file"
@@ -121,7 +121,7 @@ export function MonthProofButton({
       </label>
       <label className="block text-sm">
         <span className="mb-1 block font-medium text-slate-300">
-          Note <span className="text-slate-500">(optional)</span>
+          Note
         </span>
         <input name="note" placeholder="Sent via GCash" className={input} />
       </label>

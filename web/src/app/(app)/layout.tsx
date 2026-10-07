@@ -16,19 +16,31 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
         .from("agreements")
         .select("id", { count: "exact", head: true })
         .eq("renter_user_id", user.id),
-      supabase.from("users").select("role, is_admin").eq("id", user.id).single(),
+      supabase
+        .from("users")
+        .select("role, is_admin, profile_completed")
+        .eq("id", user.id)
+        .single(),
     ]);
 
   // First-time users (role not yet chosen) go to the welcome screen. We only
   // gate when the column is actually readable, so the app still works if the
   // migration hasn't been run yet (profileRes.error covers that case).
   const profile = profileRes.data as
-    | { role?: string | null; is_admin?: boolean | null }
+    | {
+        role?: string | null;
+        is_admin?: boolean | null;
+        profile_completed?: boolean | null;
+      }
     | null;
   const role = profile?.role ?? null;
   const isAdmin = profile?.is_admin === true;
   if (!profileRes.error && !role && !isAdmin) {
     redirect("/welcome");
+  }
+  // Role chosen but profile not filled in yet → finish the one-time record.
+  if (!profileRes.error && !isAdmin && role && !profile?.profile_completed) {
+    redirect("/welcome/profile");
   }
 
   // The founder/admin account is monitoring-only: it has no lessor or renter
