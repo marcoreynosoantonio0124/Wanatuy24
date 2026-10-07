@@ -21,5 +21,11 @@ export default async function DashboardPage() {
   const greetingName = first.charAt(0).toUpperCase() + first.slice(1);
 
   const data = await loadLessorDashboard(supabase);
-  return <LessorDashboardView data={data} greetingName={greetingName} />;
+  return (
+    <LessorDashboardView
+      data={data}
+      greetingName={greetingName}
+      pageBackground="/lessor-hero.jpg"
+    />
+  );
 }

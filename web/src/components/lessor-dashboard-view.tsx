@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { formatPeso } from "@/lib/format";
 import { PushToggle } from "@/components/push-toggle";
@@ -17,17 +18,34 @@ export function LessorDashboardView({
   preview = false,
   greetingName = "there",
   previewHref,
+  pageBackground,
 }: {
   data: LessorDashboard;
   preview?: boolean;
   greetingName?: string;
   /** In preview mode, send every unit row to this one sample page. */
   previewHref?: string;
+  /** Optional full-page photo wallpaper behind the whole dashboard. */
+  pageBackground?: string;
 }) {
   const { properties, outstanding, proofsToReview } = data;
 
   return (
     <div className="space-y-6">
+      {pageBackground && (
+        <div className="fixed inset-0 -z-10">
+          <Image
+            src={pageBackground}
+            alt=""
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/70 via-slate-950/60 to-slate-950/85" />
+        </div>
+      )}
+
       <LessorHero greetingName={greetingName} flushTop={!preview} />
 
       {/* Page heading */}
