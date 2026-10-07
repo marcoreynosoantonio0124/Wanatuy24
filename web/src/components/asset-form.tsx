@@ -2,6 +2,7 @@
 
 import { useActionState, useRef, useEffect } from "react";
 import { createAsset, type AssetFormState } from "@/app/(app)/assets/actions";
+import { LocationPicker } from "@/components/location-picker";
 
 const TYPES: { value: string; label: string }[] = [
   { value: "room", label: "Room" },
@@ -55,15 +56,7 @@ export function AssetForm() {
           />
         </label>
       </div>
-      <label className="block text-sm">
-        <span className="mb-1 block font-medium text-slate-700">
-          Address
-        </span>
-        <input
-          name="address_text"
-          className="w-full rounded-lg border border-slate-300 px-3 py-2"
-        />
-      </label>
+      <LocationPicker />
       {state.error && <p className="text-sm text-red-600">{state.error}</p>}
       <button
         type="submit"
