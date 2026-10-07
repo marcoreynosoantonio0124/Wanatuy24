@@ -1,7 +1,17 @@
 import Link from "next/link";
-import { formatPeso, formatDate } from "@/lib/format";
+import { formatPeso, formatDate, PAYMENT_METHOD_LABELS } from "@/lib/format";
 import { ReminderBadge } from "@/components/reminder-badge";
+import { MonthPaymentButton } from "@/components/month-payment-button";
 import type { ForecastMonth, ForecastStatus } from "@/components/year-forecast";
+import type { PaymentMethod } from "@/lib/database.types";
+
+/** A tenant-submitted payment proof, shown on the matching month. */
+export type MonthProof = {
+  amountCentavos: number;
+  method: PaymentMethod | string;
+  paidOn: string;
+  viewUrl: string | null;
+};
 
 const PILL: Record<ForecastStatus, { label: string; cls: string }> = {
   paid: { label: "Full paid", cls: "text-emerald-700 bg-emerald-50 ring-emerald-200" },
@@ -36,6 +46,8 @@ export function UnitTimetable({
   remindersSent,
   backHref = "/dashboard",
   showManage = true,
+  interactive = false,
+  proofByPeriod = {},
 }: {
   agreementId: string;
   unitLabel: string;
@@ -47,6 +59,10 @@ export function UnitTimetable({
   remindersSent: number;
   backHref?: string;
   showManage?: boolean;
+  /** When true, each unpaid month gets a "Payment received" action. */
+  interactive?: boolean;
+  /** Tenant proofs keyed by period id, shown on the matching month. */
+  proofByPeriod?: Record<string, MonthProof>;
 }) {
   return (
     <div className="space-y-5">
@@ -124,6 +140,39 @@ export function UnitTimetable({
                     </p>
                   )}
                 </div>
+
+                {proofByPeriod[m.periodId] && (
+                  <div className="mt-3 flex flex-wrap items-center gap-2 rounded-xl border border-sky-400/30 bg-sky-500/10 px-3 py-2 text-sm">
+                    <span className="font-semibold text-sky-200">
+                      📎 Proof submitted:
+                    </span>
+                    <span className="text-slate-200">
+                      {formatPeso(proofByPeriod[m.periodId].amountCentavos)} ·{" "}
+                      {PAYMENT_METHOD_LABELS[
+                        proofByPeriod[m.periodId].method as PaymentMethod
+                      ] ?? proofByPeriod[m.periodId].method}{" "}
+                      · paid {formatDate(proofByPeriod[m.periodId].paidOn)}
+                    </span>
+                    {proofByPeriod[m.periodId].viewUrl && (
+                      <a
+                        href={proofByPeriod[m.periodId].viewUrl ?? "#"}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="ml-auto rounded-md border border-sky-400/40 px-2.5 py-1 text-xs font-semibold text-sky-200 transition hover:bg-sky-500/20 active:scale-95"
+                      >
+                        View proof
+                      </a>
+                    )}
+                  </div>
+                )}
+
+                {interactive && m.status !== "paid" && m.status !== "waived" && (
+                  <MonthPaymentButton
+                    agreementId={agreementId}
+                    periodId={m.periodId}
+                    defaultAmountCentavos={m.remaining || m.due}
+                  />
+                )}
               </div>
             );
           })}
