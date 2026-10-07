@@ -4,6 +4,15 @@ import { ReminderBadge } from "@/components/reminder-badge";
 import { MonthPaymentButton } from "@/components/month-payment-button";
 import type { ForecastMonth, ForecastStatus } from "@/components/year-forecast";
 import type { PaymentMethod } from "@/lib/database.types";
+import type { MonthMessage } from "@/lib/renter-rentals";
+
+function fmtMsgDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-PH", {
+    timeZone: "Asia/Manila",
+    month: "short",
+    day: "numeric",
+  });
+}
 
 /** A tenant-submitted payment proof, shown on the matching month. */
 export type MonthProof = {
@@ -48,6 +57,7 @@ export function UnitTimetable({
   showManage = true,
   interactive = false,
   proofByPeriod = {},
+  messagesByPeriod = {},
 }: {
   agreementId: string;
   unitLabel: string;
@@ -63,6 +73,8 @@ export function UnitTimetable({
   interactive?: boolean;
   /** Tenant proofs keyed by period id, shown on the matching month. */
   proofByPeriod?: Record<string, MonthProof>;
+  /** Tenant messages keyed by period id, shown on the matching month. */
+  messagesByPeriod?: Record<string, MonthMessage[]>;
 }) {
   return (
     <div className="space-y-5">
@@ -163,6 +175,32 @@ export function UnitTimetable({
                         View proof
                       </a>
                     )}
+                  </div>
+                )}
+
+                {(messagesByPeriod[m.periodId]?.length ?? 0) > 0 && (
+                  <div className="mt-3 space-y-1.5 rounded-xl border border-pink-400/30 bg-pink-500/10 p-3">
+                    <p className="text-xs font-bold uppercase tracking-wide text-pink-200">
+                      💬 Message from {renterName.split(" ")[0] || "renter"}
+                    </p>
+                    {messagesByPeriod[m.periodId].map((msg, i) => (
+                      <div
+                        key={i}
+                        className={`max-w-[90%] rounded-lg px-3 py-2 text-sm ${
+                          msg.sender === "renter"
+                            ? "bg-white/10 text-slate-100"
+                            : "ml-auto bg-emerald-500/15 text-emerald-100"
+                        }`}
+                      >
+                        <p className="whitespace-pre-wrap">{msg.body}</p>
+                        <p className="mt-0.5 text-[11px] text-slate-400">
+                          {msg.sender === "renter"
+                            ? renterName.split(" ")[0] || "Renter"
+                            : "You"}{" "}
+                          · {fmtMsgDate(msg.createdAt)}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 )}
 

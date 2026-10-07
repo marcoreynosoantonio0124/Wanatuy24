@@ -166,6 +166,115 @@ export async function submitProof(
   return { ok: true };
 }
 
+// ---- Renter → lessor messages ("Message the owner") ----------------------
+
+const messageSchema = z.object({
+  token: z.string().min(10),
+  period_id: z.string().uuid(),
+  body: z.string().trim().min(1, "Type a message first.").max(1000),
+});
+
+export type MessageState = { error?: string; ok?: boolean };
+
+export async function sendRenterMessage(
+  _prev: MessageState,
+  formData: FormData,
+): Promise<MessageState> {
+  const parsed = messageSchema.safeParse({
+    token: formData.get("token"),
+    period_id: formData.get("period_id"),
+    body: formData.get("body"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid message." };
+  }
+  const v = parsed.data;
+  const admin = createAdminClient();
+
+  const { data: agreementData } = await admin
+    .from("agreements")
+    .select("id, lessor_id, lessor_phone, renter_name, asset:assets(label)")
+    .eq("renter_access_token", v.token)
+    .single();
+  if (!agreementData) return { error: "This link is no longer valid." };
+  const agreement = agreementData as unknown as {
+    id: string;
+    lessor_id: string;
+    lessor_phone: string | null;
+    renter_name: string;
+    asset: { label: string } | null;
+  };
+
+  const { data: period } = await admin
+    .from("periods")
+    .select("id, agreement_id")
+    .eq("id", v.period_id)
+    .eq("agreement_id", agreement.id)
+    .single();
+  if (!period) return { error: "That due date wasn't found." };
+
+  const { error } = await admin.from("messages").insert({
+    agreement_id: agreement.id,
+    period_id: v.period_id,
+    sender: "renter",
+    body: v.body,
+  });
+  if (error) return { error: error.message };
+
+  // Best-effort: alert the lessor that a message arrived.
+  try {
+    const who = agreement.renter_name || "Your tenant";
+    const unit = agreement.asset?.label ?? "your unit";
+    const base = process.env.APP_BASE_URL || "";
+    const link = base ? `${base}/agreements/${agreement.id}` : "";
+
+    const { data: lessor } = await admin
+      .from("users")
+      .select("email")
+      .eq("id", agreement.lessor_id)
+      .single();
+    const lessorEmail = (lessor as { email?: string } | null)?.email;
+    if (lessorEmail) {
+      await sendEmail(
+        lessorEmail,
+        "💬 New message from your tenant",
+        `<div style="font-family:ui-sans-serif,system-ui,Arial,sans-serif;max-width:480px;margin:0 auto;color:#0f172a">
+          <p style="color:#059669;font-weight:700;margin:0 0 8px">DueMeet</p>
+          <p><strong>${esc(who)}</strong> sent you a message about <strong>${esc(unit)}</strong>:</p>
+          <blockquote style="border-left:3px solid #e2e8f0;margin:12px 0;padding:4px 12px;color:#475569">${esc(v.body)}</blockquote>
+          ${link ? `<p style="margin:20px 0"><a href="${link}" style="background:#059669;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none">Open DueMeet</a></p>` : ""}
+        </div>`,
+      );
+    }
+    if (agreement.lessor_phone) {
+      await sendSms(
+        agreement.lessor_phone,
+        `DueMeet: ${who} sent you a message. Pakicheck po sa app.`,
+      );
+    }
+    const { data: subs } = await admin
+      .from("push_subscriptions")
+      .select("endpoint, p256dh, auth")
+      .eq("user_id", agreement.lessor_id);
+    for (const s of (subs ?? []) as {
+      endpoint: string;
+      p256dh: string;
+      auth: string;
+    }[]) {
+      await sendPush(s, {
+        title: "New message from your tenant",
+        body: `${who}: ${v.body.slice(0, 80)}`,
+        url: `/agreements/${agreement.id}`,
+      });
+    }
+  } catch {
+    // Alerts are best-effort; never fail the tenant's message over them.
+  }
+
+  revalidatePath(`/r/${v.token}`);
+  return { ok: true };
+}
+
 const ID_BUCKET = "ids";
 
 export type RenterIdState = { error?: string; ok?: boolean };

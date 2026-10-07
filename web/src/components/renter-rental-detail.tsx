@@ -2,6 +2,7 @@ import Link from "next/link";
 import { formatPeso, formatDate, PAYMENT_METHOD_LABELS } from "@/lib/format";
 import { ReminderBadge } from "@/components/reminder-badge";
 import { MonthProofButton } from "@/components/month-proof-button";
+import { MonthMessageButton } from "@/components/month-message-button";
 import { RenterIdUpload } from "@/components/renter-id-upload";
 import type { ForecastStatus } from "@/components/year-forecast";
 import type { RenterRentalDetailData } from "@/lib/renter-rentals";
@@ -157,6 +158,14 @@ export function RenterRentalDetail({
                     methods={data.methods}
                   />
                 ) : null}
+
+                {!preview && (
+                  <MonthMessageButton
+                    token={data.token}
+                    periodId={m.periodId}
+                    existing={data.messagesByPeriod[m.periodId] ?? []}
+                  />
+                )}
               </div>
             );
           })}
