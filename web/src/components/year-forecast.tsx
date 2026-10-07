@@ -83,7 +83,8 @@ export function YearForecast({ months }: { months: ForecastMonth[] }) {
             key={m.periodId}
             type="button"
             onClick={() => setOpen(m)}
-            className={`flex flex-col gap-1.5 rounded-xl border bg-white p-3 text-left shadow-sm transition hover:-translate-y-0.5 active:scale-95 ${
+            style={{ backgroundColor: "rgba(15,23,42,0.5)" }}
+            className={`flex flex-col gap-1.5 rounded-xl border p-3 text-left shadow-sm backdrop-blur-md transition hover:-translate-y-0.5 active:scale-95 ${
               m.isNow
                 ? "border-red-300 ring-2 ring-red-200"
                 : "border-slate-200"

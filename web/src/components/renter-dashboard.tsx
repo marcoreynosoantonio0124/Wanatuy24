@@ -1,10 +1,10 @@
+import Image from "next/image";
 import { formatPeso, formatDate, PAYMENT_METHOD_LABELS } from "@/lib/format";
 import type { PaymentMethod } from "@/lib/database.types";
 import { DuskScene } from "@/components/dusk-scene";
 import { RenterProofForm } from "@/components/renter-proof-form";
 import { RenterIdUpload } from "@/components/renter-id-upload";
 import { YearForecast, type ForecastMonth } from "@/components/year-forecast";
-import { RoleCharacter } from "@/components/role-character";
 
 export type RenterDashboardProps = {
   token: string;
@@ -26,25 +26,26 @@ export function RenterDashboard(p: RenterDashboardProps) {
   const paidMonths = p.months.filter((m) => m.status === "paid").length;
   const collected = p.months.reduce((s, m) => s + m.paid, 0);
   const yearTotal = p.months.reduce((s, m) => s + m.due, 0);
-  const renterMood =
-    p.outstanding === 0
-      ? "happy"
-      : p.months.some((m) => m.status === "overdue")
-        ? "worried"
-        : "neutral";
 
   return (
     <div className="mx-auto w-full max-w-xl space-y-5 pb-10">
       {/* Big warm welcome header */}
-      <section className="relative overflow-hidden rounded-b-2xl sm:rounded-2xl">
+      <section className="relative min-h-[210px] overflow-hidden rounded-b-2xl sm:rounded-2xl">
         <DuskScene
           preserveAspectRatio="xMidYMid slice"
           className="absolute inset-0 h-full w-full"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-slate-950/85 via-slate-950/50 to-slate-950/25" />
-        <div className="relative px-5 py-7 pr-28">
+        <div className="relative px-5 py-7 pr-32">
           <p className="text-sm font-medium text-emerald-300">Welcome back 👋</p>
-          <h1 className="text-2xl font-bold text-white drop-shadow">
+          <h1
+            className="text-4xl font-bold leading-none text-white sm:text-5xl [text-shadow:0_3px_10px_rgba(0,0,0,0.9)]"
+            style={{
+              fontFamily: "'Caveat', ui-rounded, cursive",
+              WebkitTextStroke: "1.1px rgba(2,6,23,0.7)",
+              paintOrder: "stroke",
+            }}
+          >
             Hi, {p.firstName}!
           </h1>
           <div className="mt-3 flex items-start gap-2 text-sm text-white/90">
@@ -55,10 +56,13 @@ export function RenterDashboard(p: RenterDashboardProps) {
             </span>
           </div>
           <p className="mt-1 text-xs text-white/70">{p.scheduleLabel}</p>
-          <RoleCharacter
-            role="renter"
-            mood={renterMood}
-            className="pointer-events-none absolute bottom-0 right-3 h-28 w-auto drop-shadow-lg"
+          <Image
+            src="/meet-mascot.png"
+            alt="MEET — your DueMeet rent buddy"
+            width={300}
+            height={520}
+            priority
+            className="pointer-events-none absolute bottom-0 right-1 h-44 w-auto drop-shadow-xl sm:right-3 sm:h-52"
           />
         </div>
       </section>
@@ -91,7 +95,7 @@ export function RenterDashboard(p: RenterDashboardProps) {
         {/* Send a payment */}
         {p.unpaidForProof.length > 0 && (
           <section>
-            <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
+            <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-white/80 [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]">
               Send a payment
             </h2>
             <RenterProofForm
@@ -104,7 +108,7 @@ export function RenterDashboard(p: RenterDashboardProps) {
 
         {/* Whole-year forecast */}
         <section>
-          <h2 className="text-xs font-bold uppercase tracking-wide text-slate-400">
+          <h2 className="text-xs font-bold uppercase tracking-wide text-white/80 [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]">
             This year&apos;s rent · tap a month
           </h2>
           <p className="mb-2.5 mt-0.5 text-xs text-slate-500">
@@ -115,7 +119,10 @@ export function RenterDashboard(p: RenterDashboardProps) {
         </section>
 
         {/* Balance */}
-        <div className="flex items-center justify-between rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+        <div
+          className="flex items-center justify-between rounded-xl border border-amber-200 px-4 py-3 backdrop-blur-md"
+          style={{ backgroundColor: "rgba(15,23,42,0.5)" }}
+        >
           <span className="text-sm font-medium text-slate-700">
             Balance up to date
           </span>
@@ -127,10 +134,13 @@ export function RenterDashboard(p: RenterDashboardProps) {
         {/* How to pay */}
         {(p.paymentInstructions || p.methods.length > 0) && (
           <section>
-            <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
+            <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-white/80 [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]">
               How to pay
             </h2>
-            <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+            <div
+              className="rounded-2xl border border-emerald-200 p-4 text-sm text-emerald-900 backdrop-blur-md"
+              style={{ backgroundColor: "rgba(15,23,42,0.5)" }}
+            >
               {p.paymentInstructions && (
                 <p className="whitespace-pre-wrap">{p.paymentInstructions}</p>
               )}
@@ -146,10 +156,13 @@ export function RenterDashboard(p: RenterDashboardProps) {
 
         {/* Documents */}
         <section>
-          <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
+          <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-white/80 [text-shadow:0_1px_4px_rgba(0,0,0,0.9)]">
             Documents
           </h2>
-          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+          <div
+            className="overflow-hidden rounded-2xl border border-slate-200 backdrop-blur-md"
+            style={{ backgroundColor: "rgba(15,23,42,0.5)" }}
+          >
             {p.contract && (p.contract.view || p.contract.download) && (
               <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4">
                 <span className="flex items-center gap-2 text-sm font-medium text-slate-700">

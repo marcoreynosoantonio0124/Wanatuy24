@@ -35,7 +35,8 @@ export function RenterProofForm({
   return (
     <form
       action={action}
-      className="space-y-3 rounded-xl border border-slate-200 bg-white p-4"
+      className="space-y-3 rounded-xl border border-slate-200 p-4 backdrop-blur-md"
+      style={{ backgroundColor: "rgba(15,23,42,0.5)" }}
     >
       <input type="hidden" name="token" value={token} />
       <label className="block text-sm">
