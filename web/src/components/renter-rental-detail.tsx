@@ -150,22 +150,22 @@ export function RenterRentalDetail({
                   <p className="mt-3 text-sm font-semibold text-emerald-300">
                     ✓ Payment received
                   </p>
-                ) : m.status !== "waived" && !preview ? (
+                ) : m.status !== "waived" ? (
                   <MonthProofButton
                     token={data.token}
                     periodId={m.periodId}
                     defaultAmountCentavos={m.remaining || m.due}
                     methods={data.methods}
+                    demo={preview}
                   />
                 ) : null}
 
-                {!preview && (
-                  <MonthMessageButton
-                    token={data.token}
-                    periodId={m.periodId}
-                    existing={data.messagesByPeriod[m.periodId] ?? []}
-                  />
-                )}
+                <MonthMessageButton
+                  token={data.token}
+                  periodId={m.periodId}
+                  existing={data.messagesByPeriod[m.periodId] ?? []}
+                  demo={preview}
+                />
               </div>
             );
           })}

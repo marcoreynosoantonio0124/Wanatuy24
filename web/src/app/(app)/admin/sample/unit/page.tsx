@@ -17,6 +17,24 @@ export default async function SampleUnitPage() {
         {...SAMPLE_UNIT}
         backHref="/admin/sample/lessor"
         showManage={false}
+        demo
+        proofByPeriod={{
+          "s-9": {
+            amountCentavos: 600_000,
+            method: "gcash",
+            paidOn: "2026-10-03",
+            viewUrl: null,
+          },
+        }}
+        messagesByPeriod={{
+          "s-8": [
+            {
+              sender: "renter",
+              body: "Hi po, baka ma-late ako ng konti this month. Sorry po, aayusin ko agad.",
+              createdAt: "2026-09-10T09:00:00+08:00",
+            },
+          ],
+        }}
       />
     </div>
   );

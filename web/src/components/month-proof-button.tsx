@@ -15,11 +15,14 @@ export function MonthProofButton({
   periodId,
   defaultAmountCentavos,
   methods,
+  demo = false,
 }: {
   token: string;
   periodId: string;
   defaultAmountCentavos: number;
   methods: PaymentMethod[];
+  /** Sample preview: show the UI but don't actually submit. */
+  demo?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [state, action, pending] = useActionState<ProofState, FormData>(
@@ -60,6 +63,11 @@ export function MonthProofButton({
     >
       <input type="hidden" name="token" value={token} />
       <input type="hidden" name="period_id" value={periodId} />
+      {demo && (
+        <p className="rounded-lg bg-white/5 px-3 py-2 text-xs text-slate-300">
+          👀 Sample preview — on a real renter account this uploads the proof.
+        </p>
+      )}
       <div className="grid gap-3 sm:grid-cols-2">
         <label className="block text-sm">
           <span className="mb-1 block font-medium text-slate-300">Method</span>
@@ -121,7 +129,7 @@ export function MonthProofButton({
       <div className="flex gap-2">
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || demo}
           className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 font-medium text-white transition hover:bg-emerald-700 active:scale-95 disabled:opacity-60"
         >
           {pending && (
@@ -130,7 +138,7 @@ export function MonthProofButton({
               className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
             />
           )}
-          {pending ? "Sending…" : "Send payment proof"}
+          {demo ? "Sample preview" : pending ? "Sending…" : "Send payment proof"}
         </button>
         <button
           type="button"

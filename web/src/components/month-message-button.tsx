@@ -21,10 +21,13 @@ export function MonthMessageButton({
   token,
   periodId,
   existing,
+  demo = false,
 }: {
   token: string;
   periodId: string;
   existing: MonthMessage[];
+  /** Sample preview: show the UI but don't actually submit. */
+  demo?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [state, action, pending] = useActionState<MessageState, FormData>(
@@ -70,6 +73,12 @@ export function MonthMessageButton({
         <form action={action} className="space-y-2">
           <input type="hidden" name="token" value={token} />
           <input type="hidden" name="period_id" value={periodId} />
+          {demo && (
+            <p className="rounded-lg bg-white/5 px-3 py-2 text-xs text-slate-300">
+              👀 Sample preview — on a real renter account this sends to your
+              owner.
+            </p>
+          )}
           <textarea
             name="body"
             required
@@ -82,7 +91,7 @@ export function MonthMessageButton({
           <div className="flex gap-2">
             <button
               type="submit"
-              disabled={pending}
+              disabled={pending || demo}
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-pink-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-pink-700 active:scale-95 disabled:opacity-60"
             >
               {pending && (
@@ -91,7 +100,7 @@ export function MonthMessageButton({
                   className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
                 />
               )}
-              {pending ? "Sending…" : "Send message"}
+              {demo ? "Sample preview" : pending ? "Sending…" : "Send message"}
             </button>
             <button
               type="button"
