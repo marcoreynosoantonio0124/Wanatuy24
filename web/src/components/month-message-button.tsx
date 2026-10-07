@@ -36,7 +36,7 @@ export function MonthMessageButton({
   );
 
   return (
-    <div className="mt-3">
+    <div>
       {existing.length > 0 && (
         <div className="mb-2 space-y-1.5">
           {existing.map((m, i) => (
