@@ -4,6 +4,7 @@ import { createAdminClient } from "@/lib/supabase/server";
 import { describeSchedule } from "@/lib/format";
 import { buildRenterView } from "@/lib/renter-view";
 import { RenterDashboard } from "@/components/renter-dashboard";
+import { PageWallpaper } from "@/components/page-wallpaper";
 import type {
   AgreementRow,
   PaymentMethod,
@@ -159,6 +160,7 @@ export default async function MyRentalsPage() {
 
   return (
     <div className="-mx-4 -my-8 space-y-8">
+      <PageWallpaper />
       {agreements.map((a) => {
         const asset = assetById.get(a.asset_id);
         const view = buildRenterView({
