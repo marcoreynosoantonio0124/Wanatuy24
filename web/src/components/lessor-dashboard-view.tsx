@@ -66,12 +66,20 @@ export function LessorDashboardView({
           </p>
         </div>
         {!preview && (
-          <Link
-            href="/agreements/new"
-            className="inline-flex shrink-0 items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm shadow-emerald-600/20 transition hover:bg-emerald-700 active:scale-95"
-          >
-            + Make an agreement
-          </Link>
+          <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <Link
+              href="/assets"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/60 bg-emerald-500/10 px-3.5 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-500/20 active:scale-95"
+            >
+              + Add property
+            </Link>
+            <Link
+              href="/agreements/new"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm shadow-emerald-600/20 transition hover:bg-emerald-700 active:scale-95"
+            >
+              + Make an agreement
+            </Link>
+          </div>
         )}
       </div>
 

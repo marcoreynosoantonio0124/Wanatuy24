@@ -37,6 +37,8 @@ export interface AssetRow {
   address_text: string | null;
   notes: string | null;
   created_at: string;
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export interface AgreementRow {
