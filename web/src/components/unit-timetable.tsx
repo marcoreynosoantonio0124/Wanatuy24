@@ -340,6 +340,25 @@ function UnitDocRow({ label, href }: { label: string; href: string }) {
   );
 }
 
+/** One document row in the unit's Documents card: a label + a "View" link. */
+function UnitDocRow({ label, href }: { label: string; href: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4 last:border-b-0">
+      <span className="flex items-center gap-2 text-sm font-medium text-slate-700">
+        {label}
+      </span>
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 active:scale-95"
+      >
+        View
+      </a>
+    </div>
+  );
+}
+
 function SummaryCell({
   label,
   value,
