@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { DueMascot } from "@/components/due-mascot";
 
 /**
  * Full-bleed immersive hero for the lessor dashboard: a real property photo
@@ -49,7 +48,14 @@ export function LessorHero({
         </p>
       </div>
 
-      <DueMascot className="pointer-events-none absolute bottom-0 right-1 h-[220px] w-auto drop-shadow-2xl sm:right-6 sm:h-[300px]" />
+      <Image
+        src="/due-mascot.png"
+        alt="DUE — your DueMeet rent buddy"
+        width={330}
+        height={560}
+        priority
+        className="pointer-events-none absolute bottom-0 right-1 h-[230px] w-auto drop-shadow-2xl sm:right-6 sm:h-[310px]"
+      />
     </section>
   );
 }
