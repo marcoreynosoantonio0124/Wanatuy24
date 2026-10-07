@@ -56,7 +56,7 @@ export function ReminderBadge({
   const count = records.length;
   const last = records[0]; // caller passes most-recent first
   const hot = count >= 3;
-  const verb = audience === "tenant" ? "Texted" : "Reminded";
+  const verb = audience === "tenant" ? "Reminder" : "Reminded";
 
   return (
     <>
