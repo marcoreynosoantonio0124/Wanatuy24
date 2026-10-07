@@ -62,3 +62,29 @@ export async function createAsset(
   revalidatePath("/assets");
   return {};
 }
+
+/**
+ * "Delete" a unit — a soft archive, so its past agreements stay intact in the
+ * History page. Refused while the unit still has an active agreement (end the
+ * contract first). RLS scopes the update to the lessor's own asset.
+ */
+export async function archiveAsset(formData: FormData): Promise<void> {
+  const { supabase } = await requireUser();
+  const id = String(formData.get("asset_id") ?? "");
+  if (!id) return;
+
+  const { data: active } = await supabase
+    .from("agreements")
+    .select("id")
+    .eq("asset_id", id)
+    .eq("status", "active")
+    .limit(1);
+  if (active && active.length > 0) return; // occupied — can't delete
+
+  await supabase
+    .from("assets")
+    .update({ archived_at: new Date().toISOString() })
+    .eq("id", id);
+  revalidatePath("/dashboard");
+  revalidatePath("/assets");
+}

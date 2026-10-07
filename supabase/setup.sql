@@ -844,3 +844,10 @@ alter table public.agreements
   add column if not exists transaction_no text;
 create unique index if not exists agreements_transaction_no_key
   on public.agreements(transaction_no);
+
+-- ---------------------------------------------------------------------------
+-- 0020_asset_archive: soft-archive a property (Phase 4). A "deleted" unit is
+-- archived (archived_at set) so its history survives in the History page.
+-- ---------------------------------------------------------------------------
+alter table public.assets
+  add column if not exists archived_at timestamptz;

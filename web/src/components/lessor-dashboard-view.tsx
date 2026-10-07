@@ -3,6 +3,7 @@ import Link from "next/link";
 import { formatPeso } from "@/lib/format";
 import { PushToggle } from "@/components/push-toggle";
 import { LessorHero } from "@/components/lessor-hero";
+import { ArchiveUnitButton } from "@/components/archive-unit-button";
 import type { LessorDashboard, Property } from "@/lib/lessor-dashboard";
 
 /**
@@ -67,6 +68,12 @@ export function LessorDashboardView({
         </div>
         {!preview && (
           <div className="flex shrink-0 flex-wrap items-center gap-2">
+            <Link
+              href="/dashboard/history"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-white/25 bg-white/10 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-white/20 active:scale-95"
+            >
+              📜 History
+            </Link>
             <Link
               href="/assets"
               className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/60 bg-emerald-500/10 px-3.5 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-500/20 active:scale-95"
@@ -140,6 +147,41 @@ function PropertyRow({
   preview: boolean;
   previewHref?: string;
 }) {
+  const fillStyle = { backgroundColor: "rgba(45,58,80,0.5)" } as const;
+  const cardCls =
+    "flex items-center gap-3 rounded-2xl border border-white/12 p-4 shadow-sm backdrop-blur-md";
+
+  // A property with no active agreement — "Open for leasing" (inactive).
+  if (p.vacant) {
+    return (
+      <div className={cardCls} style={fillStyle}>
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5 text-xl">
+          🔑
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-base font-bold text-slate-100">
+            {p.name}
+          </span>
+          <span className="mt-0.5 inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400">
+            <span className="h-1.5 w-1.5 rounded-full bg-slate-400" />
+            Open for leasing · inactive
+          </span>
+        </span>
+        {!preview && (
+          <span className="flex shrink-0 items-center gap-2">
+            <Link
+              href="/agreements/new"
+              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700 active:scale-95"
+            >
+              + Lease it
+            </Link>
+            <ArchiveUnitButton assetId={p.assetId} />
+          </span>
+        )}
+      </div>
+    );
+  }
+
   const icon = p.allPaid ? "🏠" : p.overdueCount > 0 ? "🏚️" : "🏡";
   const href = preview ? previewHref : `/dashboard/unit/${p.id}`;
   const inner = (
@@ -180,13 +222,9 @@ function PropertyRow({
 
   // A dark slate fill at 50% opacity (with a soft blur) so the cards stay
   // readable over the photo wallpaper while the building still shows through.
-  const cls =
-    "flex items-center gap-3 rounded-2xl border border-white/12 p-4 shadow-sm backdrop-blur-md";
-  const fillStyle = { backgroundColor: "rgba(45,58,80,0.5)" } as const;
-
   if (!href) {
     return (
-      <div className={cls} style={fillStyle}>
+      <div className={cardCls} style={fillStyle}>
         {inner}
       </div>
     );
@@ -195,7 +233,7 @@ function PropertyRow({
     <Link
       href={href}
       style={fillStyle}
-      className={`${cls} transition hover:border-emerald-300/60 hover:shadow-md active:scale-[0.99]`}
+      className={`${cardCls} transition hover:border-emerald-300/60 hover:shadow-md active:scale-[0.99]`}
     >
       {inner}
     </Link>
