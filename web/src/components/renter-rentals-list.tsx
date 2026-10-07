@@ -21,7 +21,7 @@ export function RenterRentalsList({
   previewHref?: string;
 }) {
   const { rentals, totalOutstanding } = data;
-  const fillStyle = { backgroundColor: "rgba(15,23,42,0.5)" } as const;
+  const fillStyle = { backgroundColor: "rgba(45,58,80,0.5)" } as const;
 
   return (
     <div className="space-y-6">
@@ -102,7 +102,7 @@ function RentalRow({
 }) {
   const icon = r.allPaid ? "🏠" : r.overdueCount > 0 ? "🏚️" : "🏡";
   const href = preview ? previewHref : `/my-rentals/${r.id}`;
-  const fillStyle = { backgroundColor: "rgba(15,23,42,0.5)" } as const;
+  const fillStyle = { backgroundColor: "rgba(45,58,80,0.5)" } as const;
 
   const inner = (
     <>
