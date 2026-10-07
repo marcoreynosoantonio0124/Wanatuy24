@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { formatPeso } from "@/lib/format";
 import { RenterHero } from "@/components/renter-hero";
+import { JoinUnitForm } from "@/components/join-unit-form";
 import type { RenterRentalsData, RenterRentalRow } from "@/lib/renter-rentals";
 
 /**
@@ -44,6 +45,8 @@ export function RenterRentalsList({
           </p>
         </div>
 
+        {!preview && <JoinUnitForm compact={rentals.length > 0} />}
+
         {rentals.length === 0 ? (
           <div
             className="rounded-2xl border border-white/12 p-8 text-center backdrop-blur-md"
@@ -51,8 +54,9 @@ export function RenterRentalsList({
           >
             <p className="text-slate-200">Wala pang naka-link na rental. 🧳</p>
             <p className="mt-1 text-sm text-slate-400">
-              Ask your landlord to add your email to your agreement, then sign
-              in again — it will show up here automatically.
+              Enter the <span className="font-semibold text-slate-200">transaction
+              number</span> your landlord gave you in the box above, and your unit
+              shows up here automatically.
             </p>
           </div>
         ) : (
