@@ -141,7 +141,7 @@ export function UnitTimetable({
                   </span>
                 </div>
 
-                <div className="mt-3">
+                <div className="mt-3 flex flex-wrap items-center gap-2">
                   {m.reminders.length > 0 ? (
                     <ReminderBadge
                       records={m.reminders}
@@ -149,11 +149,31 @@ export function UnitTimetable({
                       audience="lessor"
                     />
                   ) : (
-                    <p className="text-xs text-slate-400">
+                    <span className="text-xs text-slate-400">
                       {m.status === "upcoming"
-                        ? "Not texted yet — a reminder appears here once it goes out."
+                        ? "Not texted yet."
                         : "No reminder sent yet."}
-                    </p>
+                    </span>
+                  )}
+                  {(interactive || demo) &&
+                    m.status !== "paid" &&
+                    m.status !== "waived" && (
+                      <MonthPaymentButton
+                        agreementId={agreementId}
+                        periodId={m.periodId}
+                        defaultAmountCentavos={m.remaining || m.due}
+                        demo={demo}
+                      />
+                    )}
+                  {(interactive || demo) && (
+                    <MonthLessorReply
+                      agreementId={agreementId}
+                      periodId={m.periodId}
+                      hasThread={
+                        (messagesByPeriod[m.periodId]?.length ?? 0) > 0
+                      }
+                      demo={demo}
+                    />
                   )}
                 </div>
 
@@ -208,30 +228,6 @@ export function UnitTimetable({
                   </div>
                 )}
 
-                {(interactive || demo) && (
-                  <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-start">
-                    {m.status !== "paid" && m.status !== "waived" && (
-                      <div className="sm:flex-1">
-                        <MonthPaymentButton
-                          agreementId={agreementId}
-                          periodId={m.periodId}
-                          defaultAmountCentavos={m.remaining || m.due}
-                          demo={demo}
-                        />
-                      </div>
-                    )}
-                    <div className="sm:flex-1">
-                      <MonthLessorReply
-                        agreementId={agreementId}
-                        periodId={m.periodId}
-                        hasThread={
-                          (messagesByPeriod[m.periodId]?.length ?? 0) > 0
-                        }
-                        demo={demo}
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
             );
           })}

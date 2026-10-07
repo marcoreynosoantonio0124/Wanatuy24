@@ -41,7 +41,7 @@ export function MonthLessorReply({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-pink-400/40 bg-pink-500/10 px-3 py-2.5 text-sm font-semibold text-pink-200 transition hover:bg-pink-500/20 active:scale-95"
+        className="inline-flex items-center gap-1.5 rounded-lg border border-pink-400/40 bg-pink-500/10 px-3 py-1.5 text-sm font-semibold text-pink-200 transition hover:bg-pink-500/20 active:scale-95"
       >
         💬 {hasThread ? "Reply to renter" : "Message renter"}
       </button>
@@ -49,7 +49,7 @@ export function MonthLessorReply({
   }
 
   return (
-    <form action={action} className="space-y-2">
+    <form action={action} className="w-full space-y-2">
       <input type="hidden" name="agreement_id" value={agreementId} />
       <input type="hidden" name="period_id" value={periodId} />
       {demo && (
