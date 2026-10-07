@@ -14,10 +14,13 @@ export function MonthLessorReply({
   agreementId,
   periodId,
   hasThread,
+  demo = false,
 }: {
   agreementId: string;
   periodId: string;
   hasThread: boolean;
+  /** Sample preview: show the UI but don't actually submit. */
+  demo?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [state, action, pending] = useActionState<ReplyState, FormData>(
@@ -49,6 +52,11 @@ export function MonthLessorReply({
     <form action={action} className="mt-2 space-y-2">
       <input type="hidden" name="agreement_id" value={agreementId} />
       <input type="hidden" name="period_id" value={periodId} />
+      {demo && (
+        <p className="rounded-lg bg-white/5 px-3 py-2 text-xs text-slate-300">
+          👀 Sample preview — on your real unit this sends to the renter.
+        </p>
+      )}
       <textarea
         name="body"
         required
@@ -61,7 +69,7 @@ export function MonthLessorReply({
       <div className="flex gap-2">
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || demo}
           className="inline-flex flex-1 items-center justify-center gap-2 rounded-lg bg-pink-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-pink-700 active:scale-95 disabled:opacity-60"
         >
           {pending && (
@@ -70,7 +78,7 @@ export function MonthLessorReply({
               className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"
             />
           )}
-          {pending ? "Sending…" : "Send reply"}
+          {demo ? "Sample preview" : pending ? "Sending…" : "Send reply"}
         </button>
         <button
           type="button"

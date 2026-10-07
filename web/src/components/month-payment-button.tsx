@@ -32,10 +32,13 @@ export function MonthPaymentButton({
   agreementId,
   periodId,
   defaultAmountCentavos,
+  demo = false,
 }: {
   agreementId: string;
   periodId: string;
   defaultAmountCentavos: number;
+  /** Sample preview: show the UI but don't actually submit. */
+  demo?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const amountDefault =
@@ -75,11 +78,22 @@ export function MonthPaymentButton({
         />
       </label>
       <p className="text-xs text-slate-400">
-        We&apos;ll update this month&apos;s balance automatically. If it&apos;s
-        a partial payment, just enter what was received.
+        {demo
+          ? "👀 Sample preview — on your real unit this records the payment and updates the balance."
+          : "We'll update this month's balance automatically. If it's a partial payment, just enter what was received."}
       </p>
       <div className="flex gap-2">
-        <SubmitButton />
+        {demo ? (
+          <button
+            type="button"
+            disabled
+            className="inline-flex flex-1 items-center justify-center rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white opacity-60"
+          >
+            Sample preview
+          </button>
+        ) : (
+          <SubmitButton />
+        )}
         <button
           type="button"
           onClick={() => setOpen(false)}

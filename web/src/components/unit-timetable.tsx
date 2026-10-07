@@ -57,6 +57,7 @@ export function UnitTimetable({
   backHref = "/dashboard",
   showManage = true,
   interactive = false,
+  demo = false,
   proofByPeriod = {},
   messagesByPeriod = {},
 }: {
@@ -72,6 +73,8 @@ export function UnitTimetable({
   showManage?: boolean;
   /** When true, each unpaid month gets a "Payment received" action. */
   interactive?: boolean;
+  /** Sample preview: show the actions but don't actually submit. */
+  demo?: boolean;
   /** Tenant proofs keyed by period id, shown on the matching month. */
   proofByPeriod?: Record<string, MonthProof>;
   /** Tenant messages keyed by period id, shown on the matching month. */
@@ -202,32 +205,37 @@ export function UnitTimetable({
                         </p>
                       </div>
                     ))}
-                    {interactive && (
+                    {(interactive || demo) && (
                       <MonthLessorReply
                         agreementId={agreementId}
                         periodId={m.periodId}
                         hasThread
+                        demo={demo}
                       />
                     )}
                   </div>
                 )}
 
-                {interactive &&
+                {(interactive || demo) &&
                   (messagesByPeriod[m.periodId]?.length ?? 0) === 0 && (
                     <MonthLessorReply
                       agreementId={agreementId}
                       periodId={m.periodId}
                       hasThread={false}
+                      demo={demo}
                     />
                   )}
 
-                {interactive && m.status !== "paid" && m.status !== "waived" && (
-                  <MonthPaymentButton
-                    agreementId={agreementId}
-                    periodId={m.periodId}
-                    defaultAmountCentavos={m.remaining || m.due}
-                  />
-                )}
+                {(interactive || demo) &&
+                  m.status !== "paid" &&
+                  m.status !== "waived" && (
+                    <MonthPaymentButton
+                      agreementId={agreementId}
+                      periodId={m.periodId}
+                      defaultAmountCentavos={m.remaining || m.due}
+                      demo={demo}
+                    />
+                  )}
               </div>
             );
           })}
