@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { formatPeso, formatDate } from "@/lib/format";
+import { ActAsButton } from "@/components/act-as-button";
 
 export const dynamic = "force-dynamic";
 
@@ -114,7 +115,9 @@ export default async function AdminPage() {
       .limit(15),
     admin
       .from("agreements")
-      .select("id, renter_name, renter_access_token, asset:assets(label)")
+      .select(
+        "id, renter_name, renter_access_token, renter_user_id, asset:assets(label)",
+      )
       .eq("status", "active")
       .order("created_at", { ascending: false })
       .limit(15),
@@ -127,6 +130,7 @@ export default async function AdminPage() {
     id: string;
     renter_name: string;
     renter_access_token: string;
+    renter_user_id: string | null;
     asset: { label: string } | null;
   }[];
 
@@ -164,8 +168,10 @@ export default async function AdminPage() {
           Preview dashboards
         </h2>
         <p className="mb-3 text-sm text-slate-500">
-          See the app exactly the way your users see it — jump into a sample, or
-          open any real landlord or renter to check on them.
+          See the app exactly the way your users see it — jump into a sample to
+          look around, or <strong>Act as</strong> a real landlord or renter to
+          do a full end-to-end run-through as them (send messages, add a
+          contract, record payments). A yellow bar brings you back here.
         </p>
 
         <div className="grid gap-4 sm:grid-cols-2">
@@ -193,16 +199,22 @@ export default async function AdminPage() {
             ) : (
               <ul className="divide-y divide-slate-100">
                 {lessorList.map((l) => (
-                  <li key={l.id}>
-                    <Link
-                      href={`/admin/as/lessor/${l.id}`}
-                      className="flex items-center justify-between gap-2 py-2.5 text-sm transition hover:text-emerald-700"
-                    >
-                      <span className="truncate text-slate-800">{l.email}</span>
-                      <span className="shrink-0 font-semibold text-emerald-700">
-                        Open ›
-                      </span>
-                    </Link>
+                  <li
+                    key={l.id}
+                    className="flex items-center justify-between gap-2 py-2.5 text-sm"
+                  >
+                    <span className="min-w-0 truncate text-slate-800">
+                      {l.email}
+                    </span>
+                    <span className="flex shrink-0 items-center gap-2">
+                      <Link
+                        href={`/admin/as/lessor/${l.id}`}
+                        className="font-semibold text-emerald-700 transition hover:text-emerald-800"
+                      >
+                        View
+                      </Link>
+                      <ActAsButton userId={l.id} />
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -218,23 +230,29 @@ export default async function AdminPage() {
             ) : (
               <ul className="divide-y divide-slate-100">
                 {renterList.map((r) => (
-                  <li key={r.id}>
-                    <a
-                      href={`/r/${r.renter_access_token}`}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="flex items-center justify-between gap-2 py-2.5 text-sm transition hover:text-emerald-700"
-                    >
-                      <span className="min-w-0 truncate text-slate-800">
-                        {r.renter_name}
-                        {r.asset?.label ? (
-                          <span className="text-slate-400"> · {r.asset.label}</span>
-                        ) : null}
-                      </span>
-                      <span className="shrink-0 font-semibold text-emerald-700">
-                        Open ↗
-                      </span>
-                    </a>
+                  <li
+                    key={r.id}
+                    className="flex items-center justify-between gap-2 py-2.5 text-sm"
+                  >
+                    <span className="min-w-0 truncate text-slate-800">
+                      {r.renter_name}
+                      {r.asset?.label ? (
+                        <span className="text-slate-400"> · {r.asset.label}</span>
+                      ) : null}
+                    </span>
+                    <span className="flex shrink-0 items-center gap-2">
+                      <a
+                        href={`/r/${r.renter_access_token}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="font-semibold text-emerald-700 transition hover:text-emerald-800"
+                      >
+                        Portal ↗
+                      </a>
+                      {r.renter_user_id && (
+                        <ActAsButton userId={r.renter_user_id} />
+                      )}
+                    </span>
                   </li>
                 ))}
               </ul>
