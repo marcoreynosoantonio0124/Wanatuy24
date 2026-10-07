@@ -2,6 +2,7 @@ import Link from "next/link";
 import { formatPeso, formatDate, PAYMENT_METHOD_LABELS } from "@/lib/format";
 import { ReminderBadge } from "@/components/reminder-badge";
 import { MonthPaymentButton } from "@/components/month-payment-button";
+import { MonthLessorReply } from "@/components/month-lessor-reply";
 import type { ForecastMonth, ForecastStatus } from "@/components/year-forecast";
 import type { PaymentMethod } from "@/lib/database.types";
 import type { MonthMessage } from "@/lib/renter-rentals";
@@ -201,8 +202,24 @@ export function UnitTimetable({
                         </p>
                       </div>
                     ))}
+                    {interactive && (
+                      <MonthLessorReply
+                        agreementId={agreementId}
+                        periodId={m.periodId}
+                        hasThread
+                      />
+                    )}
                   </div>
                 )}
+
+                {interactive &&
+                  (messagesByPeriod[m.periodId]?.length ?? 0) === 0 && (
+                    <MonthLessorReply
+                      agreementId={agreementId}
+                      periodId={m.periodId}
+                      hasThread={false}
+                    />
+                  )}
 
                 {interactive && m.status !== "paid" && m.status !== "waived" && (
                   <MonthPaymentButton
