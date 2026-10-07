@@ -74,7 +74,8 @@ export function UnitTimetable({
             return (
               <div
                 key={m.periodId}
-                className="rounded-2xl border border-slate-200 bg-white p-4"
+                className="rounded-2xl border border-white/15 p-4"
+                style={{ backgroundColor: "rgba(15,23,42,0.6)" }}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -133,7 +134,10 @@ export function UnitTimetable({
         <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
           This unit · summary
         </h2>
-        <div className="grid grid-cols-3 overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div
+          className="grid grid-cols-3 overflow-hidden rounded-2xl border border-white/15"
+          style={{ backgroundColor: "rgba(15,23,42,0.6)" }}
+        >
           <SummaryCell label="Collected" value={formatPeso(collected)} tone="emerald" />
           <SummaryCell
             label="Outstanding"

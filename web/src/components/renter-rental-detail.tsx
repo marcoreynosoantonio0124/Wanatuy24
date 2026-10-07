@@ -114,7 +114,8 @@ export function RenterRentalDetail({
             return (
               <div
                 key={m.periodId}
-                className="rounded-2xl border border-slate-200 bg-white p-4"
+                className="rounded-2xl border border-white/15 p-4"
+                style={{ backgroundColor: "rgba(15,23,42,0.6)" }}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -198,7 +199,10 @@ export function RenterRentalDetail({
         <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
           Documents
         </h2>
-        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <div
+          className="overflow-hidden rounded-2xl border border-white/15"
+          style={{ backgroundColor: "rgba(15,23,42,0.6)" }}
+        >
           {data.contract && (data.contract.view || data.contract.download) && (
             <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4">
               <span className="flex items-center gap-2 text-sm font-medium text-slate-700">
