@@ -26,6 +26,13 @@ export type RenterRentalsData = {
   activeCount: number;
 };
 
+/** One message in a month's "Message the owner" thread. */
+export type MonthMessage = {
+  body: string;
+  sender: "renter" | "lessor";
+  createdAt: string;
+};
+
 /** Everything the detail page for one rental needs. */
 export type RenterRentalDetailData = {
   id: string;
@@ -46,9 +53,42 @@ export type RenterRentalDetailData = {
   paymentInstructions: string | null;
   contract: { view: string | null; download: string | null } | null;
   hasRenterId: boolean;
+  messagesByPeriod: Record<string, MonthMessage[]>;
 };
 
 const CONTRACT_BUCKET = "contracts";
+
+/**
+ * Loads the per-month "Message the owner" threads for an agreement, grouped by
+ * period. Resilient: if the messages table doesn't exist yet (migration not
+ * run), it returns an empty map instead of throwing.
+ */
+export async function loadMessagesByPeriod(
+  admin: SupabaseClient,
+  agreementId: string,
+): Promise<Record<string, MonthMessage[]>> {
+  const byPeriod: Record<string, MonthMessage[]> = {};
+  const { data, error } = await admin
+    .from("messages")
+    .select("period_id, sender, body, created_at")
+    .eq("agreement_id", agreementId)
+    .order("created_at", { ascending: true });
+  if (error) return byPeriod;
+  for (const m of (data ?? []) as {
+    period_id: string | null;
+    sender: "renter" | "lessor";
+    body: string;
+    created_at: string;
+  }[]) {
+    if (!m.period_id) continue;
+    (byPeriod[m.period_id] ??= []).push({
+      body: m.body,
+      sender: m.sender,
+      createdAt: m.created_at,
+    });
+  }
+  return byPeriod;
+}
 
 type AgreementLite = {
   id: string;
@@ -225,6 +265,8 @@ export async function loadRenterRentalDetail(
     contract = { view: cv?.signedUrl ?? null, download: cd?.signedUrl ?? null };
   }
 
+  const messagesByPeriod = await loadMessagesByPeriod(admin, a.id);
+
   return {
     id: a.id,
     token: a.renter_access_token,
@@ -239,5 +281,6 @@ export async function loadRenterRentalDetail(
     paymentInstructions: a.payment_instructions,
     contract,
     hasRenterId: Boolean(a.renter_id_file_path),
+    messagesByPeriod,
   };
 }

@@ -263,4 +263,5 @@ export const SAMPLE_TENANT_DETAIL: RenterRentalDetailData = {
   paymentInstructions: SAMPLE_TENANT.paymentInstructions,
   contract: SAMPLE_TENANT.contract,
   hasRenterId: SAMPLE_TENANT.hasRenterId,
+  messagesByPeriod: {},
 };

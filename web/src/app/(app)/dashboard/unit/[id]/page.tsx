@@ -3,6 +3,7 @@ import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { describeSchedule } from "@/lib/format";
 import { buildRenterView } from "@/lib/renter-view";
+import { loadMessagesByPeriod } from "@/lib/renter-rentals";
 import { UnitTimetable, type MonthProof } from "@/components/unit-timetable";
 import type { AgreementRow, AssetRow, PeriodRow } from "@/lib/database.types";
 
@@ -105,6 +106,8 @@ export default async function UnitTimetablePage({
     }
   }
 
+  const messagesByPeriod = await loadMessagesByPeriod(admin, id);
+
   return (
     <UnitTimetable
       agreementId={id}
@@ -117,6 +120,7 @@ export default async function UnitTimetablePage({
       remindersSent={remindersSent}
       interactive
       proofByPeriod={proofByPeriod}
+      messagesByPeriod={messagesByPeriod}
     />
   );
 }
