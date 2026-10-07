@@ -5,6 +5,8 @@ import { z } from "zod";
 import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { pesosToCentavos } from "@/lib/format";
+import { sendEmail } from "@/lib/email";
+import { sendPush } from "@/lib/webpush";
 
 function revalidate(agreementId: string) {
   revalidatePath(`/agreements/${agreementId}`);
@@ -352,4 +354,96 @@ export async function removeContract(formData: FormData): Promise<void> {
 
   revalidate(agreementId);
   revalidatePath("/contracts");
+}
+
+// ---- Lessor → renter messages (reply to "Message the owner") ---------------
+
+export type ReplyState = { error?: string; ok?: boolean };
+
+function escHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+export async function sendLessorMessage(
+  _prev: ReplyState,
+  formData: FormData,
+): Promise<ReplyState> {
+  const { user, supabase } = await requireUser();
+  const agreementId = String(formData.get("agreement_id") ?? "");
+  const periodId = String(formData.get("period_id") ?? "");
+  const body = String(formData.get("body") ?? "").trim();
+  if (!body) return { error: "Type a message first." };
+  if (body.length > 1000) return { error: "That message is too long." };
+  if (!periodId) return { error: "Missing month." };
+
+  const { data: agData } = await supabase
+    .from("agreements")
+    .select("id, lessor_id, renter_user_id, renter_name, asset:assets(label)")
+    .eq("id", agreementId)
+    .single();
+  const ag = agData as unknown as {
+    id: string;
+    lessor_id: string;
+    renter_user_id: string | null;
+    renter_name: string;
+    asset: { label: string } | null;
+  } | null;
+  if (!ag || ag.lessor_id !== user.id) return { error: "Not allowed." };
+
+  const admin = createAdminClient();
+  const { error } = await admin.from("messages").insert({
+    agreement_id: agreementId,
+    period_id: periodId,
+    sender: "lessor",
+    body,
+  });
+  if (error) return { error: error.message };
+
+  // Best-effort: notify the renter if they have an account.
+  try {
+    if (ag.renter_user_id) {
+      const unit = ag.asset?.label ?? "your rental";
+      const base = process.env.APP_BASE_URL || "";
+      const link = base ? `${base}/my-rentals/${agreementId}` : "";
+      const { data: renter } = await admin
+        .from("users")
+        .select("email")
+        .eq("id", ag.renter_user_id)
+        .single();
+      const renterEmail = (renter as { email?: string } | null)?.email;
+      if (renterEmail) {
+        await sendEmail(
+          renterEmail,
+          "💬 Message from your landlord",
+          `<div style="font-family:ui-sans-serif,system-ui,Arial,sans-serif;max-width:480px;margin:0 auto;color:#0f172a">
+            <p style="color:#059669;font-weight:700;margin:0 0 8px">DueMeet</p>
+            <p>Your landlord sent you a message about <strong>${escHtml(unit)}</strong>:</p>
+            <blockquote style="border-left:3px solid #e2e8f0;margin:12px 0;padding:4px 12px;color:#475569">${escHtml(body)}</blockquote>
+            ${link ? `<p style="margin:20px 0"><a href="${link}" style="background:#059669;color:#fff;padding:10px 18px;border-radius:8px;text-decoration:none">Open DueMeet</a></p>` : ""}
+          </div>`,
+        );
+      }
+      const { data: subs } = await admin
+        .from("push_subscriptions")
+        .select("endpoint, p256dh, auth")
+        .eq("user_id", ag.renter_user_id);
+      for (const s of (subs ?? []) as {
+        endpoint: string;
+        p256dh: string;
+        auth: string;
+      }[]) {
+        await sendPush(s, {
+          title: "Message from your landlord",
+          body: body.slice(0, 80),
+          url: `/my-rentals/${agreementId}`,
+        });
+      }
+    }
+  } catch {
+    // Notifications are best-effort.
+  }
+
+  revalidatePath(`/dashboard/unit/${agreementId}`);
+  revalidatePath(`/my-rentals/${agreementId}`);
+  return { ok: true };
 }
