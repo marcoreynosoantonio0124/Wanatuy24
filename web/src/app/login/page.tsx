@@ -40,7 +40,18 @@ function LoginForm() {
         <div className="absolute inset-0 bg-gradient-to-b from-slate-950/55 via-slate-950/65 to-slate-950/88" />
       </div>
 
-      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-950/65 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+      <div className="relative flex w-full max-w-5xl items-end justify-center">
+      {/* DUE — the lessor mascot, standing to the left of the card */}
+      <Image
+        src="/due-mascot.png"
+        alt="DUE — the DueMeet lessor mascot"
+        width={440}
+        height={660}
+        priority
+        className="pointer-events-none hidden h-80 w-auto shrink-0 -mr-10 drop-shadow-2xl lg:block xl:h-96"
+      />
+
+      <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/10 bg-slate-950/65 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
       <Link href="/" className="mb-8 block text-lg font-bold text-emerald-700">
         Due<span className="text-slate-400">Meet</span>
       </Link>
@@ -92,6 +103,17 @@ function LoginForm() {
         Renters: sign up with the same email your landlord used, para makita ang
         payment records mo. 🇵🇭
       </p>
+      </div>
+
+      {/* MEET — the renter mascot, standing to the right of the card */}
+      <Image
+        src="/meet-mascot.png"
+        alt="MEET — the DueMeet renter mascot"
+        width={440}
+        height={660}
+        priority
+        className="pointer-events-none hidden h-80 w-auto shrink-0 -ml-10 drop-shadow-2xl lg:block xl:h-96"
+      />
       </div>
     </main>
   );
