@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { Fredoka } from "next/font/google";
+import { Fredoka, Comic_Neue } from "next/font/google";
 import { requireUser } from "@/lib/auth";
 import { DuskScene } from "@/components/dusk-scene";
 import { RoleChooser } from "@/components/role-chooser";
@@ -8,6 +8,8 @@ import { currentPhaseManila } from "@/lib/time-theme";
 
 // Fun, rounded, easy-to-read display font for the welcome screen.
 const display = Fredoka({ subsets: ["latin"], weight: ["500", "600", "700"] });
+// Comic Sans-style font for the friendly greeting + the role signboards.
+const comic = Comic_Neue({ subsets: ["latin"], weight: ["700"] });
 
 export const dynamic = "force-dynamic";
 
@@ -38,8 +40,6 @@ export default async function WelcomePage() {
     redirect(role === "tenant" ? "/my-rentals" : "/dashboard");
   }
 
-  const firstName = (user.email ?? "there").split("@")[0];
-
   return (
     <main className="relative isolate flex min-h-screen flex-col text-white">
       {/* Living time-of-day sky + a neighborhood of houses in front, so the
@@ -61,10 +61,12 @@ export default async function WelcomePage() {
         </span>
       </header>
 
-      <section className="relative z-10 mx-auto flex w-full max-w-4xl flex-1 flex-col justify-center px-4 pb-8">
+      <section className="relative z-10 mx-auto flex w-full max-w-5xl flex-1 flex-col justify-center px-4 pb-8">
         <div className="mb-4 text-center sm:mb-6">
-          <p className="text-xs font-medium text-emerald-300 sm:text-sm">
-            Maligayang pagdating, {firstName}! 🌇
+          <p
+            className={`text-2xl leading-tight text-emerald-300 [text-shadow:0_2px_12px_rgba(0,0,0,0.5)] sm:text-4xl ${comic.className}`}
+          >
+            Maligayang pagdating! 🌇
           </p>
           <h1
             className={`mt-1 text-2xl font-bold sm:mt-2 sm:text-4xl ${display.className}`}
@@ -76,7 +78,7 @@ export default async function WelcomePage() {
           </p>
         </div>
 
-        <RoleChooser fontClass={display.className} />
+        <RoleChooser fontClass={display.className} comicClass={comic.className} />
 
         <p className="mt-4 text-center text-[11px] text-white/50 sm:text-xs">
           You can always switch or do both later.
