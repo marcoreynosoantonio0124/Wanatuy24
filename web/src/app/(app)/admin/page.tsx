@@ -4,7 +4,6 @@ import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { formatPeso, formatDate } from "@/lib/format";
 import { ActAsButton } from "@/components/act-as-button";
-import { CreateTestAccountsButton } from "@/components/create-test-accounts-button";
 
 export const dynamic = "force-dynamic";
 
@@ -185,19 +184,6 @@ export default async function AdminPage() {
           do a full end-to-end run-through as them (send messages, add a
           contract, record payments). A yellow bar brings you back here.
         </p>
-
-        {lessorList.length === 0 && tenantList.length === 0 && (
-          <div className="mb-4 rounded-2xl border border-emerald-200 bg-emerald-50/60 p-4">
-            <p className="text-sm font-semibold text-emerald-900">
-              👋 No landlords or renters yet
-            </p>
-            <p className="mb-3 mt-0.5 text-sm text-emerald-800/80">
-              Make a test landlord and a test renter to try the whole flow.
-              They&apos;ll appear below with an <strong>Act as</strong> button.
-            </p>
-            <CreateTestAccountsButton />
-          </div>
-        )}
 
         <div className="grid gap-4 sm:grid-cols-2">
           <PreviewCard
