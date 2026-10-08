@@ -41,17 +41,18 @@ function LoginForm() {
       </div>
 
       <div className="relative flex w-full max-w-5xl items-end justify-center">
-      {/* DUE — the lessor mascot, standing to the left of the card */}
+      {/* DUE — the lessor mascot, leaning his shoulder on the left edge of the card */}
       <Image
-        src="/due-mascot.png"
+        src="/due-lean.png"
         alt="DUE — the DueMeet lessor mascot"
-        width={440}
-        height={660}
+        width={537}
+        height={1248}
         priority
-        className="pointer-events-none hidden h-80 w-auto shrink-0 -mr-10 drop-shadow-2xl lg:block xl:h-96"
+        style={{ filter: "drop-shadow(9px 10px 7px rgba(0,0,0,0.4))" }}
+        className="pointer-events-none relative z-20 hidden h-[26rem] w-auto shrink-0 -mr-[14px] lg:block xl:h-[30rem]"
       />
 
-      <div className="relative z-10 w-full max-w-md rounded-2xl border border-white/10 bg-slate-950/65 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+      <div className="relative z-0 w-full max-w-md rounded-2xl border border-white/10 bg-slate-950/65 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
       <Link href="/" className="mb-8 block text-lg font-bold text-emerald-700">
         Due<span className="text-slate-400">Meet</span>
       </Link>
@@ -105,14 +106,15 @@ function LoginForm() {
       </p>
       </div>
 
-      {/* MEET — the renter mascot, standing to the right of the card */}
+      {/* MEET — the renter mascot, leaning his shoulder on the right edge of the card */}
       <Image
-        src="/meet-mascot.png"
+        src="/meet-lean.png"
         alt="MEET — the DueMeet renter mascot"
-        width={440}
-        height={660}
+        width={421}
+        height={707}
         priority
-        className="pointer-events-none hidden h-80 w-auto shrink-0 -ml-10 drop-shadow-2xl lg:block xl:h-96"
+        style={{ filter: "drop-shadow(-9px 10px 7px rgba(0,0,0,0.4))" }}
+        className="pointer-events-none relative z-20 hidden h-[26rem] w-auto shrink-0 -ml-[14px] lg:block xl:h-[30rem]"
       />
       </div>
     </main>
