@@ -41,10 +41,10 @@ export function RoleChooser({
         title="I'm a Tenant"
         subtitle="I rent a place and pay rent."
         points={[
-          "Get reminded of your due dates, even on your busiest days",
-          "Tell your landlord you've paid — no awkward follow-ups",
-          "Keep a clean record of everything you've paid",
-          "Keep digital copies of all your documents in one place",
+          "Get reminded on your due dates even on your busiest days",
+          "Notify your lessor about your payment without the hassle",
+          "Keep a clean record of everything you paid for",
+          "Have a digital copy of all the documents in one place",
         ]}
         cta="Continue as Tenant"
         fontClass={fontClass}
