@@ -31,6 +31,12 @@ export function LocationPicker({
   const [searching, setSearching] = useState(false);
   const [note, setNote] = useState("");
 
+  type Suggestion = { lat: string; lon: string; display_name: string };
+  const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [open, setOpen] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const skipNext = useRef(false); // don't re-search right after picking a suggestion
+
   useEffect(() => {
     let cancelled = false;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -65,7 +71,6 @@ export function LocationPicker({
         setLat(Number(la.toFixed(6)));
         setLng(Number(lo.toFixed(6)));
       };
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       marker.on("dragend", () => {
         const p = marker.getLatLng();
         set(p.lat, p.lng);
@@ -89,11 +94,63 @@ export function LocationPicker({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  function pinTo(la: number, lo: number, zoom = 16) {
+    setLat(Number(la.toFixed(6)));
+    setLng(Number(lo.toFixed(6)));
+    if (mapRef.current && markerRef.current) {
+      mapRef.current.setView([la, lo], zoom);
+      markerRef.current.setLatLng([la, lo]);
+    }
+  }
+
+  /** Debounced type-ahead suggestions (free, OpenStreetMap/Nominatim). */
+  function onQueryChange(v: string) {
+    setQuery(v);
+    setNote("");
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (skipNext.current) {
+      skipNext.current = false;
+      return;
+    }
+    if (v.trim().length < 3) {
+      setSuggestions([]);
+      setOpen(false);
+      return;
+    }
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&limit=5&addressdetails=1&countrycodes=ph&q=${encodeURIComponent(
+            v.trim(),
+          )}`,
+          { headers: { Accept: "application/json" } },
+        );
+        const data = (await res.json()) as Suggestion[];
+        setSuggestions(Array.isArray(data) ? data : []);
+        setOpen(true);
+      } catch {
+        setSuggestions([]);
+      }
+    }, 450);
+  }
+
+  function choose(s: Suggestion) {
+    const la = Number(s.lat);
+    const lo = Number(s.lon);
+    pinTo(la, lo);
+    setAddress(s.display_name ?? "");
+    skipNext.current = true;
+    setQuery(s.display_name ?? "");
+    setSuggestions([]);
+    setOpen(false);
+  }
+
   async function search() {
     const q = query.trim();
     if (!q) return;
     setSearching(true);
     setNote("");
+    setOpen(false);
     try {
       const res = await fetch(
         `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=ph&q=${encodeURIComponent(
@@ -134,18 +191,45 @@ export function LocationPicker({
         Where is the property?
       </span>
       <div className="flex gap-2">
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              search();
-            }
-          }}
-          placeholder="Search address or place…"
-          className={input}
-        />
+        <div className="relative flex-1">
+          <input
+            value={query}
+            onChange={(e) => onQueryChange(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                setOpen(false);
+                search();
+              } else if (e.key === "Escape") {
+                setOpen(false);
+              }
+            }}
+            onFocus={() => suggestions.length > 0 && setOpen(true)}
+            onBlur={() => setTimeout(() => setOpen(false), 150)}
+            placeholder="Start typing an address or place…"
+            autoComplete="off"
+            className={input}
+          />
+          {open && suggestions.length > 0 && (
+            <ul className="absolute z-[1000] mt-1 max-h-60 w-full overflow-auto rounded-lg border border-slate-300 bg-white py-1 shadow-xl">
+              {suggestions.map((s, i) => (
+                <li key={`${s.lat}-${s.lon}-${i}`}>
+                  <button
+                    type="button"
+                    // onMouseDown fires before the input's onBlur, so the pick registers.
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      choose(s);
+                    }}
+                    className="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-emerald-50"
+                  >
+                    📍 {s.display_name}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
         <button
           type="button"
           onClick={search}
@@ -162,7 +246,8 @@ export function LocationPicker({
         style={{ background: "#e8eef3" }}
       />
       <p className="text-xs text-slate-500">
-        Drag the 📍 pin or tap the map to set the exact spot.
+        Pick a suggestion as you type, then drag the 📍 pin (or tap the map) to
+        the exact spot.
         {lat !== "" && lng !== "" ? ` · Pinned at ${lat}, ${lng}` : ""}
       </p>
       {note && <p className="text-xs text-amber-600">{note}</p>}
