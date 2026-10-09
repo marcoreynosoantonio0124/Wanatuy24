@@ -20,9 +20,10 @@ export type ProfileDefaults = {
 
 const FIELD =
   "mt-1 h-[44px] w-full rounded-lg border border-white/15 bg-white/5 px-3 text-slate-100 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 disabled:opacity-50";
-// Native date inputs centre their value on iOS and render a hair shorter than a
-// <select>; a fixed height + left-aligned value keeps the row even.
-const DATE_FIELD = `${FIELD} [&::-webkit-date-and-time-value]:text-left [&::-webkit-date-and-time-value]:m-0`;
+// Native date inputs centre their value on iOS, render a hair shorter than a
+// <select>, and won't shrink below their intrinsic width (so they spill into the
+// next column). A fixed height, left-aligned value, and min-w-0 keep the row even.
+const DATE_FIELD = `${FIELD} min-w-0 [&::-webkit-date-and-time-value]:text-left [&::-webkit-date-and-time-value]:m-0`;
 const LABEL = "block text-sm font-medium text-slate-200";
 
 /**
@@ -184,7 +185,7 @@ export function ProfileForm({
       </label>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block">
+        <label className="block min-w-0">
           <span className={LABEL}>Birthdate</span>
           <input
             name="birthdate"
@@ -194,7 +195,7 @@ export function ProfileForm({
             className={DATE_FIELD}
           />
         </label>
-        <label className="block">
+        <label className="block min-w-0">
           <span className={LABEL}>Civil status</span>
           <select
             name="marital_status"
