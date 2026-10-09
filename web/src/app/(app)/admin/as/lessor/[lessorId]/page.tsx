@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { requireAdmin } from "@/lib/auth";
 import { loadLessorDashboard } from "@/lib/lessor-dashboard";
+import { firstName } from "@/lib/format";
 import { LessorDashboardView } from "@/components/lessor-dashboard-view";
 import { PreviewBanner } from "@/components/preview-banner";
 
@@ -14,16 +15,16 @@ export default async function ViewAsLessorPage({
 
   const { data: u } = await admin
     .from("users")
-    .select("email")
+    .select("email, full_name")
     .eq("id", lessorId)
     .maybeSingle();
-  const email = (u as { email?: string } | null)?.email;
+  const urow = u as { email?: string; full_name?: string | null } | null;
+  const email = urow?.email;
   if (!email) notFound();
 
   const data = await loadLessorDashboard(admin, { lessorId });
 
-  const first = email.split("@")[0].split(/[._+]/)[0];
-  const greetingName = first.charAt(0).toUpperCase() + first.slice(1);
+  const greetingName = firstName(urow?.full_name, email);
 
   return (
     <div>

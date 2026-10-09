@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { loadLessorDashboard } from "@/lib/lessor-dashboard";
+import { firstName } from "@/lib/format";
 import { LessorDashboardView } from "@/components/lessor-dashboard-view";
 
 export const dynamic = "force-dynamic";
@@ -12,13 +13,13 @@ export default async function DashboardPage() {
   // Center, not in a lessor dashboard of their own.
   const { data: me } = await supabase
     .from("users")
-    .select("is_admin")
+    .select("is_admin, full_name")
     .eq("id", user.id)
     .single();
-  if ((me as { is_admin?: boolean } | null)?.is_admin) redirect("/admin");
+  const meRow = me as { is_admin?: boolean; full_name?: string | null } | null;
+  if (meRow?.is_admin) redirect("/admin");
 
-  const first = (user.email ?? "there").split("@")[0].split(/[._+]/)[0];
-  const greetingName = first.charAt(0).toUpperCase() + first.slice(1);
+  const greetingName = firstName(meRow?.full_name, user.email);
 
   const data = await loadLessorDashboard(supabase);
   return (

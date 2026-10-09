@@ -4,6 +4,24 @@ import type {
   PeriodStatus,
 } from "@/lib/database.types";
 
+/**
+ * A friendly first name for greetings. Prefers the user's real profile name
+ * (first word of full_name); falls back to a tidied email prefix, then "there".
+ * e.g. ("Marco Reynoso Antonio", …) -> "Marco"; (null, "juan.cruz@x.com") -> "Juan".
+ */
+export function firstName(
+  fullName: string | null | undefined,
+  email: string | null | undefined,
+): string {
+  const name = (fullName ?? "").trim();
+  if (name) {
+    const first = name.split(/\s+/)[0];
+    return first.charAt(0).toUpperCase() + first.slice(1);
+  }
+  const prefix = (email ?? "there").split("@")[0].split(/[._+]/)[0];
+  return prefix.charAt(0).toUpperCase() + prefix.slice(1);
+}
+
 /** Format integer centavos as Philippine pesos, e.g. 150000 -> "₱1,500.00". */
 export function formatPeso(centavos: number): string {
   return new Intl.NumberFormat("en-PH", {
