@@ -23,6 +23,9 @@ type Me = {
   children_count?: number | null;
   avatar_url?: string | null;
   valid_id_file_path?: string | null;
+  id_verified?: boolean | null;
+  id_is_government?: boolean | null;
+  id_doc_type?: string | null;
   profile_completed?: boolean | null;
 };
 
@@ -48,7 +51,7 @@ export default async function ProfilePage() {
   const { data } = await supabase
     .from("users")
     .select(
-      "role, is_admin, full_name, suffix, email, phone, address, birthdate, marital_status, occupation, employer, work_address, spouse_name, children_count, avatar_url, valid_id_file_path, profile_completed",
+      "role, is_admin, full_name, suffix, email, phone, address, birthdate, marital_status, occupation, employer, work_address, spouse_name, children_count, avatar_url, valid_id_file_path, id_verified, id_is_government, id_doc_type, profile_completed",
     )
     .eq("id", user.id)
     .single();
@@ -68,7 +71,15 @@ export default async function ProfilePage() {
     idUrl = signed?.signedUrl ?? null;
   }
 
-  const verified = Boolean(me.phone) && Boolean(me.valid_id_file_path);
+  // Verified only with a mobile number AND a confirmed government ID whose name
+  // matches the account.
+  const hasId = Boolean(me.valid_id_file_path);
+  const verified = Boolean(me.phone) && hasId && me.id_verified === true;
+  // Why an on-file ID isn't verifying: a non-government ID, or a name mismatch
+  // on a government ID.
+  const idNotGov = hasId && me.id_is_government === false;
+  const idNameMismatch =
+    hasId && me.id_is_government === true && me.id_verified !== true;
   const fullName =
     [me.full_name, me.suffix].filter(Boolean).join(" ") ||
     (user.email ?? "").split("@")[0];
@@ -134,12 +145,39 @@ export default async function ProfilePage() {
 
         {!verified && (
           <p className="mt-4 rounded-lg border border-amber-400/25 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
-            Add your mobile number and a photo of your valid ID to earn the{" "}
-            <b>✅ Verified</b> badge.{" "}
-            <Link href="/profile/edit" className="underline">
-              Complete it
-            </Link>
-            .
+            {idNameMismatch ? (
+              <>
+                The name on your {me.id_doc_type ?? "ID"} doesn&apos;t match your
+                account name, so the <b>✅ Verified</b> badge isn&apos;t granted.
+                Make your <b>Full name</b> match your ID (middle name can differ)
+                {me.phone ? "" : ", and add your mobile number"}.{" "}
+                <Link href="/profile/edit" className="underline">
+                  Update it
+                </Link>
+                .
+              </>
+            ) : idNotGov ? (
+              <>
+                Your {me.id_doc_type ?? "ID"} is on file, but the{" "}
+                <b>✅ Verified</b> badge needs a <b>government-issued ID</b>{" "}
+                (e.g. Driver&apos;s License, National ID, Passport, UMID)
+                {me.phone ? "" : " and your mobile number"}.{" "}
+                <Link href="/profile/edit" className="underline">
+                  Update it
+                </Link>
+                .
+              </>
+            ) : (
+              <>
+                Add your mobile number and a photo of a{" "}
+                <b>government-issued ID</b> (name must match your account) to earn
+                the <b>✅ Verified</b> badge.{" "}
+                <Link href="/profile/edit" className="underline">
+                  Complete it
+                </Link>
+                .
+              </>
+            )}
           </p>
         )}
 
@@ -157,14 +195,24 @@ export default async function ProfilePage() {
         <div className="mt-5 border-t border-white/5 pt-4">
           <p className="text-sm text-slate-400">Valid ID on file</p>
           {idUrl ? (
-            <a
-              href={idUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-2 inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-emerald-300 transition hover:bg-white/10"
-            >
-              🪪 View your ID
-            </a>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <a
+                href={idUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-emerald-300 transition hover:bg-white/10"
+              >
+                🪪 View your ID
+              </a>
+              {me.id_doc_type && (
+                <span className="text-xs text-slate-400">
+                  {me.id_doc_type}
+                  {me.id_verified
+                    ? " · ✅ government ID"
+                    : " · not a government ID"}
+                </span>
+              )}
+            </div>
           ) : (
             <p className="mt-1 text-sm text-slate-500">
               None yet —{" "}
