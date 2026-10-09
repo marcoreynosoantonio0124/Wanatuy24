@@ -177,7 +177,7 @@ export function LocationPicker({
         Where is the property?
       </span>
       <div className="flex gap-2">
-        <div className="relative flex-1">
+        <div className="relative z-30 flex-1">
           <input
             value={query}
             onChange={(e) => onQueryChange(e.target.value)}
@@ -197,12 +197,15 @@ export function LocationPicker({
             className={input}
           />
           {open && query.trim().length >= 3 && (
-            <ul className="absolute z-[1000] mt-1 max-h-60 w-full overflow-auto rounded-lg border border-slate-300 bg-white py-1 shadow-xl">
+            <ul
+              style={{ backgroundColor: "#ffffff" }}
+              className="absolute z-[1000] mt-1 max-h-60 w-full overflow-auto rounded-lg border border-slate-300 py-1 shadow-xl"
+            >
               {loadingSug && (
-                <li className="px-3 py-2 text-sm text-slate-400">Searching…</li>
+                <li className="px-3 py-2 text-sm text-slate-500">Searching…</li>
               )}
               {!loadingSug && suggestions.length === 0 && (
-                <li className="px-3 py-2 text-sm text-slate-400">
+                <li className="px-3 py-2 text-sm text-slate-500">
                   No matches — tap <b>Find</b> or drag the pin.
                 </li>
               )}
@@ -215,7 +218,7 @@ export function LocationPicker({
                       e.preventDefault();
                       choose(s);
                     }}
-                    className="block w-full px-3 py-2 text-left text-sm text-slate-700 hover:bg-emerald-50"
+                    className="block w-full bg-white px-3 py-2 text-left text-sm text-slate-800 hover:bg-emerald-50"
                   >
                     📍 {s.display_name}
                   </button>
@@ -236,7 +239,7 @@ export function LocationPicker({
 
       <div
         ref={mapEl}
-        className="h-64 w-full overflow-hidden rounded-lg border border-slate-300"
+        className="relative z-0 h-64 w-full overflow-hidden rounded-lg border border-slate-300"
         style={{ background: "#e8eef3" }}
       />
       <p className="text-xs text-slate-500">
