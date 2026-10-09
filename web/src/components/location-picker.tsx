@@ -33,6 +33,7 @@ export function LocationPicker({
 
   type Suggestion = { lat: string; lon: string; display_name: string };
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
+  const [loadingSug, setLoadingSug] = useState(false);
   const [open, setOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const skipNext = useRef(false); // don't re-search right after picking a suggestion
@@ -117,21 +118,19 @@ export function LocationPicker({
       setOpen(false);
       return;
     }
+    setOpen(true);
+    setLoadingSug(true);
     debounceRef.current = setTimeout(async () => {
       try {
-        const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&limit=5&addressdetails=1&countrycodes=ph&q=${encodeURIComponent(
-            v.trim(),
-          )}`,
-          { headers: { Accept: "application/json" } },
-        );
-        const data = (await res.json()) as Suggestion[];
-        setSuggestions(Array.isArray(data) ? data : []);
-        setOpen(true);
+        const res = await fetch(`/api/geocode?q=${encodeURIComponent(v.trim())}`);
+        const json = (await res.json()) as { results?: Suggestion[] };
+        setSuggestions(Array.isArray(json.results) ? json.results : []);
       } catch {
         setSuggestions([]);
+      } finally {
+        setLoadingSug(false);
       }
-    }, 450);
+    }, 400);
   }
 
   function choose(s: Suggestion) {
@@ -152,27 +151,14 @@ export function LocationPicker({
     setNote("");
     setOpen(false);
     try {
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=ph&q=${encodeURIComponent(
-          q,
-        )}`,
-        { headers: { Accept: "application/json" } },
-      );
-      const data = (await res.json()) as Array<{
-        lat: string;
-        lon: string;
-        display_name: string;
-      }>;
-      if (data && data[0]) {
-        const la = Number(data[0].lat);
-        const lo = Number(data[0].lon);
-        setLat(Number(la.toFixed(6)));
-        setLng(Number(lo.toFixed(6)));
-        if (!address) setAddress(data[0].display_name ?? "");
-        if (mapRef.current && markerRef.current) {
-          mapRef.current.setView([la, lo], 16);
-          markerRef.current.setLatLng([la, lo]);
-        }
+      const res = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`);
+      const json = (await res.json()) as { results?: Suggestion[] };
+      const first = json.results?.[0];
+      if (first) {
+        const la = Number(first.lat);
+        const lo = Number(first.lon);
+        pinTo(la, lo);
+        if (!address) setAddress(first.display_name ?? "");
       } else {
         setNote("No match — drag the pin to set the spot instead.");
       }
@@ -210,8 +196,16 @@ export function LocationPicker({
             autoComplete="off"
             className={input}
           />
-          {open && suggestions.length > 0 && (
+          {open && query.trim().length >= 3 && (
             <ul className="absolute z-[1000] mt-1 max-h-60 w-full overflow-auto rounded-lg border border-slate-300 bg-white py-1 shadow-xl">
+              {loadingSug && (
+                <li className="px-3 py-2 text-sm text-slate-400">Searching…</li>
+              )}
+              {!loadingSug && suggestions.length === 0 && (
+                <li className="px-3 py-2 text-sm text-slate-400">
+                  No matches — tap <b>Find</b> or drag the pin.
+                </li>
+              )}
               {suggestions.map((s, i) => (
                 <li key={`${s.lat}-${s.lon}-${i}`}>
                   <button
