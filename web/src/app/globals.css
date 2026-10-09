@@ -318,3 +318,13 @@ summary,
   88% { opacity: 0.8; }
   100% { transform: translateY(-116vh) rotate(170deg); opacity: 0; }
 }
+
+/* Horizontally scrollable rows (e.g. the top nav on a phone) without an
+   ugly scrollbar. The content stays swipeable; nothing gets cut off. */
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
