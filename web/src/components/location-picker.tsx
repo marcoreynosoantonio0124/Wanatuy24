@@ -198,14 +198,20 @@ export function LocationPicker({
           />
           {open && query.trim().length >= 3 && (
             <ul
-              style={{ backgroundColor: "#ffffff" }}
-              className="absolute z-[1000] mt-1 max-h-60 w-full overflow-auto rounded-lg border border-slate-300 py-1 shadow-xl"
+              // Frosted dark panel: semi-transparent so the map stays a little
+              // visible, with a blur so the light text stays readable.
+              style={{
+                backgroundColor: "rgba(2, 6, 23, 0.72)",
+                backdropFilter: "blur(8px)",
+                WebkitBackdropFilter: "blur(8px)",
+              }}
+              className="absolute z-[1000] mt-1 max-h-60 w-full overflow-auto rounded-lg border border-white/15 py-1 shadow-2xl"
             >
               {loadingSug && (
-                <li className="px-3 py-2 text-sm text-slate-500">Searching…</li>
+                <li className="px-3 py-2 text-sm text-slate-300">Searching…</li>
               )}
               {!loadingSug && suggestions.length === 0 && (
-                <li className="px-3 py-2 text-sm text-slate-500">
+                <li className="px-3 py-2 text-sm text-slate-300">
                   No matches — tap <b>Find</b> or drag the pin.
                 </li>
               )}
@@ -218,7 +224,7 @@ export function LocationPicker({
                       e.preventDefault();
                       choose(s);
                     }}
-                    className="block w-full bg-white px-3 py-2 text-left text-sm text-slate-800 hover:bg-emerald-50"
+                    className="block w-full px-3 py-2 text-left text-sm text-slate-100 hover:bg-emerald-500/25"
                   >
                     📍 {s.display_name}
                   </button>
