@@ -20,10 +20,11 @@ export type ProfileDefaults = {
 
 const FIELD =
   "mt-1 h-[44px] w-full rounded-lg border border-white/15 bg-white/5 px-3 text-slate-100 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 disabled:opacity-50";
-// Native date inputs centre their value on iOS, render a hair shorter than a
-// <select>, and won't shrink below their intrinsic width (so they spill into the
-// next column). A fixed height, left-aligned value, and min-w-0 keep the row even.
-const DATE_FIELD = `${FIELD} min-w-0 [&::-webkit-date-and-time-value]:text-left [&::-webkit-date-and-time-value]:m-0`;
+// Native date inputs on iOS ignore the CSS width and size to their content, so
+// the Birthdate box spills into the next column. `appearance-none` strips the
+// native control so it respects width like a normal box; min-w-0 lets the grid
+// column shrink; the webkit rules keep the value left-aligned and snug.
+const DATE_FIELD = `${FIELD} min-w-0 appearance-none [&::-webkit-date-and-time-value]:text-left [&::-webkit-date-and-time-value]:m-0 [&::-webkit-date-and-time-value]:min-h-[1.2em]`;
 const LABEL = "block text-sm font-medium text-slate-200";
 
 /**
