@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildLedger } from "@/lib/ledger";
+import { createAdminClient } from "@/lib/supabase/server";
+import { signUnitCover } from "@/lib/unit-photos";
 import type { PeriodRow } from "@/lib/database.types";
 
 /** One month that still needs attention within a property. */
@@ -30,6 +32,10 @@ export type Property = {
   vacant: boolean;
   /** The underlying asset id (used for vacant units + delete/retain). */
   assetId: string;
+  /** Signed URL to the unit's cover photo, if any (shown on the card). */
+  coverPhoto: string | null;
+  /** How many photos the unit has. */
+  photoCount: number;
 };
 
 export type LessorDashboard = {
@@ -45,7 +51,7 @@ type AgreementLite = {
   amount_php: number;
   transaction_no: string | null;
   asset_id: string;
-  asset: { label: string } | null;
+  asset: { label: string; photo_paths: string[] | null } | null;
 };
 
 /**
@@ -63,7 +69,7 @@ export async function loadLessorDashboard(
   let agQuery = client
     .from("agreements")
     .select(
-      "id, renter_name, amount_php, transaction_no, asset_id, asset:assets(label)",
+      "id, renter_name, amount_php, transaction_no, asset_id, asset:assets(label, photo_paths)",
     )
     .eq("status", "active");
   if (opts.lessorId) agQuery = agQuery.eq("lessor_id", opts.lessorId);
@@ -194,8 +200,16 @@ export async function loadLessorDashboard(
       transactionNo: a.transaction_no ?? null,
       vacant: false,
       assetId: a.asset_id,
+      coverPhoto: null,
+      photoCount: a.asset?.photo_paths?.length ?? 0,
     };
   });
+
+  // Remember each asset's photo paths so we can sign covers in one pass below.
+  const pathsByAsset = new Map<string, string[]>();
+  for (const a of ags) {
+    if (a.asset?.photo_paths?.length) pathsByAsset.set(a.asset_id, a.asset.photo_paths);
+  }
 
   // Needs-attention properties first (most owed first), paid-up last.
   properties.sort(
@@ -207,15 +221,20 @@ export async function loadLessorDashboard(
   // occupied ones.
   let assetQuery = client
     .from("assets")
-    .select("id, label")
+    .select("id, label, photo_paths")
     .is("archived_at", null);
   if (opts.lessorId) assetQuery = assetQuery.eq("lessor_id", opts.lessorId);
   const { data: assetData } = await assetQuery.order("created_at", {
     ascending: true,
   });
   const occupied = new Set(ags.map((a) => a.asset_id));
-  for (const asset of (assetData ?? []) as { id: string; label: string }[]) {
+  for (const asset of (assetData ?? []) as {
+    id: string;
+    label: string;
+    photo_paths: string[] | null;
+  }[]) {
     if (occupied.has(asset.id)) continue;
+    if (asset.photo_paths?.length) pathsByAsset.set(asset.id, asset.photo_paths);
     properties.push({
       id: asset.id,
       name: asset.label,
@@ -231,7 +250,21 @@ export async function loadLessorDashboard(
       transactionNo: null,
       vacant: true,
       assetId: asset.id,
+      coverPhoto: null,
+      photoCount: asset.photo_paths?.length ?? 0,
     });
+  }
+
+  // Sign cover photos for every property that has one (service-role; the
+  // bucket is private). Done once, after the list is assembled.
+  if (pathsByAsset.size > 0) {
+    const admin = createAdminClient();
+    await Promise.all(
+      properties.map(async (p) => {
+        const paths = pathsByAsset.get(p.assetId);
+        if (paths?.length) p.coverPhoto = await signUnitCover(admin, paths);
+      }),
+    );
   }
 
   const outstanding = properties.reduce((s, p) => s + p.owed, 0);

@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/server";
 import { buildRenterView } from "@/lib/renter-view";
+import { signUnitPhotos } from "@/lib/unit-photos";
 import { describeSchedule } from "@/lib/format";
 import type {
   PeriodRow,
@@ -61,6 +62,8 @@ export type RenterRentalDetailData = {
   lessorIdUrl: string | null;
   renterIdUrl: string | null;
   messagesByPeriod: Record<string, MonthMessage[]>;
+  /** Signed URLs to the unit's photos (move-in condition), cover first. */
+  unitPhotos: string[];
 };
 
 const CONTRACT_BUCKET = "contracts";
@@ -295,7 +298,7 @@ export async function loadRenterRentalDetail(
     await Promise.all([
       admin
         .from("assets")
-        .select("id, label, address_text")
+        .select("id, label, address_text, photo_paths")
         .eq("id", a.asset_id)
         .maybeSingle(),
       admin.from("periods").select("*").eq("agreement_id", a.id),
@@ -312,7 +315,12 @@ export async function loadRenterRentalDetail(
         .order("sent_at", { ascending: false }),
     ]);
 
-  const asset = assetRow as { label: string; address_text: string | null } | null;
+  const asset = assetRow as {
+    label: string;
+    address_text: string | null;
+    photo_paths: string[] | null;
+  } | null;
+  const unitPhotos = await signUnitPhotos(admin, asset?.photo_paths);
   const today = manilaToday();
   const view = buildRenterView({
     periods: (perData ?? []) as PeriodRow[],
@@ -369,5 +377,6 @@ export async function loadRenterRentalDetail(
     lessorIdUrl: docs?.lessorIdUrl ?? null,
     renterIdUrl: docs?.renterIdUrl ?? null,
     messagesByPeriod,
+    unitPhotos,
   };
 }
