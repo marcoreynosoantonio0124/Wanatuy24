@@ -19,7 +19,10 @@ export type ProfileDefaults = {
 };
 
 const FIELD =
-  "mt-1 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-slate-100 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 disabled:opacity-50";
+  "mt-1 h-[44px] w-full rounded-lg border border-white/15 bg-white/5 px-3 text-slate-100 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 disabled:opacity-50";
+// Native date inputs centre their value on iOS and render a hair shorter than a
+// <select>; a fixed height + left-aligned value keeps the row even.
+const DATE_FIELD = `${FIELD} [&::-webkit-date-and-time-value]:text-left [&::-webkit-date-and-time-value]:m-0`;
 const LABEL = "block text-sm font-medium text-slate-200";
 
 /**
@@ -53,7 +56,7 @@ function NAField({
           readOnly={isNA}
           inputMode={inputMode}
           placeholder={placeholder}
-          className={`w-full rounded-lg border border-white/15 bg-white/5 py-2 pl-3 pr-16 text-slate-100 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 ${
+          className={`h-[44px] w-full rounded-lg border border-white/15 bg-white/5 pl-3 pr-16 text-slate-100 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 ${
             isNA ? "italic text-slate-400" : ""
           }`}
         />
@@ -188,7 +191,7 @@ export function ProfileForm({
             type="date"
             required
             defaultValue={defaults.birthdate}
-            className={FIELD}
+            className={DATE_FIELD}
           />
         </label>
         <label className="block">
