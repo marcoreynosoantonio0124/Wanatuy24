@@ -22,7 +22,10 @@ const FIELD =
   "mt-1 w-full rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-slate-100 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 disabled:opacity-50";
 const LABEL = "block text-sm font-medium text-slate-200";
 
-/** A text field with a small "N/A" toggle for details that may not apply. */
+/**
+ * A text field with a small "N/A" toggle tucked inside the box, on the right.
+ * Tap it to mark the detail "Not applicable"; tap again to type a value.
+ */
 function NAField({
   name,
   label,
@@ -40,27 +43,33 @@ function NAField({
   const [value, setValue] = useState(defaultValue === "N/A" ? "" : defaultValue);
   return (
     <label className="block">
-      <span className="flex items-center justify-between">
-        <span className={LABEL}>{label}</span>
-        <span className="flex items-center gap-1.5 text-xs text-slate-400">
-          <input
-            type="checkbox"
-            checked={isNA}
-            onChange={(e) => setIsNA(e.target.checked)}
-            className="h-3.5 w-3.5 rounded border-white/20 bg-white/10 accent-emerald-500"
-          />
+      <span className={LABEL}>{label}</span>
+      <span className="relative mt-1 block">
+        <input
+          name={name}
+          // readOnly (not disabled) so the "N/A" value still submits.
+          value={isNA ? "N/A" : value}
+          onChange={(e) => setValue(e.target.value)}
+          readOnly={isNA}
+          inputMode={inputMode}
+          placeholder={placeholder}
+          className={`w-full rounded-lg border border-white/15 bg-white/5 py-2 pl-3 pr-16 text-slate-100 outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-400/30 ${
+            isNA ? "italic text-slate-400" : ""
+          }`}
+        />
+        <button
+          type="button"
+          onClick={() => setIsNA((v) => !v)}
+          aria-pressed={isNA}
+          className={`absolute right-1.5 top-1/2 -translate-y-1/2 rounded-md px-2 py-1 text-xs font-semibold transition ${
+            isNA
+              ? "bg-emerald-500/25 text-emerald-200 ring-1 ring-emerald-400/40"
+              : "bg-white/10 text-slate-300 hover:bg-white/15"
+          }`}
+        >
           N/A
-        </span>
+        </button>
       </span>
-      <input
-        name={name}
-        value={isNA ? "N/A" : value}
-        onChange={(e) => setValue(e.target.value)}
-        disabled={isNA}
-        inputMode={inputMode}
-        placeholder={isNA ? "Not applicable" : placeholder}
-        className={FIELD}
-      />
     </label>
   );
 }
