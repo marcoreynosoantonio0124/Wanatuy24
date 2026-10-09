@@ -36,7 +36,6 @@ export function LocationPicker({
   const [loadingSug, setLoadingSug] = useState(false);
   const [open, setOpen] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const skipNext = useRef(false); // don't re-search right after picking a suggestion
 
   useEffect(() => {
     let cancelled = false;
@@ -71,6 +70,9 @@ export function LocationPicker({
       const set = (la: number, lo: number) => {
         setLat(Number(la.toFixed(6)));
         setLng(Number(lo.toFixed(6)));
+        // The search box is just a map finder — clear it so it never shows a
+        // stale place name after the pin has been moved.
+        setQuery("");
       };
       marker.on("dragend", () => {
         const p = marker.getLatLng();
@@ -109,10 +111,6 @@ export function LocationPicker({
     setQuery(v);
     setNote("");
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (skipNext.current) {
-      skipNext.current = false;
-      return;
-    }
     if (v.trim().length < 3) {
       setSuggestions([]);
       setOpen(false);
@@ -134,12 +132,10 @@ export function LocationPicker({
   }
 
   function choose(s: Suggestion) {
-    const la = Number(s.lat);
-    const lo = Number(s.lon);
-    pinTo(la, lo);
-    setAddress(s.display_name ?? "");
-    skipNext.current = true;
-    setQuery(s.display_name ?? "");
+    // Picking a suggestion just moves the map pin. The address below stays for
+    // the user to type the exact details (PH addresses often aren't on the map).
+    pinTo(Number(s.lat), Number(s.lon));
+    setQuery("");
     setSuggestions([]);
     setOpen(false);
   }
@@ -155,10 +151,8 @@ export function LocationPicker({
       const json = (await res.json()) as { results?: Suggestion[] };
       const first = json.results?.[0];
       if (first) {
-        const la = Number(first.lat);
-        const lo = Number(first.lon);
-        pinTo(la, lo);
-        if (!address) setAddress(first.display_name ?? "");
+        pinTo(Number(first.lat), Number(first.lon));
+        setQuery(""); // the box is just a finder — clear it once the pin is set
       } else {
         setNote("No match — drag the pin to set the spot instead.");
       }
@@ -174,7 +168,7 @@ export function LocationPicker({
   return (
     <div className="space-y-2">
       <span className="block text-sm font-medium text-slate-700">
-        Where is the property?
+        Let&apos;s pin where your property is 📍
       </span>
       <div className="flex gap-2">
         <div className="relative z-30 flex-1">
@@ -249,8 +243,8 @@ export function LocationPicker({
         style={{ background: "#e8eef3" }}
       />
       <p className="text-xs text-slate-500">
-        Pick a suggestion as you type, then drag the 📍 pin (or tap the map) to
-        the exact spot.
+        Search to jump the map, then drag the 📍 pin (or tap the map) to the exact
+        spot. Type the full address below.
         {lat !== "" && lng !== "" ? ` · Pinned at ${lat}, ${lng}` : ""}
       </p>
       {note && <p className="text-xs text-amber-600">{note}</p>}
