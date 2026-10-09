@@ -30,7 +30,12 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const verdict = await classifyId(Buffer.from(await file.arrayBuffer()), file.type);
+  const expectedName = String(form.get("name") ?? "").trim() || undefined;
+  const verdict = await classifyId(
+    Buffer.from(await file.arrayBuffer()),
+    file.type,
+    expectedName,
+  );
   if (!verdict) {
     return NextResponse.json({ configured: true, ok: false }, { status: 200 });
   }

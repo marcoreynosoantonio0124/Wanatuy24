@@ -876,9 +876,11 @@ on conflict (id) do nothing;
 
 -- ---------------------------------------------------------------------------
 -- 0022_id_verification: store the AI ID-check verdict so the Verified badge
--- requires a clear government ID. id_doc_type records the kind (e.g. "Company
--- ID") for the user-facing notice.
+-- requires a clear government ID whose name matches the account (middle name may
+-- differ). id_is_government distinguishes a non-government ID from a name
+-- mismatch; id_doc_type records the kind (e.g. "Company ID") for the notice.
 -- ---------------------------------------------------------------------------
 alter table public.users
-  add column if not exists id_verified boolean not null default false,
-  add column if not exists id_doc_type text;
+  add column if not exists id_verified      boolean not null default false,
+  add column if not exists id_is_government boolean,
+  add column if not exists id_doc_type      text;

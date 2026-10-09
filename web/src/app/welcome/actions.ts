@@ -105,6 +105,7 @@ async function handleIdUpload(
   admin: ReturnType<typeof createAdminClient>,
   userId: string,
   file: FormDataEntryValue | null,
+  expectedName: string,
 ): Promise<{ error: string } | { path: string | null; idUpdate: Record<string, unknown> }> {
   const { data: existing } = await admin
     .from("users")
@@ -123,7 +124,7 @@ async function handleIdUpload(
 
     // Classify BEFORE storing so a rejected image is never kept.
     const bytes = Buffer.from(await file.arrayBuffer());
-    const verdict = await classifyId(bytes, file.type);
+    const verdict = await classifyId(bytes, file.type, expectedName);
     if (verdict) {
       if (!verdict.looks_like_id)
         return {
@@ -144,10 +145,14 @@ async function handleIdUpload(
       .upload(path, bytes, { contentType: file.type, upsert: false });
     if (upErr) return { error: `ID upload failed: ${upErr.message}` };
     idPath = path;
-    // Badge only for a confirmed government ID. If the AI is off/unreachable
-    // (verdict null), store the ID but leave it unverified (no badge).
+    // Badge only for a confirmed government ID whose name matches the account.
+    // If the AI is off/unreachable (verdict null), store the ID but leave it
+    // unverified (no badge).
     idUpdate = {
-      id_verified: verdict ? verdict.is_government_id : false,
+      id_verified: verdict
+        ? verdict.is_government_id && verdict.name_matches === true
+        : false,
+      id_is_government: verdict ? verdict.is_government_id : null,
       id_doc_type: verdict ? verdict.id_type : null,
     };
   }
@@ -171,7 +176,7 @@ export async function saveProfile(
   if ("error" in parsed) return parsed;
 
   const admin = createAdminClient();
-  const id = await handleIdUpload(admin, user.id, formData.get("valid_id"));
+  const id = await handleIdUpload(admin, user.id, formData.get("valid_id"), parsed.value.full_name);
   if ("error" in id) return id;
 
   const { error } = await admin
@@ -208,7 +213,7 @@ export async function updateProfile(
   if ("error" in parsed) return parsed;
 
   const admin = createAdminClient();
-  const id = await handleIdUpload(admin, user.id, formData.get("valid_id"));
+  const id = await handleIdUpload(admin, user.id, formData.get("valid_id"), parsed.value.full_name);
   if ("error" in id) return id;
 
   const { error } = await admin
