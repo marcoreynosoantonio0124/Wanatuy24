@@ -52,11 +52,12 @@ export function RenterRentalsList({
             className="rounded-2xl border border-white/12 p-8 text-center backdrop-blur-md"
             style={fillStyle}
           >
-            <p className="text-slate-200">Wala pang naka-link na rental. 🧳</p>
+            <p className="text-slate-100">Let&apos;s find your rental! 🧳</p>
             <p className="mt-1 text-sm text-slate-400">
-              Enter the <span className="font-semibold text-slate-200">transaction
-              number</span> your landlord gave you in the box above, and your unit
-              shows up here automatically.
+              Ask your landlord for your{" "}
+              <span className="font-semibold text-slate-200">transaction number</span>,
+              type it in the box above, and your unit appears here automatically —
+              all your rent, dues and receipts in one place.
             </p>
           </div>
         ) : (
