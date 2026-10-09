@@ -41,6 +41,7 @@ export interface AssetRow {
   latitude: number | null;
   longitude: number | null;
   archived_at: string | null;
+  photo_paths: string[];
 }
 
 export interface AgreementRow {

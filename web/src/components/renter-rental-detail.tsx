@@ -75,6 +75,29 @@ export function RenterRentalDetail({
         )}
       </div>
 
+      {/* Unit photos (move-in condition), if the landlord added any */}
+      {data.unitPhotos.length > 0 && (
+        <section>
+          <h2 className="mb-2 text-xs font-bold uppercase tracking-wide text-slate-400">
+            📷 Photos of your unit
+          </h2>
+          <div className="flex gap-3 overflow-x-auto pb-1">
+            {data.unitPhotos.map((url, i) => (
+              <a
+                key={i}
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="h-36 w-52 shrink-0 overflow-hidden rounded-2xl border border-white/15 bg-slate-800 transition active:scale-95"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={url} alt={`Unit photo ${i + 1}`} className="h-full w-full object-cover" />
+              </a>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* Amount due */}
       {data.dueNow ? (
         <div className="rounded-2xl bg-gradient-to-br from-amber-600 to-red-600 p-5 text-white shadow-lg shadow-red-600/20">

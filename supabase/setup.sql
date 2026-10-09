@@ -891,3 +891,22 @@ alter table public.users
 -- ---------------------------------------------------------------------------
 alter table public.users
   add column if not exists id_expired boolean;
+
+-- ---------------------------------------------------------------------------
+-- 0024_unit_photos: optional photos of a unit (move-in condition). Added on the
+-- unit's own detail page, not the short Add-a-unit form. First photo is the
+-- cover. Private bucket + short-lived signed URLs (like contracts/IDs/proofs);
+-- shown to the lessor and the renter in that unit's agreement.
+-- ---------------------------------------------------------------------------
+alter table public.assets
+  add column if not exists photo_paths text[] not null default '{}';
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'unit-photos',
+  'unit-photos',
+  false,
+  10485760,
+  array['image/png', 'image/jpeg', 'image/webp']
+)
+on conflict (id) do nothing;

@@ -155,9 +155,8 @@ function PropertyRow({
   if (p.vacant) {
     return (
       <div className={cardCls} style={fillStyle}>
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5 text-xl">
-          🔑
-        </span>
+        <UnitThumb p={p} fallback="🔑" dark />
+
         <span className="min-w-0 flex-1">
           <span className="block truncate text-base font-bold text-slate-100">
             {p.name}
@@ -186,9 +185,8 @@ function PropertyRow({
   const href = preview ? previewHref : `/dashboard/unit/${p.id}`;
   const inner = (
     <>
-      <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-200 bg-slate-50 text-xl">
-        {icon}
-      </span>
+      <UnitThumb p={p} fallback={icon} />
+
       <span className="min-w-0 flex-1">
         <span className="block truncate text-base font-bold text-slate-900">
           {p.name}
@@ -237,6 +235,50 @@ function PropertyRow({
     >
       {inner}
     </Link>
+  );
+}
+
+/**
+ * The little square at the left of a property card: the unit's cover photo when
+ * it has one, otherwise the status emoji. `dark` matches the vacant card's
+ * translucent styling.
+ */
+function UnitThumb({
+  p,
+  fallback,
+  dark = false,
+}: {
+  p: Property;
+  fallback: string;
+  dark?: boolean;
+}) {
+  if (p.coverPhoto) {
+    return (
+      <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-white/15 bg-slate-800">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={p.coverPhoto}
+          alt=""
+          className="h-full w-full object-cover"
+        />
+        {p.photoCount > 1 && (
+          <span className="absolute bottom-0 right-0 bg-slate-900/70 px-1 text-[9px] font-semibold text-white">
+            {p.photoCount}
+          </span>
+        )}
+      </span>
+    );
+  }
+  return (
+    <span
+      className={
+        dark
+          ? "grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-white/10 bg-white/5 text-xl"
+          : "grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-slate-200 bg-slate-50 text-xl"
+      }
+    >
+      {fallback}
+    </span>
   );
 }
 
