@@ -25,6 +25,7 @@ type Me = {
   valid_id_file_path?: string | null;
   id_verified?: boolean | null;
   id_is_government?: boolean | null;
+  id_expired?: boolean | null;
   id_doc_type?: string | null;
   profile_completed?: boolean | null;
 };
@@ -51,7 +52,7 @@ export default async function ProfilePage() {
   const { data } = await supabase
     .from("users")
     .select(
-      "role, is_admin, full_name, suffix, email, phone, address, birthdate, marital_status, occupation, employer, work_address, spouse_name, children_count, avatar_url, valid_id_file_path, id_verified, id_is_government, id_doc_type, profile_completed",
+      "role, is_admin, full_name, suffix, email, phone, address, birthdate, marital_status, occupation, employer, work_address, spouse_name, children_count, avatar_url, valid_id_file_path, id_verified, id_is_government, id_expired, id_doc_type, profile_completed",
     )
     .eq("id", user.id)
     .single();
@@ -75,11 +76,16 @@ export default async function ProfilePage() {
   // matches the account.
   const hasId = Boolean(me.valid_id_file_path);
   const verified = Boolean(me.phone) && hasId && me.id_verified === true;
-  // Why an on-file ID isn't verifying: a non-government ID, or a name mismatch
-  // on a government ID.
+  // Why an on-file ID isn't verifying: a non-government ID, an expired one, or a
+  // name mismatch on a valid government ID.
   const idNotGov = hasId && me.id_is_government === false;
+  const idExpired =
+    hasId && me.id_is_government === true && me.id_expired === true && !verified;
   const idNameMismatch =
-    hasId && me.id_is_government === true && me.id_verified !== true;
+    hasId &&
+    me.id_is_government === true &&
+    me.id_expired !== true &&
+    me.id_verified !== true;
   const fullName =
     [me.full_name, me.suffix].filter(Boolean).join(" ") ||
     (user.email ?? "").split("@")[0];
@@ -145,7 +151,18 @@ export default async function ProfilePage() {
 
         {!verified && (
           <p className="mt-4 rounded-lg border border-amber-400/25 bg-amber-400/10 px-3 py-2 text-xs text-amber-200">
-            {idNameMismatch ? (
+            {idExpired ? (
+              <>
+                Your {me.id_doc_type ?? "ID"} looks <b>expired</b>, so the{" "}
+                <b>✅ Verified</b> badge isn&apos;t granted. Upload a{" "}
+                <b>valid (unexpired) government ID</b>
+                {me.phone ? "" : " and add your mobile number"}.{" "}
+                <Link href="/profile/edit" className="underline">
+                  Update it
+                </Link>
+                .
+              </>
+            ) : idNameMismatch ? (
               <>
                 The name on your {me.id_doc_type ?? "ID"} doesn&apos;t match your
                 account name, so the <b>✅ Verified</b> badge isn&apos;t granted.
@@ -209,7 +226,11 @@ export default async function ProfilePage() {
                   {me.id_doc_type}
                   {me.id_verified
                     ? " · ✅ government ID"
-                    : " · not a government ID"}
+                    : me.id_is_government === true
+                      ? me.id_expired === true
+                        ? " · government ID (expired)"
+                        : " · government ID (name mismatch)"
+                      : " · not a government ID"}
                 </span>
               )}
             </div>
