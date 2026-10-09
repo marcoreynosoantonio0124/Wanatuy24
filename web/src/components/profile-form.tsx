@@ -130,6 +130,7 @@ export function ProfileForm({
         is_government_id: boolean;
         id_type: string | null;
         name_matches: boolean | null;
+        is_expired: boolean;
       };
       const kind = v.id_type ?? "ID";
       if (!v.looks_like_id) {
@@ -147,6 +148,11 @@ export function ProfileForm({
           state: "info",
           label: `This looks like a ${kind}. You can continue, but a government ID is needed for the ✅ Verified badge.`,
         });
+      } else if (v.is_expired) {
+        setIdStatus({
+          state: "warn",
+          label: `This ${kind} looks expired. Upload a valid (unexpired) government ID to get the ✅ badge.`,
+        });
       } else if (v.name_matches === false) {
         setIdStatus({
           state: "warn",
@@ -155,7 +161,7 @@ export function ProfileForm({
       } else {
         setIdStatus({
           state: "ok",
-          label: `Verified — this is a ${kind} (government ID) and the name matches. You'll get the ✅ badge.`,
+          label: `Verified — this is a ${kind} (government ID), unexpired, and the name matches. You'll get the ✅ badge.`,
         });
       }
     } catch {

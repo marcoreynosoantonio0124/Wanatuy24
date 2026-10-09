@@ -145,14 +145,17 @@ async function handleIdUpload(
       .upload(path, bytes, { contentType: file.type, upsert: false });
     if (upErr) return { error: `ID upload failed: ${upErr.message}` };
     idPath = path;
-    // Badge only for a confirmed government ID whose name matches the account.
-    // If the AI is off/unreachable (verdict null), store the ID but leave it
-    // unverified (no badge).
+    // Badge only for a confirmed government ID that is unexpired AND whose name
+    // matches the account. If the AI is off/unreachable (verdict null), store the
+    // ID but leave it unverified (no badge).
     idUpdate = {
       id_verified: verdict
-        ? verdict.is_government_id && verdict.name_matches === true
+        ? verdict.is_government_id &&
+          verdict.name_matches === true &&
+          !verdict.is_expired
         : false,
       id_is_government: verdict ? verdict.is_government_id : null,
+      id_expired: verdict ? verdict.is_expired : null,
       id_doc_type: verdict ? verdict.id_type : null,
     };
   }

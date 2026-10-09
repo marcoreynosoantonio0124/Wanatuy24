@@ -884,3 +884,10 @@ alter table public.users
   add column if not exists id_verified      boolean not null default false,
   add column if not exists id_is_government boolean,
   add column if not exists id_doc_type      text;
+
+-- ---------------------------------------------------------------------------
+-- 0023_id_expiry: an expired government ID doesn't earn the Verified badge.
+-- IDs with no expiry date are never treated as expired.
+-- ---------------------------------------------------------------------------
+alter table public.users
+  add column if not exists id_expired boolean;
