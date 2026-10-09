@@ -136,6 +136,13 @@ async function handleIdUpload(
           error:
             "We couldn't clearly read the name and photo. Please upload a clearer photo of your ID.",
         };
+      // The name on the ID must match the account name — whatever the ID type.
+      // This blocks uploading someone else's ID. (Middle name may differ.)
+      if (verdict.name_matches === false)
+        return {
+          error:
+            "The name on this ID doesn't match your Full name. Please upload your own ID — or leave it blank to continue without one.",
+        };
     }
 
     const ext = file.name.includes(".") ? file.name.split(".").pop() : "bin";

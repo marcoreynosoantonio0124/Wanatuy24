@@ -143,6 +143,13 @@ export function ProfileForm({
           state: "warn",
           label: "The photo isn't clear enough — make sure the name and picture are readable.",
         });
+      } else if (v.name_matches === false) {
+        // Name must match the account, whatever the ID type — this blocks
+        // uploading someone else's ID.
+        setIdStatus({
+          state: "warn",
+          label: `The name on this ${kind} doesn't match the name you entered, so it won't be accepted. Please upload your own ID (or leave it blank).`,
+        });
       } else if (!v.is_government_id) {
         setIdStatus({
           state: "info",
@@ -152,11 +159,6 @@ export function ProfileForm({
         setIdStatus({
           state: "warn",
           label: `This ${kind} looks expired. Upload a valid (unexpired) government ID to get the ✅ badge.`,
-        });
-      } else if (v.name_matches === false) {
-        setIdStatus({
-          state: "warn",
-          label: `This ${kind} is a government ID, but the name on it doesn't match the name you entered. Make them match to get the ✅ badge.`,
         });
       } else {
         setIdStatus({
