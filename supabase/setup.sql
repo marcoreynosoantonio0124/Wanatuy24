@@ -851,3 +851,25 @@ create unique index if not exists agreements_transaction_no_key
 -- ---------------------------------------------------------------------------
 alter table public.assets
   add column if not exists archived_at timestamptz;
+
+-- ---------------------------------------------------------------------------
+-- 0021_user_profile_extended: fuller one-time profile — livelihood + family
+-- details and a profile photo. All optional (N/A-friendly). Avatars live in a
+-- public Storage bucket; the URL is kept in users.avatar_url.
+-- ---------------------------------------------------------------------------
+alter table public.users
+  add column if not exists occupation     text,
+  add column if not exists employer       text,
+  add column if not exists work_address   text,
+  add column if not exists spouse_name    text,
+  add column if not exists children_count integer;
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'avatars',
+  'avatars',
+  true,
+  5242880,
+  array['image/png', 'image/jpeg', 'image/webp']
+)
+on conflict (id) do nothing;

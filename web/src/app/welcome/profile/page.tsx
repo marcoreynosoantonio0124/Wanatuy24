@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { DuskScene } from "@/components/dusk-scene";
 import { ProfileForm } from "@/components/profile-form";
+import { saveProfile } from "@/app/welcome/actions";
 
 export const dynamic = "force-dynamic";
 
@@ -11,7 +12,9 @@ export default async function ProfilePage() {
 
   const { data, error } = await supabase
     .from("users")
-    .select("role, is_admin, full_name, phone, profile_completed")
+    .select(
+      "role, is_admin, full_name, phone, profile_completed, suffix, address, birthdate, marital_status, occupation, employer, work_address, spouse_name, children_count, valid_id_file_path",
+    )
     .eq("id", user.id)
     .single();
   const me = data as {
@@ -20,6 +23,16 @@ export default async function ProfilePage() {
     full_name?: string | null;
     phone?: string | null;
     profile_completed?: boolean | null;
+    suffix?: string | null;
+    address?: string | null;
+    birthdate?: string | null;
+    marital_status?: string | null;
+    occupation?: string | null;
+    employer?: string | null;
+    work_address?: string | null;
+    spouse_name?: string | null;
+    children_count?: number | null;
+    valid_id_file_path?: string | null;
   } | null;
 
   if (!error && me?.is_admin) redirect("/admin");
@@ -69,8 +82,23 @@ export default async function ProfilePage() {
 
         <div className="rounded-2xl border border-white/10 bg-slate-950/55 p-5 shadow-2xl backdrop-blur-xl sm:p-6">
           <ProfileForm
-            defaultName={defaultName}
-            defaultPhone={me?.phone ?? ""}
+            action={saveProfile}
+            submitLabel="Save & continue"
+            defaults={{
+              full_name: defaultName,
+              suffix: me?.suffix ?? "",
+              address: me?.address ?? "",
+              birthdate: me?.birthdate ?? "",
+              marital_status: me?.marital_status ?? "",
+              phone: me?.phone ?? "",
+              occupation: me?.occupation ?? "",
+              employer: me?.employer ?? "",
+              work_address: me?.work_address ?? "",
+              spouse_name: me?.spouse_name ?? "",
+              children_count:
+                me?.children_count == null ? "" : String(me.children_count),
+              hasId: Boolean(me?.valid_id_file_path),
+            }}
           />
         </div>
       </div>
