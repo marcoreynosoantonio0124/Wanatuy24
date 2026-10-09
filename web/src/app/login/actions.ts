@@ -74,6 +74,16 @@ export async function signUp(
     };
   }
 
+  // Must accept the Terms & Privacy Policy to create an account.
+  const consent = formData.get("consent");
+  if (consent !== "on") {
+    return {
+      mode: "signup",
+      email: String(formData.get("email") ?? ""),
+      error: "Please agree to the Terms of Service and Privacy Policy to continue.",
+    };
+  }
+
   const { email, password, next } = parsed.data;
   const origin = await siteOrigin();
   const callback = new URL("/auth/callback", origin);

@@ -95,6 +95,7 @@ function LoginForm() {
               heading="Create your account"
               subheading="Set a password — you'll use it every time you sign in."
               submitLabel="Create account"
+              showConsent
             />
           )}
         </>
@@ -103,6 +104,15 @@ function LoginForm() {
       <p className="mt-8 text-center text-xs text-slate-400">
         Renters: sign up with the same email your landlord used, para makita ang
         payment records mo. 🇵🇭
+      </p>
+      <p className="mt-3 text-center text-xs text-slate-500">
+        <Link href="/terms" className="hover:text-slate-300">
+          Terms
+        </Link>{" "}
+        ·{" "}
+        <Link href="/privacy" className="hover:text-slate-300">
+          Privacy
+        </Link>
       </p>
       </div>
 
@@ -152,6 +162,7 @@ function CredentialsForm({
   subheading,
   submitLabel,
   onForgot,
+  showConsent = false,
 }: {
   next: string;
   action: (prev: LoginState, formData: FormData) => Promise<LoginState>;
@@ -159,6 +170,7 @@ function CredentialsForm({
   subheading: string;
   submitLabel: string;
   onForgot?: () => void;
+  showConsent?: boolean;
 }) {
   const [state, formAction, pending] = useActionState<LoginState, FormData>(
     action,
@@ -227,6 +239,37 @@ function CredentialsForm({
             className="mt-1 w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200"
           />
         </div>
+
+        {showConsent && (
+          <label className="flex items-start gap-2 text-xs text-slate-600">
+            <input
+              type="checkbox"
+              name="consent"
+              required
+              className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-slate-300 accent-emerald-600"
+            />
+            <span>
+              I agree to DueMeet&apos;s{" "}
+              <Link
+                href="/terms"
+                target="_blank"
+                className="font-medium text-emerald-700 hover:underline"
+              >
+                Terms of Service
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/privacy"
+                target="_blank"
+                className="font-medium text-emerald-700 hover:underline"
+              >
+                Privacy Policy
+              </Link>
+              , and I consent to the collection of my details and valid ID for
+              verification.
+            </span>
+          </label>
+        )}
 
         {state.error && <p className="text-sm text-red-600">{state.error}</p>}
 
