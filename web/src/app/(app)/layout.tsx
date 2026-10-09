@@ -53,14 +53,16 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     <div className="app-dark relative isolate flex min-h-full flex-1 flex-col bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
       <AmbientBackground initialPhase={currentPhaseManila()} />
       <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/80 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-5xl items-center justify-between px-4 py-3">
-          <nav className="flex items-center gap-1 sm:gap-4">
-            <Link
-              href={isAdmin ? "/admin" : isLessor ? "/dashboard" : "/my-rentals"}
-              className="mr-2 rounded-md px-1 py-0.5 font-bold text-emerald-400 transition hover:text-emerald-300 active:scale-95"
-            >
-              Due<span className="text-slate-500">Meet</span>
-            </Link>
+        <div className="mx-auto flex w-full max-w-5xl items-center gap-2 px-4 py-3">
+          <Link
+            href={isAdmin ? "/admin" : isLessor ? "/dashboard" : "/my-rentals"}
+            className="shrink-0 rounded-md px-1 py-0.5 font-bold text-emerald-400 transition hover:text-emerald-300 active:scale-95"
+          >
+            Due<span className="text-slate-500">Meet</span>
+          </Link>
+          {/* Links: scroll sideways on a phone if they don't all fit, so the
+              layout never breaks and nothing gets cut off. */}
+          <nav className="no-scrollbar flex min-w-0 flex-1 items-center gap-1 overflow-x-auto whitespace-nowrap sm:gap-3">
             {isLessor && (
               <>
                 <NavLink href="/dashboard">Dashboard</NavLink>
@@ -73,8 +75,8 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
             {!isAdmin && <NavLink href="/profile">👤 Profile</NavLink>}
             {isAdmin && <NavLink href="/admin">🎛️ Command Center</NavLink>}
           </nav>
-          <div className="flex items-center gap-3">
-            <span className="hidden text-sm text-slate-400 sm:inline">
+          <div className="flex shrink-0 items-center gap-3">
+            <span className="hidden text-sm text-slate-400 lg:inline">
               {user.email}
             </span>
             <form action="/auth/signout" method="post">
