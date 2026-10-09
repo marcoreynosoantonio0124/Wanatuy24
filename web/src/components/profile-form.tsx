@@ -82,8 +82,9 @@ function NAField({
 type IdStatus =
   | { state: "idle" }
   | { state: "checking" }
-  | { state: "ok"; label: string }
-  | { state: "warn"; label: string };
+  | { state: "ok"; label: string } // confirmed government ID → badge
+  | { state: "info"; label: string } // a real ID but not government → no badge
+  | { state: "warn"; label: string }; // not an ID / not clear → rejected on save
 
 /**
  * The one-time profile form every account fills in (and can edit later):
@@ -116,31 +117,38 @@ export function ProfileForm({
       fd.append("file", file);
       const res = await fetch("/api/id/check", { method: "POST", body: fd });
       const json = await res.json();
-      if (!json?.configured || !json?.ok || !json?.check) {
-        // Dormant (no API key) or couldn't read — stay quiet.
+      if (!json?.configured || !json?.ok || !json?.verdict) {
+        // Dormant (no API key) or couldn't read — stay quiet; the server has
+        // the final say when they save.
         setIdStatus({ state: "idle" });
         return;
       }
-      const c = json.check as {
+      const v = json.verdict as {
         looks_like_id: boolean;
-        has_photo: boolean;
-        has_name: boolean;
+        is_clear: boolean;
+        is_government_id: boolean;
         id_type: string | null;
       };
-      if (c.looks_like_id && c.has_photo && c.has_name) {
-        setIdStatus({
-          state: "ok",
-          label: `Looks like a valid ${c.id_type ?? "ID"} — photo and name detected.`,
-        });
-      } else {
-        const missing: string[] = [];
-        if (!c.has_photo) missing.push("a photo");
-        if (!c.has_name) missing.push("a name");
+      const kind = v.id_type ?? "ID";
+      if (!v.looks_like_id) {
         setIdStatus({
           state: "warn",
-          label: missing.length
-            ? `Hmm — we couldn't spot ${missing.join(" and ")}. Double-check the picture.`
-            : "That doesn't look like an ID. Please upload a clear photo of a valid ID.",
+          label: "This doesn't look like an ID — it won't be accepted. Please upload a valid ID.",
+        });
+      } else if (!v.is_clear) {
+        setIdStatus({
+          state: "warn",
+          label: "The photo isn't clear enough — make sure the name and picture are readable.",
+        });
+      } else if (v.is_government_id) {
+        setIdStatus({
+          state: "ok",
+          label: `Verified — this is a ${kind} (government ID). You'll get the ✅ badge.`,
+        });
+      } else {
+        setIdStatus({
+          state: "info",
+          label: `This looks like a ${kind}. You can continue, but a government ID is needed for the ✅ Verified badge.`,
         });
       }
     } catch {
@@ -293,6 +301,11 @@ export function ProfileForm({
             ✓ {idStatus.label}
           </span>
         )}
+        {idStatus.state === "info" && (
+          <span className="mt-1 block text-xs text-sky-300">
+            ℹ️ {idStatus.label}
+          </span>
+        )}
         {idStatus.state === "warn" && (
           <span className="mt-1 block text-xs text-amber-300">
             ⚠️ {idStatus.label}
@@ -301,7 +314,7 @@ export function ProfileForm({
         <span className="mt-1 block text-xs text-slate-400">
           {isEdit && defaults.hasId
             ? "An ID is already on file — upload a new one to replace it."
-            : "Optional — but needed for the ✅ Verified badge. Kept private; only shown to the other party in an agreement you both signed."}
+            : "Optional — a government ID (Driver's License, National ID, Passport…) earns the ✅ Verified badge. Kept private; only shown to the other party in an agreement you both signed."}
         </span>
       </label>
 

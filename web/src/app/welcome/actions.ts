@@ -3,6 +3,7 @@
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
+import { classifyId } from "@/lib/id-check";
 
 /**
  * Saves the role the user picked on the welcome screen and sends them to fill
@@ -104,7 +105,7 @@ async function handleIdUpload(
   admin: ReturnType<typeof createAdminClient>,
   userId: string,
   file: FormDataEntryValue | null,
-): Promise<{ error: string } | { path: string | null }> {
+): Promise<{ error: string } | { path: string | null; idUpdate: Record<string, unknown> }> {
   const { data: existing } = await admin
     .from("users")
     .select("valid_id_file_path")
@@ -112,21 +113,45 @@ async function handleIdUpload(
     .single();
   let idPath =
     (existing as { valid_id_file_path?: string | null } | null)?.valid_id_file_path ?? null;
+  // Only touch the verdict columns when a new file is actually processed.
+  let idUpdate: Record<string, unknown> = {};
 
   if (file instanceof File && file.size > 0) {
     if (file.size > MAX_FILE_BYTES) return { error: "That file is larger than 20 MB." };
     if (!ALLOWED_TYPES.includes(file.type))
       return { error: "Upload a photo (PNG/JPG) or PDF of your ID." };
+
+    // Classify BEFORE storing so a rejected image is never kept.
+    const bytes = Buffer.from(await file.arrayBuffer());
+    const verdict = await classifyId(bytes, file.type);
+    if (verdict) {
+      if (!verdict.looks_like_id)
+        return {
+          error:
+            "That photo doesn't look like an ID. Please upload a valid ID — or leave it blank to continue without one.",
+        };
+      if (!verdict.is_clear)
+        return {
+          error:
+            "We couldn't clearly read the name and photo. Please upload a clearer photo of your ID.",
+        };
+    }
+
     const ext = file.name.includes(".") ? file.name.split(".").pop() : "bin";
     const path = `profile/${userId}/valid-id-${Date.now()}.${ext}`;
-    const bytes = new Uint8Array(await file.arrayBuffer());
     const { error: upErr } = await admin.storage
       .from(ID_BUCKET)
       .upload(path, bytes, { contentType: file.type, upsert: false });
     if (upErr) return { error: `ID upload failed: ${upErr.message}` };
     idPath = path;
+    // Badge only for a confirmed government ID. If the AI is off/unreachable
+    // (verdict null), store the ID but leave it unverified (no badge).
+    idUpdate = {
+      id_verified: verdict ? verdict.is_government_id : false,
+      id_doc_type: verdict ? verdict.id_type : null,
+    };
   }
-  return { path: idPath };
+  return { path: idPath, idUpdate };
 }
 
 /**
@@ -151,7 +176,12 @@ export async function saveProfile(
 
   const { error } = await admin
     .from("users")
-    .update({ ...parsed.value, valid_id_file_path: id.path, profile_completed: true })
+    .update({
+      ...parsed.value,
+      valid_id_file_path: id.path,
+      ...id.idUpdate,
+      profile_completed: true,
+    })
     .eq("id", user.id);
   if (error) return { error: error.message };
 
@@ -183,7 +213,12 @@ export async function updateProfile(
 
   const { error } = await admin
     .from("users")
-    .update({ ...parsed.value, valid_id_file_path: id.path, profile_completed: true })
+    .update({
+      ...parsed.value,
+      valid_id_file_path: id.path,
+      ...id.idUpdate,
+      profile_completed: true,
+    })
     .eq("id", user.id);
   if (error) return { error: error.message };
 

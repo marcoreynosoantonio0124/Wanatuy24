@@ -873,3 +873,12 @@ values (
   array['image/png', 'image/jpeg', 'image/webp']
 )
 on conflict (id) do nothing;
+
+-- ---------------------------------------------------------------------------
+-- 0022_id_verification: store the AI ID-check verdict so the Verified badge
+-- requires a clear government ID. id_doc_type records the kind (e.g. "Company
+-- ID") for the user-facing notice.
+-- ---------------------------------------------------------------------------
+alter table public.users
+  add column if not exists id_verified boolean not null default false,
+  add column if not exists id_doc_type text;
