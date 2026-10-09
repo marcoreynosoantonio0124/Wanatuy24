@@ -69,12 +69,6 @@ export function LessorDashboardView({
         {!preview && (
           <div className="flex shrink-0 flex-wrap items-center gap-2">
             <Link
-              href="/dashboard/history"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-white/25 bg-white/10 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-white/20 active:scale-95"
-            >
-              📜 History
-            </Link>
-            <Link
               href="/assets"
               className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/60 bg-emerald-500/10 px-3.5 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-500/20 active:scale-95"
             >
@@ -337,11 +331,11 @@ function SummaryCell({
 function EmptyState({ preview }: { preview: boolean }) {
   return (
     <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
-      <p className="text-slate-600">Wala pang naka-set up na paupahan. 🏠</p>
+      <p className="text-slate-600">Wala pang naka-setup na paupahan? 🏠</p>
       <p className="mt-1 text-sm text-slate-400">
         {preview
           ? "This landlord hasn't added any properties yet."
-          : "Tap “Make an agreement” to add your first property and start tracking rent."}
+          : "Add your first unit and make an agreement to start earning without the hassle."}
       </p>
     </div>
   );
