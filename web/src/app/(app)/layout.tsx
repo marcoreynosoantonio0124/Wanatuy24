@@ -70,6 +70,7 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
               </>
             )}
             {isRenter && <NavLink href="/my-rentals">My rentals</NavLink>}
+            {!isAdmin && <NavLink href="/profile">👤 Profile</NavLink>}
             {isAdmin && <NavLink href="/admin">🎛️ Command Center</NavLink>}
           </nav>
           <div className="flex items-center gap-3">
