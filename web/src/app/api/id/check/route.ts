@@ -72,7 +72,9 @@ export async function POST(request: NextRequest) {
   const client = new Anthropic({ apiKey });
   try {
     const resp = await client.messages.create({
-      model: process.env.CONTRACT_AI_MODEL || "claude-opus-5-5",
+      // A quick "does this look like an ID" sanity check — Haiku is plenty and
+      // keeps it ~₱0.01 per check. Override with ID_CHECK_MODEL if needed.
+      model: process.env.ID_CHECK_MODEL || "claude-haiku-5-5",
       max_tokens: 1024,
       output_config: { effort: "low" },
       messages: [{ role: "user", content: [docBlock, { type: "text", text: PROMPT }] }],
