@@ -52,7 +52,7 @@ export default async function AssetsPage() {
             No units yet. Add your first one above.
           </p>
         ) : (
-          <ul className="grid gap-3 sm:grid-cols-2">
+          <ul className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {assets.map((a) => (
               <li
                 key={a.id}
