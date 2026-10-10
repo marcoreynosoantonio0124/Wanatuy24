@@ -43,3 +43,39 @@ export async function updateAvatar(
   revalidatePath("/profile");
   return { ok: true };
 }
+
+/**
+ * Removes the signed-in user's valid ID: deletes the stored file and clears the
+ * ID + its verification verdict, so the ✅ Verified badge goes away until a new
+ * ID is uploaded (and passes the scan). Owner-only — keyed on the session user.
+ */
+export async function removeValidId(): Promise<{ error?: string }> {
+  const { user } = await requireUser();
+  const admin = createAdminClient();
+
+  const { data } = await admin
+    .from("users")
+    .select("valid_id_file_path")
+    .eq("id", user.id)
+    .single();
+  const path = (data as { valid_id_file_path?: string | null } | null)
+    ?.valid_id_file_path;
+
+  const { error } = await admin
+    .from("users")
+    .update({
+      valid_id_file_path: null,
+      id_verified: false,
+      id_is_government: null,
+      id_expired: null,
+      id_doc_type: null,
+    })
+    .eq("id", user.id);
+  if (error) return { error: error.message };
+
+  // Best-effort file cleanup; the record is already cleared either way.
+  if (path) await admin.storage.from("ids").remove([path]);
+
+  revalidatePath("/profile");
+  return {};
+}

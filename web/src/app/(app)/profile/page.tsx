@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { AvatarUploader } from "@/components/avatar-uploader";
-import { DocViewButton } from "@/components/doc-viewer";
+import { ProfileIdViewer } from "@/components/profile-id-viewer";
 
 export const dynamic = "force-dynamic";
 
@@ -65,12 +65,22 @@ export default async function ProfilePage() {
 
   // Signed URL for the private ID (1 hour), shown only to the owner here.
   let idUrl: string | null = null;
+  let idDownloadUrl: string | null = null;
   if (me.valid_id_file_path) {
     const admin = createAdminClient();
-    const { data: signed } = await admin.storage
-      .from("ids")
-      .createSignedUrl(me.valid_id_file_path, 60 * 60);
+    const ext = me.valid_id_file_path.includes(".")
+      ? me.valid_id_file_path.split(".").pop()
+      : "jpg";
+    const [{ data: signed }, { data: dl }] = await Promise.all([
+      admin.storage.from("ids").createSignedUrl(me.valid_id_file_path, 60 * 60),
+      admin.storage
+        .from("ids")
+        .createSignedUrl(me.valid_id_file_path, 60 * 60, {
+          download: `my-valid-id.${ext}`,
+        }),
+    ]);
     idUrl = signed?.signedUrl ?? null;
+    idDownloadUrl = dl?.signedUrl ?? null;
   }
 
   // Verified only with a mobile number AND a confirmed government ID whose name
@@ -214,13 +224,11 @@ export default async function ProfilePage() {
           <p className="text-sm text-slate-400">Valid ID on file</p>
           {idUrl ? (
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <DocViewButton
-                href={idUrl}
-                label="Your valid ID"
-                className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-emerald-300 transition hover:bg-white/10 active:scale-95"
-              >
-                🪪 View your ID
-              </DocViewButton>
+              <ProfileIdViewer
+                viewUrl={idUrl}
+                downloadUrl={idDownloadUrl}
+                verified={verified}
+              />
               {me.id_doc_type && (
                 <span className="text-xs text-slate-400">
                   {me.id_doc_type}

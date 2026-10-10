@@ -2,21 +2,38 @@
 
 import { useEffect, useState } from "react";
 
+/** True when the (signed) URL points at a PDF — those need the document viewer. */
+function isPdf(href: string): boolean {
+  try {
+    return /\.pdf$/i.test(new URL(href, "http://x").pathname);
+  } catch {
+    return /\.pdf(\?|$)/i.test(href);
+  }
+}
+
 /**
  * A full-screen in-app viewer for a document (an ID photo, a signed contract, a
- * payment proof). Shows the file in an iframe (the browser's own viewer gives
- * pinch-zoom for both images and PDFs) with a clear "← Back", instead of leaving
- * the app for a raw file URL in a new browser tab. "Open ↗" stays as a fallback.
+ * payment proof) with a clear back button, instead of leaving the app for a raw
+ * file URL in a new tab. Images are shown compact and centered (readable, not
+ * edge-to-edge); PDFs use the browser's document viewer. "Open ↗" stays as a
+ * fallback for the full-size file. `children` render under the document as an
+ * action area (e.g. download / change / remove).
  */
 export function DocOverlay({
   href,
   label,
   onClose,
+  backLabel = "← Back",
+  children,
 }: {
   href: string;
   label: string;
   onClose: () => void;
+  backLabel?: string;
+  children?: React.ReactNode;
 }) {
+  const [asFrame, setAsFrame] = useState(() => isPdf(href));
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") onClose();
@@ -42,9 +59,9 @@ export function DocOverlay({
         <button
           type="button"
           onClick={onClose}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/10 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-white/20 active:scale-95"
+          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-white/20 bg-white/10 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-white/20 active:scale-95"
         >
-          ← Back
+          {backLabel}
         </button>
         <span className="min-w-0 flex-1 truncate text-center text-sm font-medium text-slate-200">
           {label}
@@ -58,8 +75,24 @@ export function DocOverlay({
           Open ↗
         </a>
       </div>
-      <div className="min-h-0 flex-1 bg-slate-900">
-        <iframe src={href} title={label} className="h-full w-full border-0" />
+
+      <div className="flex min-h-0 flex-1 flex-col items-center gap-4 overflow-y-auto px-4 py-5">
+        {asFrame ? (
+          <iframe
+            src={href}
+            title={label}
+            className="h-[70vh] w-full max-w-3xl rounded-xl border border-white/10 bg-slate-900"
+          />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={href}
+            alt={label}
+            onError={() => setAsFrame(true)}
+            className="h-auto max-h-[55vh] w-auto max-w-full rounded-xl border border-white/10 bg-slate-900 object-contain shadow-2xl"
+          />
+        )}
+        {children && <div className="w-full max-w-md">{children}</div>}
       </div>
     </div>
   );
