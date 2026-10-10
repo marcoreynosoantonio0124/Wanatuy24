@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { markProofSeen } from "@/app/(app)/agreements/[id]/actions";
+import { DocOverlay } from "@/components/doc-viewer";
 
 /**
  * The "message from tenant" cell. Blinks while a proof is unseen; opening it
@@ -24,6 +25,7 @@ export function ProofCell({
   caption: string;
 }) {
   const [isSeen, setIsSeen] = useState(seen);
+  const [viewing, setViewing] = useState(false);
   const [, startTransition] = useTransition();
 
   function markSeen() {
@@ -38,7 +40,7 @@ export function ProofCell({
   }
 
   function open() {
-    if (viewUrl) window.open(viewUrl, "_blank", "noopener,noreferrer");
+    if (viewUrl) setViewing(true);
     markSeen();
   }
 
@@ -55,6 +57,13 @@ export function ProofCell({
       >
         {isSeen ? "👁️ View proof" : "🔔 New proof — tap to view"}
       </button>
+      {viewing && viewUrl && (
+        <DocOverlay
+          href={viewUrl}
+          label="Payment proof"
+          onClose={() => setViewing(false)}
+        />
+      )}
       {caption && <span className="text-xs text-slate-500">{caption}</span>}
       {downloadUrl && (
         <a

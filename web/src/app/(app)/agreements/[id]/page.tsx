@@ -12,6 +12,7 @@ import { buildLedger, type LedgerStatus } from "@/lib/ledger";
 import { CopyButton } from "@/components/copy-button";
 import { SubmitButton } from "@/components/submit-button";
 import { ProofCell } from "@/components/proof-cell";
+import { DocViewButton } from "@/components/doc-viewer";
 import { ReminderBadge, type ReminderRecord } from "@/components/reminder-badge";
 import { reminderKindLabel } from "@/lib/sms";
 import type {
@@ -234,14 +235,7 @@ export default async function AgreementDetailPage({
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {contractView && (
-                <a
-                  href={contractView}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 active:scale-95"
-                >
-                  View
-                </a>
+                <DocViewButton href={contractView} label="Signed contract" />
               )}
               {contractDownload && (
                 <a

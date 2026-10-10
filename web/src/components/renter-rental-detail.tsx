@@ -4,6 +4,7 @@ import { ReminderBadge } from "@/components/reminder-badge";
 import { MonthProofButton } from "@/components/month-proof-button";
 import { MonthMessageButton } from "@/components/month-message-button";
 import { RenterIdUpload } from "@/components/renter-id-upload";
+import { DocViewButton } from "@/components/doc-viewer";
 import type { ForecastStatus } from "@/components/year-forecast";
 import type { RenterRentalDetailData } from "@/lib/renter-rentals";
 
@@ -253,14 +254,7 @@ export function RenterRentalDetail({
               </span>
               <span className="flex gap-2">
                 {data.contract.view && (
-                  <a
-                    href={data.contract.view}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 active:scale-95"
-                  >
-                    View
-                  </a>
+                  <DocViewButton href={data.contract.view} label="Your signed contract" />
                 )}
                 {data.contract.download && (
                   <a
@@ -292,21 +286,15 @@ export function RenterRentalDetail({
   );
 }
 
-/** One ID document row in the Documents card: a label + a "View" link. */
+/** One ID document row in the Documents card: a label + a "View" button that
+ *  opens the file inside the app (overlay), not a new browser tab. */
 function IdDocRow({ label, href }: { label: string; href: string }) {
   return (
     <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4 last:border-b-0">
       <span className="flex items-center gap-2 text-sm font-medium text-slate-700">
         {label}
       </span>
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 active:scale-95"
-      >
-        View
-      </a>
+      <DocViewButton href={href} label={label} />
     </div>
   );
 }

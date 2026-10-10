@@ -4,6 +4,7 @@ import { ReminderBadge } from "@/components/reminder-badge";
 import { MonthPaymentButton } from "@/components/month-payment-button";
 import { MonthLessorReply } from "@/components/month-lessor-reply";
 import { EndContractButton } from "@/components/end-contract-button";
+import { DocViewButton } from "@/components/doc-viewer";
 import type { ForecastMonth, ForecastStatus } from "@/components/year-forecast";
 import type { PaymentMethod } from "@/lib/database.types";
 import type { MonthMessage, UnitDocuments } from "@/lib/renter-rentals";
@@ -213,14 +214,13 @@ export function UnitTimetable({
                       · paid {formatDate(proofByPeriod[m.periodId].paidOn)}
                     </span>
                     {proofByPeriod[m.periodId].viewUrl && (
-                      <a
+                      <DocViewButton
                         href={proofByPeriod[m.periodId].viewUrl ?? "#"}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        label="Payment proof"
                         className="ml-auto rounded-md border border-sky-400/40 px-2.5 py-1 text-xs font-semibold text-sky-200 transition hover:bg-sky-500/20 active:scale-95"
                       >
                         View proof
-                      </a>
+                      </DocViewButton>
                     )}
                   </div>
                 )}
@@ -321,21 +321,15 @@ export function UnitTimetable({
   );
 }
 
-/** One document row in the unit's Documents card: a label + a "View" link. */
+/** One document row in the unit's Documents card: a label + a "View" button
+ *  that opens the file inside the app (overlay), not a new browser tab. */
 function UnitDocRow({ label, href }: { label: string; href: string }) {
   return (
     <div className="flex items-center justify-between gap-3 border-b border-slate-100 p-4 last:border-b-0">
       <span className="flex items-center gap-2 text-sm font-medium text-slate-700">
         {label}
       </span>
-      <a
-        href={href}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 active:scale-95"
-      >
-        View
-      </a>
+      <DocViewButton href={href} label={label} />
     </div>
   );
 }
