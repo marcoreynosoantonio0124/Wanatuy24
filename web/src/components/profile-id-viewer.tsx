@@ -88,12 +88,20 @@ export function ProfileIdViewer({
 
             {panel === "change" && (
               <div className="rounded-xl border border-emerald-400/30 bg-emerald-500/10 p-3.5 text-sm text-emerald-100">
-                <p>
-                  <span className="font-semibold">Heads up:</span> a new ID goes
-                  through our automatic check again. A clear, unexpired{" "}
-                  <span className="font-semibold">government ID</span> with your
-                  name earns the ✅ Verified badge.
-                </p>
+                {verified ? (
+                  <p>
+                    <span className="font-semibold">Replace your valid ID?</span>{" "}
+                    Our system will check the new one again. To keep your
+                    Verified badge ✅, it must be a clear, valid government ID
+                    with your name.
+                  </p>
+                ) : (
+                  <p>
+                    <span className="font-semibold">Replacing your ID?</span> Our
+                    system will check it again, and once it passes, you&apos;ll
+                    get the Verified badge ✅ on your profile.
+                  </p>
+                )}
                 <Link
                   href="/profile/edit"
                   className="mt-3 inline-flex items-center rounded-lg bg-emerald-500 px-3.5 py-2 text-sm font-semibold text-slate-950 transition hover:bg-emerald-400 active:scale-95"
@@ -105,12 +113,21 @@ export function ProfileIdViewer({
 
             {panel === "remove" && (
               <div className="rounded-xl border border-red-400/30 bg-red-500/10 p-3.5 text-sm text-red-100">
-                <p>
-                  <span className="font-semibold">Remove this ID?</span>{" "}
-                  {verified
-                    ? "You'll lose your ✅ Verified badge until you upload a new ID and it passes our check."
-                    : "You can upload a new one anytime — a clear government ID earns the ✅ Verified badge."}
-                </p>
+                {verified ? (
+                  <p>
+                    <span className="font-semibold">Remove your valid ID?</span>{" "}
+                    Your Verified badge ✅ will be removed too. You can upload a
+                    new valid ID anytime and our system will check it to get it
+                    back.
+                  </p>
+                ) : (
+                  <p>
+                    <span className="font-semibold">Remove your ID?</span> You can
+                    upload a new one anytime and our system will check it again,
+                    and once it passes, you&apos;ll get the Verified badge ✅ on
+                    your profile.
+                  </p>
+                )}
                 <div className="mt-3 flex gap-2">
                   <button
                     type="button"
