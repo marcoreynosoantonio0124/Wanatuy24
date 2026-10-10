@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 
 /** True when the (signed) URL points at a PDF — those need the document viewer. */
 function isPdf(href: string): boolean {
@@ -48,14 +49,16 @@ export function DocOverlay({
     };
   }, [onClose]);
 
-  return (
+  // Render at the top level of <body> (a portal). Inside the page it would sit
+  // below the sticky top menu, which then covers the Back button.
+  return createPortal(
     <div
       className="fixed inset-0 z-[2000] flex flex-col bg-slate-950/95 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-label={label}
     >
-      <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 py-3">
+      <div className="flex items-center justify-between gap-3 border-b border-white/10 px-4 pb-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
         <button
           type="button"
           onClick={onClose}
@@ -94,7 +97,8 @@ export function DocOverlay({
         )}
         {children && <div className="w-full max-w-md">{children}</div>}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
 
