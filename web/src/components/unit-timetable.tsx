@@ -262,7 +262,7 @@ export function UnitTimetable({
           This unit · summary
         </h2>
         <div
-          className="grid grid-cols-3 overflow-hidden rounded-2xl border border-white/15"
+          className="grid grid-cols-2 overflow-hidden rounded-2xl border border-white/15 sm:grid-cols-3"
           style={{ backgroundColor: "rgba(15,23,42,0.6)" }}
         >
           <SummaryCell label="Collected" value={formatPeso(collected)} tone="emerald" />
@@ -352,9 +352,15 @@ function SummaryCell({
         ? "text-red-600"
         : "text-slate-900";
   return (
-    <div className={`px-4 py-4 ${last ? "" : "border-r border-slate-100"}`}>
+    <div
+      className={`min-w-0 px-4 py-4 ${
+        last
+          ? "col-span-2 border-t border-slate-100 sm:col-span-1 sm:border-t-0"
+          : "border-r border-slate-100 [&:nth-child(2)]:border-r-0 sm:[&:nth-child(2)]:border-r"
+      }`}
+    >
       <p className="text-xs text-slate-500">{label}</p>
-      <p className={`mt-0.5 text-lg font-bold tabular-nums ${color}`}>{value}</p>
+      <p className={`mt-0.5 break-words text-lg font-bold tabular-nums ${color}`}>{value}</p>
     </div>
   );
 }

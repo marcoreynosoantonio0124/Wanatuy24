@@ -67,16 +67,16 @@ export function LessorDashboardView({
           </p>
         </div>
         {!preview && (
-          <div className="flex shrink-0 flex-wrap items-center gap-2">
+          <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto sm:shrink-0">
             <Link
               href="/assets"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-500/60 bg-emerald-500/10 px-3.5 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-500/20 active:scale-95"
+              className="inline-flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl sm:flex-none border border-emerald-500/60 bg-emerald-500/10 px-3.5 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-500/20 active:scale-95"
             >
               + Add property
             </Link>
             <Link
               href="/agreements/new"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm shadow-emerald-600/20 transition hover:bg-emerald-700 active:scale-95"
+              className="inline-flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-xl sm:flex-none bg-emerald-600 px-3.5 py-2 text-sm font-semibold text-white shadow-sm shadow-emerald-600/20 transition hover:bg-emerald-700 active:scale-95"
             >
               + Make an agreement
             </Link>
@@ -143,7 +143,7 @@ function PropertyRow({
 }) {
   const fillStyle = { backgroundColor: "rgba(45,58,80,0.5)" } as const;
   const cardCls =
-    "flex items-center gap-3 rounded-2xl border border-white/12 p-4 shadow-sm backdrop-blur-md";
+    "flex flex-wrap items-center gap-3 rounded-2xl border border-white/12 p-4 shadow-sm backdrop-blur-md sm:flex-nowrap";
 
   // A property with no active agreement — "Open for leasing" (inactive).
   if (p.vacant) {
@@ -161,7 +161,7 @@ function PropertyRow({
           </span>
         </span>
         {!preview && (
-          <span className="flex shrink-0 items-center gap-2">
+          <span className="flex w-full shrink-0 items-center justify-end gap-2 sm:w-auto">
             <Link
               href="/agreements/new"
               className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-emerald-700 active:scale-95"
@@ -200,9 +200,9 @@ function PropertyRow({
           </span>
         )}
       </span>
-      <span className="flex shrink-0 items-center gap-2.5">
+      <span className="flex w-full shrink-0 items-center justify-end gap-2.5 sm:w-auto">
         {p.owed > 0 && (
-          <span className="hidden font-bold tabular-nums text-amber-700 sm:inline">
+          <span className="mr-auto font-bold tabular-nums text-amber-700 sm:mr-0">
             {formatPeso(p.owed)} owed
           </span>
         )}

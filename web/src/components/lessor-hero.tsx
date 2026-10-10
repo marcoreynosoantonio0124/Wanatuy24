@@ -115,7 +115,7 @@ export function LessorHero({
         <span className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-400/35 bg-emerald-500/10 px-3 py-1 text-sm font-semibold text-emerald-200">
           👋 Welcome back
         </span>
-        <h1 className="mt-3 text-3xl font-bold leading-tight text-white sm:text-4xl">
+        <h1 className="mt-3 max-w-[62%] break-words text-[26px] font-bold leading-tight text-white sm:max-w-none sm:text-4xl">
           Kumusta, <span className="text-emerald-300">{greetingName}!</span>
         </h1>
         <p className="mt-2 max-w-[58%] text-sm text-white/85 sm:text-base">
@@ -129,7 +129,7 @@ export function LessorHero({
         width={330}
         height={560}
         priority
-        className="pointer-events-none absolute bottom-0 right-1 h-[205px] w-auto drop-shadow-2xl sm:right-6 sm:h-[262px]"
+        className="pointer-events-none absolute bottom-0 right-1 h-[185px] w-auto drop-shadow-2xl sm:right-6 sm:h-[262px]"
       />
     </section>
   );

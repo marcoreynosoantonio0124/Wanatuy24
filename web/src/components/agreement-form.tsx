@@ -387,7 +387,7 @@ export function AgreementForm({ assets }: { assets: AssetOption[] }) {
           {ALL_PAYMENT_METHODS.map((m) => (
             <label
               key={m}
-              className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 px-3 py-1.5 text-sm has-[:checked]:border-emerald-500 has-[:checked]:bg-emerald-50"
+              className="flex cursor-pointer items-center gap-2 rounded-lg border border-slate-300 px-3 py-1.5 text-sm has-[:checked]:border-emerald-400 has-[:checked]:bg-emerald-500/20 has-[:checked]:text-emerald-100"
             >
               <input
                 type="checkbox"

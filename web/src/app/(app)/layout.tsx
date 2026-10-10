@@ -53,29 +53,30 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     <div className="app-dark relative isolate flex min-h-full flex-1 flex-col bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-slate-100">
       <AmbientBackground initialPhase={currentPhaseManila()} />
       <header className="sticky top-0 z-20 border-b border-white/10 bg-slate-950/80 backdrop-blur">
-        <div className="mx-auto flex w-full max-w-5xl items-center gap-2 px-4 py-3">
+        <div className="mx-auto flex w-full max-w-5xl flex-wrap items-center gap-x-2 gap-y-1 px-4 py-2.5 sm:py-3">
           <Link
             href={isAdmin ? "/admin" : isLessor ? "/dashboard" : "/my-rentals"}
             className="shrink-0 rounded-md px-1 py-0.5 font-bold text-emerald-400 transition hover:text-emerald-300 active:scale-95"
           >
             Due<span className="text-slate-500">Meet</span>
           </Link>
-          {/* Links: scroll sideways on a phone if they don't all fit, so the
-              layout never breaks and nothing gets cut off. */}
-          <nav className="no-scrollbar flex min-w-0 flex-1 items-center gap-1 overflow-x-auto whitespace-nowrap sm:gap-3">
+          {/* Links: on a phone they sit on their own row, spread evenly, so every
+              link is visible (none hidden behind a scroll). From sm up they sit
+              inline between the brand and Sign out. Scrolls only as a last resort. */}
+          <nav className="no-scrollbar order-3 flex w-full items-center justify-between gap-0.5 overflow-x-auto whitespace-nowrap sm:order-none sm:w-auto sm:min-w-0 sm:flex-1 sm:justify-start sm:gap-3">
             {isLessor && (
               <>
                 <NavLink href="/dashboard">Dashboard</NavLink>
                 <NavLink href="/assets">Units</NavLink>
-                <NavLink href="/dashboard/history">📜 History</NavLink>
-                <NavLink href="/contracts">🗂️ Contracts</NavLink>
+                <NavLink href="/dashboard/history" icon="📜">History</NavLink>
+                <NavLink href="/contracts" icon="🗂️">Contracts</NavLink>
               </>
             )}
             {isRenter && <NavLink href="/my-rentals">My rentals</NavLink>}
-            {!isAdmin && <NavLink href="/profile">👤 Profile</NavLink>}
-            {isAdmin && <NavLink href="/admin">🎛️ Command Center</NavLink>}
+            {!isAdmin && <NavLink href="/profile" icon="👤">Profile</NavLink>}
+            {isAdmin && <NavLink href="/admin" icon="🎛️">Command Center</NavLink>}
           </nav>
-          <div className="flex shrink-0 items-center gap-3">
+          <div className="ml-auto flex shrink-0 items-center gap-3 sm:ml-0">
             <span className="hidden text-sm text-slate-400 lg:inline">
               {user.email}
             </span>
