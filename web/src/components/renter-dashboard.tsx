@@ -4,6 +4,7 @@ import type { PaymentMethod } from "@/lib/database.types";
 import { DuskScene } from "@/components/dusk-scene";
 import { RenterProofForm } from "@/components/renter-proof-form";
 import { RenterIdUpload } from "@/components/renter-id-upload";
+import { DocViewButton } from "@/components/doc-viewer";
 import { YearForecast, type ForecastMonth } from "@/components/year-forecast";
 
 export type RenterDashboardProps = {
@@ -170,14 +171,7 @@ export function RenterDashboard(p: RenterDashboardProps) {
                 </span>
                 <span className="flex gap-2">
                   {p.contract.view && (
-                    <a
-                      href={p.contract.view}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 active:scale-95"
-                    >
-                      View
-                    </a>
+                    <DocViewButton href={p.contract.view} label="Your signed contract" />
                   )}
                   {p.contract.download && (
                     <a

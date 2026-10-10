@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/server";
 import { AvatarUploader } from "@/components/avatar-uploader";
+import { DocViewButton } from "@/components/doc-viewer";
 
 export const dynamic = "force-dynamic";
 
@@ -213,14 +214,13 @@ export default async function ProfilePage() {
           <p className="text-sm text-slate-400">Valid ID on file</p>
           {idUrl ? (
             <div className="mt-2 flex flex-wrap items-center gap-2">
-              <a
+              <DocViewButton
                 href={idUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-emerald-300 transition hover:bg-white/10"
+                label="Your valid ID"
+                className="inline-flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 px-3 py-2 text-sm text-emerald-300 transition hover:bg-white/10 active:scale-95"
               >
                 🪪 View your ID
-              </a>
+              </DocViewButton>
               {me.id_doc_type && (
                 <span className="text-xs text-slate-400">
                   {me.id_doc_type}
