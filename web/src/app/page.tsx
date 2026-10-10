@@ -69,8 +69,8 @@ export default async function LandingPage() {
 
         <p className="mt-5 max-w-xl leading-relaxed text-white/75">
           Set the rent once — we track every due date, remind your renters, and
-          keep proof of every payment (GCash, Maya, bank, or cash). Renters pay
-          from a simple link. No account needed.
+          keep proof of every payment and all the details for you and your
+          renter, all digitally in one place.
         </p>
 
         <div className="mt-9 flex flex-wrap gap-3">
